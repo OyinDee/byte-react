@@ -19,6 +19,10 @@ import CartPage from "./pages/CartPage";
 import RestaurantPage from "./pages/CheckRestaurant";
 import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
+import AdminLogin from "./pages/AdminLogin";
+import MealsPage from "./pages/MealsPage";
+import NotificationsPage from "./pages/AdminNotifs";
+
 function App() {
   return (
     <AuthProvider>
@@ -26,29 +30,57 @@ function App() {
         <Router>
           <NavbarWrapper />
           <Routes>
-            <Route path="/user/notifs" element={<Notifications />} />
-            <Route path="/user/profile" element={<Profile />} />
-            <Route path="/user/cart" element={<CartPage />} />
-            <Route path="/user/fund/callback" element={<CallbackPage />} />
-            <Route path="/forgot-password" element={<ResetPassword />} />
+
             <Route path="/" element={<Home />} />
-            <Route path="/user/fund" element={<Fund />} />
-            <Route path="/signupsuccess" element={<SignUpSuccess />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signupsuccess" element={<SignUpSuccess />} />
+            <Route path="/forgot-password" element={<ResetPassword />} />
+            
+
             <Route
               path="/user"
               element={<PrivateRoute element={<UserDashboard />} />}
             />
             <Route
+              path="/user/notifs"
+              element={<PrivateRoute element={<Notifications />} />}
+            />
+            <Route
+              path="/user/profile"
+              element={<PrivateRoute element={<Profile />} />}
+            />
+            <Route
+              path="/user/cart"
+              element={<PrivateRoute element={<CartPage />} />}
+            />
+            <Route
+              path="/user/fund/callback"
+              element={<PrivateRoute element={<CallbackPage />} />}
+            />
+            <Route
+              path="/user/fund"
+              element={<PrivateRoute element={<Fund />} />}
+            />
+            <Route
               path="/user/checkrestaurant/:id"
-              element={<RestaurantPage />}
+              element={<PrivateRoute element={<RestaurantPage />} />}
             />
             <Route
               path="/restaurant/dashboard"
               element={<PrivateRoute element={<RestaurantDashboard />} />}
             />
-            <Route path="*" element={<NotFound />} />{" "}
+            <Route
+              path="/restaurant/menu"
+              element={<PrivateRoute element={<MealsPage />} />}
+            />
+              <Route
+              path="/restaurant/notifications"
+              element={<PrivateRoute element={<NotificationsPage />} />}
+            />
+            <Route path="/restaurant/login" element={<AdminLogin />} />
+
+            <Route path="*" element={<NotFound />} />
           </Routes>
           <ToastContainer />
         </Router>

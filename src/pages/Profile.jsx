@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { RingLoader } from "react-spinners";
 
 const Profile = () => {
@@ -11,6 +11,7 @@ const Profile = () => {
   const [nearestLandmark, setNearestLandmark] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [updateLoading, setUpdateLoading] = useState(false); 
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -72,6 +73,7 @@ const Profile = () => {
   const updateUserProfile = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
+    setUpdateLoading(true); 
     try {
       let imageUrl = user?.imageUrl;
       if (selectedImage) {
@@ -90,9 +92,11 @@ const Profile = () => {
         location,
         nearestLandmark,
       }));
-      setIsModalOpen(false); // Close modal after successful update
+      setIsModalOpen(false);
+      setUpdateLoading(false);
     } catch (error) {
       console.error("Error updating user profile:", error);
+      setUpdateLoading(false); 
     }
   };
 
@@ -106,15 +110,11 @@ const Profile = () => {
 
   if (loading) {
     return (
-    <div className="flex items-center justify-center min-h-screen bg-black">
-      <div className="flex flex-col items-center text-center z-10">
-        <RingLoader
-          color="#FFD700" // cheese color for the loader
-          size={100}
-          speedMultiplier={1.5}
-        />
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <div className="flex flex-col items-center text-center z-10">
+          <RingLoader color="#FFD700" size={100} speedMultiplier={1.5} />
         </div>
-    </div>
+      </div>
     );
   }
 
@@ -134,7 +134,7 @@ const Profile = () => {
             <div className="relative">
               <img
                 src={user?.imageUrl || "/Images/nk.jpg"}
-                alt="Profile Picture"
+                alt="ProfilePicture"
                 className="rounded-full border-4 border-black mb-4 object-cover"
                 style={{ width: 150, height: 150 }}
               />
@@ -173,26 +173,9 @@ const Profile = () => {
                 <h2 className="text-xl font-semibold mb-2">Byte Balance</h2>
                 <p className="text-lg">{user?.byteBalance}</p>
               </div>
-            </div>
+          </div>
           </div>
 
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">Order History</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {user?.orderHistory.map((transaction, index) => (
-                <div
-                  key={index}
-                  className="bg-gray-100 p-4 rounded-lg shadow-md hover:shadow-lg"
-                >
-                  <p>{transaction.date}</p>
-                  <p className="font-semibold">{transaction.description}</p>
-                  <p className="text-green-600">{transaction.amount}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Edit Button at the end */}
           <div className="flex justify-end mt-8">
             <button
               onClick={openModal}
@@ -235,17 +218,26 @@ const Profile = () => {
               onChange={(e) => setNearestLandmark(e.target.value)}
               className="border border-gray-300 p-2 w-full mb-4"
             />
-            <button
-              onClick={updateUserProfile}
-              className="bg-black text-white p-2 rounded-sm hover:bg-gray-800 transition-colors duration-200"
-            >
-              Save Changes
-            </button>
+
+            {/* Loader during update */}
+            {updateLoading ? (
+              <div className="flex justify-center">
+                <RingLoader color="#FFD700" size={50} />
+              </div>
+            ) : (
+              <button
+                onClick={updateUserProfile}
+                className="bg-black text-white p-2 rounded-sm hover:bg-gray-800 transition-colors duration-200 ml-3"
+              >
+                Save Changes
+              </button>
+            )}
+
             <button
               onClick={closeModal}
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              className="text-red-500 mt-4 hover:text-red-700"
             >
-              &times;
+              Cancel
             </button>
           </div>
         </div>

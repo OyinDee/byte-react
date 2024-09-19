@@ -45,9 +45,9 @@ const RestaurantNavbar = () => {
             </li>
             <li>
               <Link
-                to="/restaurant/meals"
+                to="/restaurant/menu"
                 className={`flex flex-col items-center ${getLinkClassName(
-                  "/restaurant/meals"
+                  "/restaurant/menu"
                 )}`}
               >
                 <ShoppingBagIcon className="h-5 w-5 mb-1" />
@@ -87,9 +87,9 @@ const RestaurantNavbar = () => {
             Dashboard
           </Link>
           <Link
-            to="/restaurant/meals"
+            to="/restaurant/menu"
             className={`text-lg font-semibold ${getLinkClassName(
-              "/restaurant/meals"
+              "/restaurant/menu"
             )}`}
           >
             Meals

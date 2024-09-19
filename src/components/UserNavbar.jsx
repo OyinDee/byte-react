@@ -149,12 +149,11 @@ const UserNavbar = () => {
           </Link>
           <Link
             to="/user/cart"
-            className={`flex flex-col items-center ${getLinkClassName(
+            className={`text-lg font-semibold ${getLinkClassName(
               "/user/cart"
             )}`}
           >
-            <ShoppingCartIcon className="h-5 w-5 mb-1" />
-            <span className="text-xs">Cart</span>
+            Cart
             {itemCount > 0 && (
               <span className="absolute -top-2 left-4 text-xs text-cheese rounded-full px-2 py-1">
                 {itemCount}

@@ -1,15 +1,14 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [auth, setAuth] = useState(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const checkAuth = () => {
     const token = localStorage.getItem("token");
-
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
@@ -22,7 +21,18 @@ export function AuthProvider({ children }) {
     } else {
       setAuth(null);
     }
+  };
+
+  useEffect(() => {
+    checkAuth();
     setLoading(false);
+
+
+    window.addEventListener("storage", checkAuth);
+
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+    };
   }, []);
 
   return (
