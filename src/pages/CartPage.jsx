@@ -67,7 +67,7 @@ const CartPage = () => {
     toast.error("You need to log in first.");
     return;
   }
-  console.log(user)
+
   if (user.location === "" || user.nearestLandmark === "") {
     toast.error("Complete profile setup to proceed with the order.");
     return;
@@ -116,7 +116,7 @@ const CartPage = () => {
 
     toast.success("Order placed successfully!");
     setNote('');
-    window.location.reload();
+    // window.location.reload();
   } catch (error) {
     toast.error(error.message || "Something went wrong.");
   } finally {
