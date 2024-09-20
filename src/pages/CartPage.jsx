@@ -68,7 +68,7 @@ const CartPage = () => {
     return;
   }
 
-  if (!user.location || !user.nearestLandmark) {
+  if (user.location == "" || user.nearestLandmark == "") {
     toast.error("Complete profile setup to proceed with the order.");
     return;
   }
