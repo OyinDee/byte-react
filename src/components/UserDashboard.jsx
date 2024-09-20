@@ -16,22 +16,28 @@ const CombinedPage = () => {
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });
     AOS.refresh();
-
+  
     const fetchRestaurants = async () => {
       try {
         const response = await axios.get(
           "https://mongobyte.onrender.com/api/v1/restaurants"
         );
-        setRestaurants(response.data);
+        
+        const sortedRestaurants = response.data.sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
+        
+        setRestaurants(sortedRestaurants);
       } catch {
         setError("Error fetching restaurants. Please try again.");
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchRestaurants();
   }, []);
+  
 
   const handleSearch = () => {
     const searchLower = searchQuery.toLowerCase();

@@ -4,18 +4,17 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useCart } from "../context/cartContext"; 
+import Loader from '../components/Loader';
 
 const RestaurantPage = () => {
   const { id } = useParams(); 
   const [restaurant, setRestaurant] = useState(null); 
-  const [loading, setLoading] = useState(true); // Loading state
+  const [loading, setLoading] = useState(true);
   const [collapsedSections, setCollapsedSections] = useState({
     regular: false,
     combo: false,
     "add-on": false,
   });
-
-  const { addToCart } = useCart(); 
 
   useEffect(() => {
     if (id) {
@@ -49,16 +48,13 @@ const RestaurantPage = () => {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-lg text-gray-600">Loading...</p>
-      </div>
+     <Loader/>
     );
 
   return (
     <div className="p-4 bg-white min-h-screen">
       <ToastContainer />
       <div className="max-w-4xl mx-auto text-black">
-        {/* Restaurant Info */}
         {restaurant && (
           <>
             <div className="flex justify-between items-center mb-4">
@@ -80,7 +76,6 @@ const RestaurantPage = () => {
               )}
             </div>
 
-            {/* Collapsible Sections */}
             {["regular", "combo", "add-on"].map((section) => (
               <div key={section}>
                 <button
@@ -131,6 +126,7 @@ const MealCard = ({ meal, restaurantId }) => {
 
   return (
     <div className="border rounded-lg p-4 shadow-md">
+      <img src={meal.imageUrl} alt="" className="w-full h-40 object-cover" />
       <h3 className="text-xl font-semibold mb-2">{meal.name}</h3>
       <p className="text-lg font-bold mb-2">B{meal.price.toFixed(2)}</p>
       <div className="flex items-center mb-4">

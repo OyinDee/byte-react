@@ -6,6 +6,9 @@ import "react-toastify/dist/ReactToastify.css";
 const CartPage = () => {
   const [cart, setCart] = useState(new Map());
   const [user, setUser] = useState(null);
+  const [note, setNote] = useState(''); 
+  const [fee, setFee] = useState(60); 
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("byteUser");
@@ -17,7 +20,6 @@ const CartPage = () => {
         setUser(null);
       }
     }
-
 
     const storedCart = localStorage.getItem("cart");
     if (storedCart) {
@@ -31,74 +33,98 @@ const CartPage = () => {
     }
   }, []);
 
-  const handleCheckout = async () => {
+  const handleRemoveItem = (restaurantId, mealId) => {
+
+    setCart(prevCart => {
+      const newCart = new Map(prevCart);
+      const items = newCart.get(restaurantId) || [];
+      const updatedItems = items.filter(item => item.meal.customId !== mealId);
+  
+      if (updatedItems.length > 0) {
+        newCart.set(restaurantId, updatedItems);
+      } else {
+        newCart.delete(restaurantId);
+      }
+  
+      localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
+      toast.success("Item removed from cart!");
+      return newCart;
+    });
+  };
+  
+  const handleClearCart = (restaurantId) => {
+    setCart(prevCart => {
+      const newCart = new Map(prevCart);
+      newCart.delete(restaurantId);
+  
+      localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
+      toast.success("Cart cleared successfully!");
+      return newCart;
+    });
+  };
+  
+  const handleCheckout = async (restaurantId) => {
     if (!user) {
       toast.error("You need to log in first.");
       return;
     }
+    
+    toast.info("In the kitchen... Wait a minute!");
+      setIsCheckoutLoading(true);
 
-    const orderDetails = Array.from(cart.entries()).map(([restaurantId, items]) => {
-      return {
-        restaurantId,
+      const orderDetails = Array.from(cart.entries()).map(([restaurantId, items]) => ({
+        restaurantCustomId: restaurantId,
         meals: items.map(({ meal, quantity }) => ({
-          mealId: meal.customId,
-          quantity
-        })),
-        totalPrice: totalAmountPerRestaurant(items),
-        location: user.location,
-        phoneNumber: user.phoneNumber,
-        user: user._id,
-      };
-    });
-
+        mealId: meal.customId,
+        quantity,
+      })),
+      totalPrice: totalAmountPerRestaurant(items),
+      location: user.location,
+      phoneNumber: user.phoneNumber,
+      user: user._id,
+      note, 
+      nearestLandmark: user.nearestLandmark || "",
+      fee
+    }));
+  
     try {
-      const response = await fetch("http://localhost:8080/api/v1/orders/create", {
+      const response = await fetch("https://mongobyte.onrender.com/api/v1/orders/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ orders: orderDetails }),
+        body: JSON.stringify(orderDetails),
       });
-
+  
       if (!response.ok) {
         throw new Error("Failed to place the order.");
       }
-
+  
       const data = await response.json();
-      console.log(data)
-      toast.success("Order placed successfully!");
+      console.log(data);
+      
+      setCart(prevCart => {
+        const newCart = new Map(prevCart);
 
-      setCart(new Map());
-      localStorage.removeItem("cart");
+        newCart.delete(restaurantId);
+
+  
+        localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
+        return newCart;
+      });
+  
+      toast.success("Order placed successfully!");
+      setNote('');
+      window.location.reload();
     } catch (error) {
       toast.error(error.message || "Something went wrong.");
     }
-  };
-
-  const handleRemoveItem = (restaurantId, mealId) => {
-    const newCart = new Map(cart);
-    const items = newCart.get(restaurantId) || [];
-    const updatedItems = items.filter((item) => item.meal.customId !== mealId);
-
-    if (updatedItems.length > 0) {
-      newCart.set(restaurantId, updatedItems);
-    } else {
-      newCart.delete(restaurantId);
+    finally {
+      setIsCheckoutLoading(false); 
     }
-
-    setCart(new Map(newCart));
-    localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
-    toast.success("Item removed from cart!");
   };
+  
 
-  const handleClearCart = (restaurantId) => {
-    const newCart = new Map(cart);
-    newCart.delete(restaurantId);
-
-    setCart(new Map(newCart));
-    localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
-    toast.success("Cart cleared successfully!");
-  };
 
   const totalAmountPerRestaurant = (items) =>
     items.reduce(
@@ -164,6 +190,32 @@ const CartPage = () => {
                   </div>
                 ))}
               </div>
+              <div className="mt-4">
+                <label htmlFor="note" className="text-sm font-medium text-black">
+                  Add a note for your order:
+                </label>
+                <textarea
+                  id="note"
+                  className="w-full p-1 border border-gray-300 rounded mt-2"
+                  rows="3"
+                  placeholder="Special requests or preferences"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                />
+              </div>
+             <br/>
+                <label htmlFor="note" className="text-xs font-medium text-black">
+                  If requested amount (transport plus add ons calculated by restaurants) is within the range of this amount, we'll grant request and debit automatically..
+                </label>
+             <br/>
+
+                <input type='number'
+                  id="fee"
+                  placeholder="Add requests and transfer amount in BYTES!"
+                  value= {fee}
+                  onChange={(e) => setFee(e.target.value)}
+                  className='w-full border'
+                />
               <div className="flex justify-between items-center mt-4">
                 <p className="text-lg font-semibold text-black">
                   Total:{" "}
@@ -173,11 +225,14 @@ const CartPage = () => {
                 </p>
               </div>
               <div className="mt-4 flex space-x-2">
-                <button
-                  onClick={handleCheckout}
-                  className="w-full bg-black text-white px-6 py-3 rounded hover:bg-gray-800"
+              <button
+                  onClick={() => handleCheckout(restaurantId)}
+                  className={`w-full bg-black text-white px-6 py-3 rounded hover:bg-gray-800 ${
+                    isCheckoutLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  disabled={isCheckoutLoading} 
                 >
-                  Checkout
+                  {isCheckoutLoading ? "Processing..." : "Checkout"}
                 </button>
                 <button
                   onClick={() => handleClearCart(restaurantId)}
@@ -195,4 +250,3 @@ const CartPage = () => {
 };
 
 export default CartPage;
-
