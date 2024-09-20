@@ -62,7 +62,67 @@ const CartPage = () => {
       return newCart;
     });
   };
-  
+  const handleCheckout = async (restaurantId) => {
+  if (!user) {
+    toast.error("You need to log in first.");
+    return;
+  }
+
+  if (!user.location || !user.nearestLandmark) {
+    toast.error("Complete profile setup to proceed with the order.");
+    return;
+  }
+
+  toast.info("In the kitchen... Wait a minute!");
+  setIsCheckoutLoading(true);
+
+  const orderDetails = Array.from(cart.entries()).map(([restaurantId, items]) => ({
+    restaurantCustomId: restaurantId,
+    meals: items.map(({ meal, quantity }) => ({
+      mealId: meal.customId,
+      quantity,
+    })),
+    totalPrice: totalAmountPerRestaurant(items),
+    location: user.location,
+    phoneNumber: user.phoneNumber,
+    user: user._id,
+    note, 
+    nearestLandmark: user.nearestLandmark || "",
+    fee
+  }));
+
+  try {
+    const response = await fetch("https://mongobyte.onrender.com/api/v1/orders/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(orderDetails),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to place the order.");
+    }
+
+    const data = await response.json();
+    console.log(data);
+    
+    setCart(prevCart => {
+      const newCart = new Map(prevCart);
+      newCart.delete(restaurantId);
+      localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
+      return newCart;
+    });
+
+    toast.success("Order placed successfully!");
+    setNote('');
+    window.location.reload();
+  } catch (error) {
+    toast.error(error.message || "Something went wrong.");
+  } finally {
+    setIsCheckoutLoading(false);
+  }
+};
   const totalAmountPerRestaurant = (items) =>
     items.reduce(
       (sum, item) => sum + (item.meal?.price ?? 0) * (item.quantity ?? 0),
