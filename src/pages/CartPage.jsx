@@ -67,8 +67,8 @@ const CartPage = () => {
     toast.error("You need to log in first.");
     return;
   }
-
-  if (user.location == "" || user.nearestLandmark == "") {
+  console.log(user)
+  if (user.location === "" || user.nearestLandmark === "") {
     toast.error("Complete profile setup to proceed with the order.");
     return;
   }
@@ -130,10 +130,9 @@ const CartPage = () => {
     );
 
   return (
-    <div className="p-4 bg-white min-h-screen mb-20">
+    <div className="p-4 bg-white  mb-8">
       <ToastContainer />
       <div className="max-w-4xl mx-auto text-black">
-        <h1 className="text-3xl font-bold text-black mb-6">Your Cart</h1>
         {cart.size === 0 ? (
           <p className="text-center text-gray-500">Your cart is empty.</p>
         ) : (
