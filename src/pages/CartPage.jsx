@@ -5,8 +5,20 @@ import "react-toastify/dist/ReactToastify.css";
 
 const CartPage = () => {
   const [cart, setCart] = useState(new Map());
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
+    const storedUser = localStorage.getItem("byteUser");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Failed to parse user from localStorage:", error);
+        setUser(null);
+      }
+    }
+
+
     const storedCart = localStorage.getItem("cart");
     if (storedCart) {
       try {
@@ -19,8 +31,48 @@ const CartPage = () => {
     }
   }, []);
 
-  const handleCheckout = () => {
-    alert("Proceeding to checkout...");
+  const handleCheckout = async () => {
+    if (!user) {
+      toast.error("You need to log in first.");
+      return;
+    }
+
+    const orderDetails = Array.from(cart.entries()).map(([restaurantId, items]) => {
+      return {
+        restaurantId,
+        meals: items.map(({ meal, quantity }) => ({
+          mealId: meal.customId,
+          quantity
+        })),
+        totalPrice: totalAmountPerRestaurant(items),
+        location: user.location,
+        phoneNumber: user.phoneNumber,
+        user: user._id,
+      };
+    });
+
+    try {
+      const response = await fetch("http://localhost:8080/api/v1/orders/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ orders: orderDetails }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to place the order.");
+      }
+
+      const data = await response.json();
+      console.log(data)
+      toast.success("Order placed successfully!");
+
+      setCart(new Map());
+      localStorage.removeItem("cart");
+    } catch (error) {
+      toast.error(error.message || "Something went wrong.");
+    }
   };
 
   const handleRemoveItem = (restaurantId, mealId) => {
@@ -43,7 +95,6 @@ const CartPage = () => {
     const newCart = new Map(cart);
     newCart.delete(restaurantId);
 
-    // Again, ensure a new reference to trigger re-render
     setCart(new Map(newCart));
     localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
     toast.success("Cart cleared successfully!");
@@ -144,3 +195,4 @@ const CartPage = () => {
 };
 
 export default CartPage;
+
