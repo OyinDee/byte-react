@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useCart } from "../context/cartContext"; 
 import Loader from '../components/Loader';
 
+
 const RestaurantPage = () => {
   const { id } = useParams(); 
   const [restaurant, setRestaurant] = useState(null); 
