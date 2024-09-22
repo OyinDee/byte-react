@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {jwtDecode} from "jwt-decode"; 
-import Loader from './Loader'
+import jwtDecode from "jwt-decode";
+import Loader from './Loader';
+
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState("Pending");
   const [restaurant, setRestaurant] = useState(null);
-  const [orders, setOrders] = useState([]); 
-  const [loading, setLoading] = useState(true); 
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -14,30 +15,8 @@ const RestaurantDashboard = () => {
       try {
         const decodedToken = jwtDecode(token);
         setRestaurant(decodedToken.restaurant);
-
-        const fetchOrders = async () => {
-          try {
-            const response = await axios.get(
-              `http://localhost:8080/api/v1/orders/restaurant/${decodedToken.restaurant.customId}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            );
-            setOrders(response.data);
-            console.log(response.data)
-          } catch (error) {
-            console.error("Error fetching orders:", error);
-            setOrders([]);
-          } finally {
-            setLoading(false); 
-          }
-        };
-
-        fetchOrders();
+        fetchOrders(decodedToken.restaurant.customId, token);
       } catch (error) {
-        console.error("Error decoding token:", error);
         setLoading(false);
       }
     } else {
@@ -45,12 +24,29 @@ const RestaurantDashboard = () => {
     }
   }, []);
 
+  const fetchOrders = async (restaurantId, token) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/v1/orders/restaurant/${restaurantId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setOrders(response.data);
+    } catch (error) {
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleTabClick = (tab) => {
     setActiveTab(tab);
   };
 
-
-  const updateOrderStatus = async (orderId, status, fee) => {
+  const updateOrderStatus = async (orderId, status, fee = 0) => {
     const token = localStorage.getItem("token");
     try {
       await axios.patch(
@@ -62,22 +58,14 @@ const RestaurantDashboard = () => {
           },
         }
       );
-      const response = await axios.get(
-        `http://localhost:8080/api/v1/orders/restaurant/${restaurant.customId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setOrders(response.data.orders);
+      fetchOrders(restaurant.customId, token);
     } catch (error) {
       console.error("Error updating order status:", error);
     }
   };
 
   if (loading) {
-    return  <Loader/>
+    return <Loader />;
   }
 
   return (
@@ -113,11 +101,7 @@ const RestaurantDashboard = () => {
           {["Pending", "Confirmed", "Delivered"].map((tab) => (
             <button
               key={tab}
-              className={`px-4 py-2 border-b-4 ${
-                activeTab === tab
-                  ? "border-black text-black"
-                  : "border-transparent text-gray-500"
-              }`}
+              className={`px-4 py-2 border-b-4 ${activeTab === tab ? "border-black text-black" : "border-transparent text-gray-500"}`}
               onClick={() => handleTabClick(tab)}
             >
               {tab} Orders
@@ -136,8 +120,7 @@ const RestaurantDashboard = () => {
                   key={order.customId}
                   order={order}
                   isPending={order.status === "Pending"}
-                  onCancel={() => updateOrderStatus(order.customId, "Cancelled")}
-                  onMarkDone={() => updateOrderStatus(order.customId, "Confirmed")}
+                  updateOrderStatus={updateOrderStatus}
                 />
               ))
           )}
@@ -146,34 +129,16 @@ const RestaurantDashboard = () => {
     </div>
   );
 };
-const OrderCard = ({ order, isPending }) => {
-  const onRequest = async (orderId, status, fee) => {
-    const token = localStorage.getItem("token");
-    try {
-      await axios.patch(
-        `http://localhost:8080/api/v1/orders/${orderId}`,
-        { status, additionalFee: fee },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const response = await axios.get(
-        `http://localhost:8080/api/v1/orders/restaurant/${restaurant.customId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      // setOrders(response.data.orders);
-    } catch (error) {
-      console.error("Error updating order status:", error);
+
+const OrderCard = ({ order, isPending, updateOrderStatus }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [fees, setFees] = useState("");
+
+  const onRequest = () => {
+    if (isPending && fees) {
+      updateOrderStatus(order.customId, "Request Sent", fees);
     }
   };
-  const [isOpen, setIsOpen] = useState(false);
-  const [fees, setFees] = useState(""); 
 
   return (
     <div className="bg-gray-100 p-4 rounded-lg shadow-md border border-gray-300">
@@ -208,7 +173,7 @@ const OrderCard = ({ order, isPending }) => {
               />
               <button
                 className="w-full bg-black text-white px-4 py-2 rounded-lg"
-                onClick={() => onRequest(order.customId, fees)}
+                onClick={onRequest}
               >
                 Request
               </button>
@@ -219,6 +184,5 @@ const OrderCard = ({ order, isPending }) => {
     </div>
   );
 };
-
 
 export default RestaurantDashboard;
