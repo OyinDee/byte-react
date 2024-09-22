@@ -53,7 +53,7 @@ const RestaurantPage = () => {
       <div className="max-w-4xl mx-auto text-black">
         {restaurant && (
           <>
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-20">
               <div>
                 <h1 className="text-3xl font-bold text-black">
                   {restaurant.name}
@@ -72,13 +72,13 @@ const RestaurantPage = () => {
               )}
             </div>
 
-            {["regular", "combo", "add-on"].map((section) => (
+            {["regular meals", "combo meals", "add-ons"].map((section) => (
               <div key={section}>
                 <button
                   className="w-full text-left py-2 bg-black text-white px-4 rounded-md mb-2"
                   onClick={() => toggleSection(section)}
                 >
-                  {section.toUpperCase()} MEALS
+                  {section.toUpperCase()}
                 </button>
                 {!collapsedSections[section] && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
