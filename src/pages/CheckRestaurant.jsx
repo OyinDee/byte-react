@@ -24,6 +24,8 @@ const RestaurantPage = () => {
           const response = await axios.get(
             `https://mongobyte.onrender.com/api/v1/users/restdetails/${id}`
           );
+          console.log(response)
+
           setRestaurant(response.data); 
         } catch (error) {
           toast.error("Error fetching restaurant details.");
@@ -49,7 +51,7 @@ const RestaurantPage = () => {
   if (loading) return <Loader />;
 
   return (
-    <div className="p-4 bg-white min-h-screen">
+    <div className="p-4 bg-white min-h-screen mb-20">
       <ToastContainer />
       <div className="max-w-4xl mx-auto text-black">
         {restaurant && (
@@ -73,7 +75,7 @@ const RestaurantPage = () => {
               )}
             </div>
 
-            {["regular meals", "combo meals", "add-ons"].map((section) => (
+            {["regular", "combo", "add-on"].map((section) => (
               <div key={section}>
                 <button
                   className="w-full text-left py-2 bg-black text-white px-4 rounded-md mb-2"
@@ -156,7 +158,7 @@ const MealCard = ({ meal, restaurantId, hideImage }) => {
         <button
           onClick={handleAddToCart}
           className="bg-black w-full ml-4 text-white py-2 px-4 rounded hover:bg-gray-800"
-        >
+          disabled={!meal.availability}  >
           Add to Cart
         </button>
       </div>

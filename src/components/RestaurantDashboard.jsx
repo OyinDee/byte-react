@@ -4,6 +4,7 @@ import {jwtDecode} from "jwt-decode";
 import Loader from "./Loader";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { FaClock, FaCheck, FaBoxOpen, FaCoins } from "react-icons/fa"; 
 
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState("Pending");
@@ -51,12 +52,12 @@ const RestaurantDashboard = () => {
     setActiveTab(tab);
   };
 
-  const updateOrderStatus = async (orderId, status, fee = 0) => {
+  const updateOrderStatus = async (orderId,  requestDescription, fee) => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.patch(
         `https://mongobyte.onrender.com/api/v1/orders/${orderId}`,
-        { status, additionalFee: fee },
+        { additionalFee: fee, requestDescription},
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -110,15 +111,30 @@ const RestaurantDashboard = () => {
 
       <div className="mb-8">
         <div className="flex justify-around border-b border-gray-300 mb-4">
-          {["Pending", "Confirmed", "Delivered", "Fee Requested"].map((tab) => (
-            <button
-              key={tab}
-              className={`px-4 py-2 border-b-4 ${activeTab === tab ? "border-black text-black" : "border-transparent text-gray-500"}`}
-              onClick={() => handleTabClick(tab)}
-            >
-              {tab} Orders
-            </button>
-          ))}
+          <TabButton
+            icon={<FaClock />}
+            label="Pending"
+            isActive={activeTab === "Pending"}
+            onClick={() => handleTabClick("Pending")}
+          />
+          <TabButton
+            icon={<FaCheck />}
+            label="Confirmed"
+            isActive={activeTab === "Confirmed"}
+            onClick={() => handleTabClick("Confirmed")}
+          />
+          <TabButton
+            icon={<FaBoxOpen />}
+            label="Delivered"
+            isActive={activeTab === "Delivered"}
+            onClick={() => handleTabClick("Delivered")}
+          />
+          <TabButton
+            icon={<FaCoins />}
+            label="Fee Requested"
+            isActive={activeTab === "Fee Requested"}
+            onClick={() => handleTabClick("Fee Requested")}
+          />
         </div>
 
         <div className="space-y-4">
@@ -143,6 +159,16 @@ const RestaurantDashboard = () => {
   );
 };
 
+const TabButton = ({ icon, label, isActive, onClick }) => (
+  <button
+    className={`flex items-center space-x-2 px-4 py-2 border-b-4 ${isActive ? "border-black text-black" : "border-transparent text-gray-500"}`}
+    onClick={onClick}
+  >
+    {icon}
+    <span className="hidden md:inline">{label}</span>
+  </button>
+);
+
 const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [fees, setFees] = useState("");
@@ -152,14 +178,14 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
   const onRequest = async () => {
     if (isPending && fees) {
       setIsRequesting(true);
-      await updateOrderStatus(order.customId, "Fee Requested", fees);
+      await updateOrderStatus(order.customId, requestDescription, fees);
       setIsRequesting(false);
     }
   };
 
   const markAsDelivered = async () => {
     if (isConfirmed) {
-      await updateOrderStatus(order.customId, "Delivered");
+      await updateOrderStatus(order.customId);
     }
   };
 
@@ -223,7 +249,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
 
           {isConfirmed && (
             <button
-              className="w-full bg-green-600 text-white px-4 py-2 mt-4 rounded-lg"
+              className="w-full bg-black text-white px-4 py-2 mt-4 rounded-lg"
               onClick={markAsDelivered}
             >
               Mark as Delivered

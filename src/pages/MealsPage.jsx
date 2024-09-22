@@ -276,7 +276,7 @@ const MealsPage = () => {
                 <img src={meal.imageUrl || selectedImage} alt={meal.name} className="w-full mt-4" />
                   <div className="flex justify-center my-2">
                     <button
-                      className={`bg-black py-1 px-4 text-${meal.availability ? "red" : "green"}-500 mr-2`}
+                      className={`bg-black py-1 px-4 text-${meal.availability ? "red-500":"white"} mr-2`}
                       onClick={() => toggleAvailability(meal)}
                     >
                       {meal.availability ? "Mark as Unavailable" : "Mark as Available"}
