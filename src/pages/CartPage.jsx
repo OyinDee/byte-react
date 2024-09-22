@@ -85,7 +85,7 @@ const CartPage = () => {
       user: user._id,
       note,
       nearestLandmark: user.nearestLandmark || "",
-      fee,
+      fee: fee||60,
     }));
 
     try {

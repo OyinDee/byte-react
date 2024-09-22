@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {jwtDecode} from "jwt-decode";
-import Loader from './Loader';
+import Loader from "./Loader";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState("Pending");
@@ -18,16 +20,18 @@ const RestaurantDashboard = () => {
         fetchOrders(decodedToken.restaurant.customId, token);
       } catch (error) {
         setLoading(false);
+        toast.error("Failed to decode token.");
       }
     } else {
       setLoading(false);
+      toast.error("Token not found.");
     }
   }, []);
 
   const fetchOrders = async (restaurantId, token) => {
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/v1/orders/restaurant/${restaurantId}`,
+        `https://mongobyte.onrender.com/api/v1/orders/restaurant/${restaurantId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -37,6 +41,7 @@ const RestaurantDashboard = () => {
       setOrders(response.data);
     } catch (error) {
       setOrders([]);
+      toast.error("Error fetching orders.");
     } finally {
       setLoading(false);
     }
@@ -49,8 +54,8 @@ const RestaurantDashboard = () => {
   const updateOrderStatus = async (orderId, status, fee = 0) => {
     const token = localStorage.getItem("token");
     try {
-      await axios.patch(
-        `http://localhost:8080/api/v1/orders/${orderId}`,
+      const response = await axios.patch(
+        `https://mongobyte.onrender.com/api/v1/orders/${orderId}`,
         { status, additionalFee: fee },
         {
           headers: {
@@ -59,8 +64,14 @@ const RestaurantDashboard = () => {
         }
       );
       fetchOrders(restaurant.customId, token);
+      toast.success(response.data.message);
     } catch (error) {
-      console.error("Error updating order status:", error);
+      fetchOrders(restaurant.customId, token);
+      toast.error(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : "Error updating order status."
+      );
     }
   };
 
@@ -70,6 +81,7 @@ const RestaurantDashboard = () => {
 
   return (
     <div className="min-h-screen bg-white p-6 pb-20">
+      <ToastContainer />
       {restaurant && (
         <div className="bg-white p-6 rounded-lg shadow-md mb-10">
           <div className="flex items-center space-x-4 mb-4">
@@ -98,7 +110,7 @@ const RestaurantDashboard = () => {
 
       <div className="mb-8">
         <div className="flex justify-around border-b border-gray-300 mb-4">
-          {["Pending", "Confirmed", "Delivered"].map((tab) => (
+          {["Pending", "Confirmed", "Delivered", "Fee Requested"].map((tab) => (
             <button
               key={tab}
               className={`px-4 py-2 border-b-4 ${activeTab === tab ? "border-black text-black" : "border-transparent text-gray-500"}`}
@@ -120,6 +132,7 @@ const RestaurantDashboard = () => {
                   key={order.customId}
                   order={order}
                   isPending={order.status === "Pending"}
+                  isConfirmed={order.status === "Confirmed"}
                   updateOrderStatus={updateOrderStatus}
                 />
               ))
@@ -130,13 +143,23 @@ const RestaurantDashboard = () => {
   );
 };
 
-const OrderCard = ({ order, isPending, updateOrderStatus }) => {
+const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [fees, setFees] = useState("");
+  const [requestDescription, setRequestDescription] = useState("");
+  const [isRequesting, setIsRequesting] = useState(false);
 
-  const onRequest = () => {
+  const onRequest = async () => {
     if (isPending && fees) {
-      updateOrderStatus(order.customId, "Request Sent", fees);
+      setIsRequesting(true);
+      await updateOrderStatus(order.customId, "Fee Requested", fees);
+      setIsRequesting(false);
+    }
+  };
+
+  const markAsDelivered = async () => {
+    if (isConfirmed) {
+      await updateOrderStatus(order.customId, "Delivered");
     }
   };
 
@@ -154,12 +177,22 @@ const OrderCard = ({ order, isPending, updateOrderStatus }) => {
 
       {isOpen && (
         <div className="mt-4">
-          <p className="text-gray-600">Note: {order.note || "No special requests"}</p>
           <p className="text-black font-semibold">Total: ₦{(order.totalPrice * 10).toFixed(2)}</p>
           <div className="text-gray-600">
             <p>Location: {order.location}</p>
             <p>Phone Number: {order.phoneNumber}</p>
             <p>Status: {order.status}</p>
+
+            <div className="mt-2">
+              <h3 className="text-black font-semibold">Meals:</h3>
+              {order.meals.map(({ meal, quantity }, index) => (
+                <p key={index} className="text-gray-700">
+                  {meal.name} - {quantity}x
+                </p>
+              ))}
+            </div>
+
+            <p className="text-gray-600">Note: {order.note || "No special requests"}</p>
           </div>
 
           {isPending && (
@@ -171,13 +204,30 @@ const OrderCard = ({ order, isPending, updateOrderStatus }) => {
                 placeholder="Transport and other fees in naira"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg"
               />
+              <input
+                type="text"
+                value={requestDescription}
+                onChange={(e) => setRequestDescription(e.target.value)}
+                placeholder="Request description (e.g., Just for transport)"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              />
               <button
                 className="w-full bg-black text-white px-4 py-2 rounded-lg"
                 onClick={onRequest}
+                disabled={isRequesting}
               >
-                Request
+                {isRequesting ? "Requesting..." : "Request"}
               </button>
             </div>
+          )}
+
+          {isConfirmed && (
+            <button
+              className="w-full bg-green-600 text-white px-4 py-2 mt-4 rounded-lg"
+              onClick={markAsDelivered}
+            >
+              Mark as Delivered
+            </button>
           )}
         </div>
       )}

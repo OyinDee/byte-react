@@ -23,7 +23,7 @@ const MealsPage = () => {
   });
   const [selectedImage, setSelectedImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingMeals, setLoadingMeals] = useState(false);  // For loading meals
+  const [loadingMeals, setLoadingMeals] = useState(false); 
   const [isEditing, setIsEditing] = useState(false);
   const [editingMealId, setEditingMealId] = useState(null);
 
@@ -48,10 +48,10 @@ const MealsPage = () => {
       description: meal.description || "",
       tag: meal.tag || "regular",
       price: meal.price.toString(),
-      imageUrl: meal.imageUrl || "",  // Keep the existing image URL for meals with images
+      imageUrl: meal.imageUrl || "",  
       availability: meal.availability,
     });
-    setSelectedImage(null);  // Ensure selectedImage is reset when editing
+    setSelectedImage(null);  
     setEditingMealId(meal.customId);
     setIsEditing(true);
   };
