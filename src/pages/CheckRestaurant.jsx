@@ -25,7 +25,6 @@ const RestaurantPage = () => {
           );
           setRestaurant(response.data); 
         } catch (error) {
-          console.error("Error fetching restaurant details:", error);
           toast.error("Error fetching restaurant details.");
         } finally {
           setLoading(false);
@@ -46,10 +45,7 @@ const RestaurantPage = () => {
     return restaurant?.meals.filter((meal) => meal.tag === tag) || [];
   };
 
-  if (loading)
-    return (
-     <Loader/>
-    );
+  if (loading) return <Loader />;
 
   return (
     <div className="p-4 bg-white min-h-screen">
@@ -91,6 +87,7 @@ const RestaurantPage = () => {
                         key={meal.customId}
                         meal={meal}
                         restaurantId={restaurant.customId}
+                        hideImage={section === "add-on"}
                       />
                     ))}
                   </div>
@@ -104,7 +101,7 @@ const RestaurantPage = () => {
   );
 };
 
-const MealCard = ({ meal, restaurantId }) => {
+const MealCard = ({ meal, restaurantId, hideImage }) => {
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
 
@@ -125,8 +122,14 @@ const MealCard = ({ meal, restaurantId }) => {
   };
 
   return (
-    <div className="border rounded-lg p-4 shadow-md">
-      <img src={meal.imageUrl} alt="" className="w-full h-40 object-cover" />
+    <div
+      className={`border rounded-lg p-4 shadow-md ${
+        !meal.availability ? "opacity-50" : ""
+      }`}
+    >
+      {!hideImage && (
+        <img src={meal.imageUrl} alt="" className="w-full h-40 object-cover" />
+      )}
       <h3 className="text-xl font-semibold mb-2">{meal.name}</h3>
       <p className="text-lg font-bold mb-2">B{meal.price.toFixed(2)}</p>
       <div className="flex items-center mb-4">
@@ -160,4 +163,4 @@ const MealCard = ({ meal, restaurantId }) => {
   );
 };
 
-export default RestaurantPage;
+export default RestaurantPage; 
