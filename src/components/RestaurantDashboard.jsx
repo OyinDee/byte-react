@@ -1,18 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { jwtDecode } from "jwt-decode";
-
-// Define your custom colors
-const colors = {
-  cheese: "#FFD700",
-  pepperoni: "#FF6347",
-  crust: "#8B4513",
-  olive: "#000000",
-  accentwhite: "#FFFFFF",
-};
-
+import axios from "axios";
+import {jwtDecode} from "jwt-decode"; 
+import Loader from './Loader'
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState("Pending");
   const [restaurant, setRestaurant] = useState(null);
+  const [orders, setOrders] = useState([]); 
+  const [loading, setLoading] = useState(true); 
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -20,9 +14,34 @@ const RestaurantDashboard = () => {
       try {
         const decodedToken = jwtDecode(token);
         setRestaurant(decodedToken.restaurant);
+
+        const fetchOrders = async () => {
+          try {
+            const response = await axios.get(
+              `http://localhost:8080/api/v1/orders/restaurant/${decodedToken.restaurant.customId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+            setOrders(response.data);
+            console.log(response.data)
+          } catch (error) {
+            console.error("Error fetching orders:", error);
+            setOrders([]);
+          } finally {
+            setLoading(false); 
+          }
+        };
+
+        fetchOrders();
       } catch (error) {
         console.error("Error decoding token:", error);
+        setLoading(false);
       }
+    } else {
+      setLoading(false);
     }
   }, []);
 
@@ -30,20 +49,49 @@ const RestaurantDashboard = () => {
     setActiveTab(tab);
   };
 
-  const totalIncome = restaurant?.totalIncome || 0;
+
+  const updateOrderStatus = async (orderId, status, fee) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.patch(
+        `http://localhost:8080/api/v1/orders/${orderId}`,
+        { status, additionalFee: fee },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const response = await axios.get(
+        `http://localhost:8080/api/v1/orders/restaurant/${restaurant.customId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setOrders(response.data.orders);
+    } catch (error) {
+      console.error("Error updating order status:", error);
+    }
+  };
+
+  if (loading) {
+    return  <Loader/>
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 pb-20">
+    <div className="min-h-screen bg-white p-6 pb-20">
       {restaurant && (
         <div className="bg-white p-6 rounded-lg shadow-md mb-10">
           <div className="flex items-center space-x-4 mb-4">
             <img
               src={restaurant.imageUrl}
               alt={restaurant.name}
-              className="w-20 h-20 object-cover rounded-full border-4 border-crust"
+              className="w-20 h-20 object-cover rounded-full border-2 border-black"
             />
             <div>
-              <h1 className="text-4xl font-bold text-crust">{restaurant.name}</h1>
+              <h1 className="text-4xl font-bold text-black">{restaurant.name}</h1>
               <p className="text-lg text-gray-700 mt-2">{restaurant.description}</p>
               <p className="text-md text-gray-600 mt-2">Location: {restaurant.location}</p>
               <p className="text-md text-gray-600">Contact: {restaurant.contactNumber}</p>
@@ -51,10 +99,10 @@ const RestaurantDashboard = () => {
             </div>
           </div>
 
-          <div className="bg-cheese p-4 rounded-lg shadow-md mb-8">
-            <h2 className="text-2xl font-semibold text-olive">Total Income</h2>
-            <p className="text-xl text-olive mt-2">
-              {totalIncome > 0 ? `₦${totalIncome.toFixed(2)}` : "₦0.00"}
+          <div className="bg-gray-200 p-4 rounded-lg shadow-md mb-8">
+            <h2 className="text-2xl font-semibold text-black">Total Income</h2>
+            <p className="text-xl text-black mt-2">
+              {restaurant?.totalIncome ? `₦${restaurant.totalIncome.toFixed(2)}` : "₦0.00"}
             </p>
           </div>
         </div>
@@ -62,83 +110,115 @@ const RestaurantDashboard = () => {
 
       <div className="mb-8">
         <div className="flex justify-around border-b border-gray-300 mb-4">
-          <button
-            className={`px-4 py-2 border-b-4 ${
-              activeTab === "Pending"
-                ? "border-pepperoni text-crust"
-                : "border-transparent text-gray-500"
-            }`}
-            onClick={() => handleTabClick("Pending")}
-          >
-            Pending Orders
-          </button>
-          <button
-            className={`px-4 py-2 border-b-4 ${
-              activeTab === "Confirmed"
-                ? "border-pepperoni text-crust"
-                : "border-transparent text-gray-500"
-            }`}
-            onClick={() => handleTabClick("Confirmed")}
-          >
-            Confirmed Orders
-          </button>
-          <button
-            className={`px-4 py-2 border-b-4 ${
-              activeTab === "Delivered"
-                ? "border-pepperoni text-crust"
-                : "border-transparent text-gray-500"
-            }`}
-            onClick={() => handleTabClick("Delivered")}
-          >
-            Delivered Orders
-          </button>
+          {["Pending", "Confirmed", "Delivered"].map((tab) => (
+            <button
+              key={tab}
+              className={`px-4 py-2 border-b-4 ${
+                activeTab === tab
+                  ? "border-black text-black"
+                  : "border-transparent text-gray-500"
+              }`}
+              onClick={() => handleTabClick(tab)}
+            >
+              {tab} Orders
+            </button>
+          ))}
         </div>
 
         <div className="space-y-4">
-          {activeTab === "Pending" && (
-            <>
-              <OrderCard
-                orderId="#O123"
-                note="Please add extra sauce"
-                totalPrice={25.0}
-              />
-              <OrderCard
-                orderId="#O124"
-                note="No onions, please"
-                totalPrice={18.5}
-              />
-            </>
-          )}
-          {activeTab === "Confirmed" && (
-            <>
-              <OrderCard
-                orderId="#O125"
-                note="Extra cheese"
-                totalPrice={30.0}
-              />
-            </>
-          )}
-          {activeTab === "Delivered" && (
-            <>
-              <OrderCard
-                orderId="#O126"
-                note="Gluten-free option"
-                totalPrice={22.5}
-              />
-            </>
+          {orders.length === 0 ? (
+            <p>No orders found</p>
+          ) : (
+            orders
+              .filter((order) => order.status === activeTab)
+              .map((order) => (
+                <OrderCard
+                  key={order.customId}
+                  order={order}
+                  isPending={order.status === "Pending"}
+                  onCancel={() => updateOrderStatus(order.customId, "Cancelled")}
+                  onMarkDone={() => updateOrderStatus(order.customId, "Confirmed")}
+                />
+              ))
           )}
         </div>
       </div>
     </div>
   );
 };
+const OrderCard = ({ order, isPending }) => {
+  const onRequest = async (orderId, status, fee) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.patch(
+        `http://localhost:8080/api/v1/orders/${orderId}`,
+        { status, additionalFee: fee },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const response = await axios.get(
+        `http://localhost:8080/api/v1/orders/restaurant/${restaurant.customId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      // setOrders(response.data.orders);
+    } catch (error) {
+      console.error("Error updating order status:", error);
+    }
+  };
+  const [isOpen, setIsOpen] = useState(false);
+  const [fees, setFees] = useState(""); 
 
-const OrderCard = ({ orderId, note, totalPrice }) => (
-  <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
-    <p className="text-lg font-bold text-crust">Order ID: {orderId}</p>
-    <p className="text-gray-600">Note: {note}</p>
-    <p className="text-crust font-semibold">Total: ₦{totalPrice.toFixed(2)}</p>
-  </div>
-);
+  return (
+    <div className="bg-gray-100 p-4 rounded-lg shadow-md border border-gray-300">
+      <div className="flex justify-between items-center">
+        <p className="text-lg font-bold text-black">Order ID: {order.customId}</p>
+        <button
+          className="text-sm font-semibold text-gray-700"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {isOpen ? "Hide Details" : "View Details"}
+        </button>
+      </div>
+
+      {isOpen && (
+        <div className="mt-4">
+          <p className="text-gray-600">Note: {order.note || "No special requests"}</p>
+          <p className="text-black font-semibold">Total: ₦{(order.totalPrice * 10).toFixed(2)}</p>
+          <div className="text-gray-600">
+            <p>Location: {order.location}</p>
+            <p>Phone Number: {order.phoneNumber}</p>
+            <p>Status: {order.status}</p>
+          </div>
+
+          {isPending && (
+            <div className="mt-4 space-y-4">
+              <input
+                type="number"
+                value={fees}
+                onChange={(e) => setFees(e.target.value)}
+                placeholder="Transport and other fees in naira"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              />
+              <button
+                className="w-full bg-black text-white px-4 py-2 rounded-lg"
+                onClick={() => onRequest(order.customId, fees)}
+              >
+                Request
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 export default RestaurantDashboard;

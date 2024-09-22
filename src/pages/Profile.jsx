@@ -80,11 +80,12 @@ const Profile = () => {
         imageUrl = await handleImageUpload();
       }
 
-      await axios.post(
+      const data = await axios.post(
         "https://mongobyte.onrender.com/api/v1/users/updateProfile",
         { imageUrl, bio, location, nearestLandmark },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      localStorage.setItem('token', data.data.token)
       setUser((prevUser) => ({
         ...prevUser,
         imageUrl,
