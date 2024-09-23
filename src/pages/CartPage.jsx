@@ -8,7 +8,7 @@ const CartPage = () => {
   const [cart, setCart] = useState(new Map());
   const [user, setUser] = useState(null);
   const [note, setNote] = useState('');
-  const [fee, setFee] = useState(60);
+  const [fee, setFee] = useState(70);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   useEffect(() => {
@@ -85,7 +85,7 @@ const CartPage = () => {
       user: user._id,
       note,
       nearestLandmark: user.nearestLandmark || "",
-      fee: fee||60,
+      fee: fee||70,
     }));
 
     try {
@@ -196,7 +196,7 @@ const CartPage = () => {
               </div>
               <br />
               <label htmlFor="fee" className="text-xs font-medium text-black">
-                If requested amount is within this range, we'll grant request and debit automatically.
+                Expected delivery + miscellaneous. Specify amount in bytes...
               </label>
               <br />
               <input

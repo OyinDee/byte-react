@@ -1,32 +1,55 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import Loader from "./Loader";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FaClock, FaCheck, FaShippingFast, FaCoins } from "react-icons/fa"; 
+import { FaClock, FaCheck, FaShippingFast, FaCoins } from "react-icons/fa";
+import { RingLoader } from "react-spinners";
 
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState("Pending");
   const [restaurant, setRestaurant] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
+    const fetchRestaurantAndOrders = async () => {
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        toast.error("Token not found.");
+        return;
+      }
+  
       try {
         const decodedToken = jwtDecode(token);
-        setRestaurant(decodedToken.restaurant);
-        fetchOrders(decodedToken.restaurant.customId, token);
+        const restaurantCustomId = decodedToken.restaurant.customId;
+  
+        const restaurantResponse = await axios.get(
+          `https://mongobyte.onrender.com/api/v1/restaurants/${restaurantCustomId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+  
+        console.log(restaurantResponse)
+        setRestaurant(restaurantResponse.data);
+  
+        await fetchOrders(restaurantCustomId, token);
+  
       } catch (error) {
+        toast.error(
+          error.response && error.response.data.message
+            ? error.response.data.message
+            : "Error fetching restaurant or orders."
+        );
+      } finally {
         setLoading(false);
-        toast.error("Failed to decode token.");
       }
-    } else {
-      setLoading(false);
-      toast.error("Token not found.");
-    }
+    };
+  
+    fetchRestaurantAndOrders();
   }, []);
 
   const fetchOrders = async (restaurantId, token) => {
@@ -39,18 +62,13 @@ const RestaurantDashboard = () => {
           },
         }
       );
-      const sortedOrders = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const sortedOrders = response.data.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
       setOrders(sortedOrders);
     } catch (error) {
-      setOrders([]);
       toast.error("Error fetching orders.");
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const handleTabClick = (tab) => {
-    setActiveTab(tab);
   };
 
   const updateOrderStatus = async (orderId, requestDescription, fee) => {
@@ -65,10 +83,12 @@ const RestaurantDashboard = () => {
           },
         }
       );
-      fetchOrders(restaurant.customId, token);
+      setTimeout(() => {
+        window.location.reload();
+      }, 5000);
       toast.success(response.data.message);
     } catch (error) {
-      fetchOrders(restaurant.customId, token);
+      await fetchOrders(restaurant.customId, token);
       toast.error(
         error.response && error.response.data.message
           ? error.response.data.message
@@ -78,7 +98,13 @@ const RestaurantDashboard = () => {
   };
 
   if (loading) {
-    return <Loader />;
+    return (
+      <div className="flex items-center justify-center">
+        <div className="flex flex-col items-center text-center z-10">
+          <RingLoader color="#FFD700" size={100} speedMultiplier={1.5} />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -90,7 +116,7 @@ const RestaurantDashboard = () => {
             <img
               src={restaurant.imageUrl}
               alt={restaurant.name}
-              className="w-20 h-20 object-cover rounded-full border-2 border-black"
+              className="w-20 h-20 object-cover rounded-sm border-2 border-black"
             />
             <div>
               <h1 className="text-4xl font-bold text-black">{restaurant.name}</h1>
@@ -104,7 +130,9 @@ const RestaurantDashboard = () => {
           <div className="bg-gray-200 p-4 rounded-lg shadow-md mb-8">
             <h2 className="text-2xl font-semibold text-black">Total Income</h2>
             <p className="text-xl text-black mt-2">
-              {restaurant?.totalIncome ? `₦${restaurant.totalIncome.toFixed(2)}` : "₦0.00"}
+              {restaurant?.walletBalance
+                ? `₦${restaurant.walletBalance.toFixed(2)}`
+                : "₦0.00"}
             </p>
           </div>
         </div>
@@ -116,25 +144,25 @@ const RestaurantDashboard = () => {
             icon={<FaClock />}
             label="Pending"
             isActive={activeTab === "Pending"}
-            onClick={() => handleTabClick("Pending")}
+            onClick={() => setActiveTab("Pending")}
           />
           <TabButton
             icon={<FaCheck />}
             label="Confirmed"
             isActive={activeTab === "Confirmed"}
-            onClick={() => handleTabClick("Confirmed")}
+            onClick={() => setActiveTab("Confirmed")}
           />
           <TabButton
             icon={<FaShippingFast />}
             label="Delivered"
             isActive={activeTab === "Delivered"}
-            onClick={() => handleTabClick("Delivered")}
+            onClick={() => setActiveTab("Delivered")}
           />
           <TabButton
             icon={<FaCoins />}
             label="Fee Requested"
             isActive={activeTab === "Fee Requested"}
-            onClick={() => handleTabClick("Fee Requested")}
+            onClick={() => setActiveTab("Fee Requested")}
           />
         </div>
 
@@ -162,7 +190,9 @@ const RestaurantDashboard = () => {
 
 const TabButton = ({ icon, label, isActive, onClick }) => (
   <button
-    className={`flex items-center space-x-2 px-4 py-2 border-b-4 ${isActive ? "border-black text-black" : "border-transparent text-gray-500"}`}
+    className={`flex items-center space-x-2 px-4 py-2 border-b-4 ${
+      isActive ? "border-black text-black" : "border-transparent text-gray-500"
+    }`}
     onClick={onClick}
   >
     {icon}
@@ -175,6 +205,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
   const [fees, setFees] = useState("");
   const [requestDescription, setRequestDescription] = useState("");
   const [isRequesting, setIsRequesting] = useState(false);
+  const [isDelivering, setIsDelivering] = useState(false);
 
   const onRequest = async () => {
     if (isPending && fees) {
@@ -186,7 +217,31 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
 
   const markAsDelivered = async () => {
     if (isConfirmed) {
-      await updateOrderStatus(order.customId);
+      setIsDelivering(true);
+      const token = localStorage.getItem("token");
+      try {
+        const response = await axios.patch(
+          `https://mongobyte.onrender.com/api/v1/orders/deliver/${order.customId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        toast.success(response.data.message);
+        setIsDelivering(false);
+        setTimeout(() => {
+          window.location.reload();
+        }, 5000);
+      } catch (error) {
+        toast.error(
+          error.response && error.response.data.message
+            ? error.response.data.message
+            : "Error marking order as delivered."
+        );
+        setIsDelivering(false);
+      }
     }
   };
 
@@ -219,43 +274,49 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
               ))}
             </div>
 
-            <p className="text-gray-600">Note: {order.note || "No special requests"}</p>
+            <p className="text-gray-600">Note: {order.note}</p>
+            <p className="text-gray-600">
+              Ordered At: {new Date(order.createdAt).toLocaleString()}
+            </p>
+
+            {isPending && (
+              <div className="mt-4">
+                <input
+                  type="number"
+                  value={fees}
+                  onChange={(e) => setFees(e.target.value)}
+                  placeholder="Additional Fee in Naira"
+                  className="p-2 border rounded-lg w-full"
+                />
+                <input
+                  type="text"
+                  value={requestDescription}
+                  onChange={(e) => setRequestDescription(e.target.value)}
+                  placeholder="Description (e.g. delivery fee)"
+                  className="p-2 border rounded-lg w-full mt-2"
+                />
+                <button
+                  className="bg-black text-white p-2 rounded-lg mt-2 w-full"
+                  onClick={onRequest}
+                  disabled={isRequesting}
+                >
+                  {isRequesting ? "Requesting..." : "Request Additional Fee"}
+                </button>
+              </div>
+            )}
+
+            {isConfirmed && (
+              <div className="mt-4">
+                <button
+                  className="bg-black text-white p-2 rounded-lg mt-2 w-full"
+                  onClick={markAsDelivered}
+                  disabled={isDelivering}
+                >
+                  {isDelivering ? "Delivering..." : "Mark as Delivered"}
+                </button>
+              </div>
+            )}
           </div>
-
-          {isPending && (
-            <div className="mt-4 space-y-4">
-              <input
-                type="number"
-                value={fees}
-                onChange={(e) => setFees(e.target.value)}
-                placeholder="Transport and other fees in naira"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              />
-              <input
-                type="text"
-                value={requestDescription}
-                onChange={(e) => setRequestDescription(e.target.value)}
-                placeholder="Request description (e.g., Just for transport)"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              />
-              <button
-                className="w-full bg-black text-white px-4 py-2 rounded-lg"
-                onClick={onRequest}
-                disabled={isRequesting}
-              >
-                {isRequesting ? "Requesting..." : "Request"}
-              </button>
-            </div>
-          )}
-
-          {isConfirmed && (
-            <button
-              className="w-full bg-black text-white px-4 py-2 mt-4 rounded-lg"
-              onClick={markAsDelivered}
-            >
-              Mark as Delivered
-            </button>
-          )}
         </div>
       )}
     </div>
