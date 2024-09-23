@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import Loader from "./Loader";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FaClock, FaCheck, FaBoxOpen, FaCoins } from "react-icons/fa"; 
+import { FaClock, FaCheck, FaShippingFast, FaCoins } from "react-icons/fa"; 
 
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState("Pending");
@@ -39,7 +39,8 @@ const RestaurantDashboard = () => {
           },
         }
       );
-      setOrders(response.data);
+      const sortedOrders = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setOrders(sortedOrders);
     } catch (error) {
       setOrders([]);
       toast.error("Error fetching orders.");
@@ -52,12 +53,12 @@ const RestaurantDashboard = () => {
     setActiveTab(tab);
   };
 
-  const updateOrderStatus = async (orderId,  requestDescription, fee) => {
+  const updateOrderStatus = async (orderId, requestDescription, fee) => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.patch(
         `https://mongobyte.onrender.com/api/v1/orders/${orderId}`,
-        { additionalFee: fee, requestDescription},
+        { additionalFee: fee, requestDescription },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -124,7 +125,7 @@ const RestaurantDashboard = () => {
             onClick={() => handleTabClick("Confirmed")}
           />
           <TabButton
-            icon={<FaBoxOpen />}
+            icon={<FaShippingFast />}
             label="Delivered"
             isActive={activeTab === "Delivered"}
             onClick={() => handleTabClick("Delivered")}
