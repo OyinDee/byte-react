@@ -63,7 +63,7 @@ const Notifications = () => {
   }, [hasMore]);
 
   return (
-    <div className="p-8 bg-white min-h-screen">
+    <div className="p-8 bg-white min-h-screen mb-20">
       <h1 className="text-3xl font-bold mb-8 text-black">Notifications</h1>
 
       <div className="space-y-4">
