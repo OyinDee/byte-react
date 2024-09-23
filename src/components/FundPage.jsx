@@ -128,6 +128,7 @@ const FundPage = () => {
       );
 
       toast.success(`Transfer Successful: ${response.data.message}`);
+      alert(`Transfer Successful: ${response.data.message}`)
       window.location.reload();
     } catch (error) {
       const errorMsg = error.response?.data?.message || "Transfer failed";

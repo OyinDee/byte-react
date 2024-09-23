@@ -111,7 +111,9 @@ const CartPage = () => {
 
       toast.success("Order placed successfully!");
       setNote('');
-      window.location.reload()
+      setTimeout(() => {
+        window.location.reload();
+      }, 5000);
     } catch (error) {
       toast.error(error.message || "Something went wrong.");
     } finally {

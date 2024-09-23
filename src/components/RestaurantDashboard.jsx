@@ -83,10 +83,10 @@ const RestaurantDashboard = () => {
           },
         }
       );
+      toast.success(response.data.message);
       setTimeout(() => {
         window.location.reload();
       }, 5000);
-      toast.success(response.data.message);
     } catch (error) {
       await fetchOrders(restaurant.customId, token);
       toast.error(

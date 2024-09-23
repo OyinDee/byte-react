@@ -56,8 +56,8 @@ const SignUp = () => {
       const fullPhoneNumber = `${phoneCode}${phoneNumber}`;
 
       await axios.post("https://mongobyte.onrender.com/api/v1/auth/register", {
-        username,
-        email,
+        username: username.trim(),
+        email: email.trim(),
         password,
         phoneNumber: fullPhoneNumber,
       });
@@ -85,7 +85,7 @@ const SignUp = () => {
     <div className="relative min-h-screen bg-olive">
       <div className="absolute inset-0">
         <img
-          src="/Images/burger.jpg" // Replace with your burger image path
+          src="/Images/burger.jpg" 
           alt="Burger Background"
           className="w-full h-full object-cover"
         />
