@@ -113,7 +113,7 @@ const CartPage = () => {
       setNote('');
       window.location.reload()
     } catch (error) {
-      toast.error(response.data.message || "Something went wrong.");
+      toast.error(error.message || "Something went wrong.");
     } finally {
       setIsCheckoutLoading(false);
     }
