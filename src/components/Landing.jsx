@@ -79,7 +79,7 @@ const Landing = () => {
             Byte!
           </h1>
           <a
-            href="#learn-more"
+            href="/login"
             className="bg-white text-black px-6 py-3 rounded-full text-lg hover:bg-gray-100 font-bold transition"
           >
             Grab One

@@ -21,7 +21,6 @@ import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import MealsPage from "./pages/MealsPage";
-import NotificationsPage from "./pages/AdminNotifs";
 
 function App() {
   return (
@@ -70,13 +69,13 @@ function App() {
               path="/restaurant/dashboard"
               element={<PrivateRoute element={<RestaurantDashboard />} />}
             />
+              <Route
+              path="/restaurant/notifications"
+              element={<PrivateRoute element={<Notifications />} />}
+            />
             <Route
               path="/restaurant/menu"
               element={<PrivateRoute element={<MealsPage />} />}
-            />
-              <Route
-              path="/restaurant/notifications"
-              element={<PrivateRoute element={<NotificationsPage />} />}
             />
             <Route path="/restaurant/login" element={<AdminLogin />} />
 

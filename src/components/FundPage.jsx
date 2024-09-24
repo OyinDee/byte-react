@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { toast } from "react-toastify";
+import { Toaster, toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "react-toastify/dist/ReactToastify.css";
 import Loading from "./Loader";
 
 const FundPage = () => {
@@ -105,9 +104,7 @@ const FundPage = () => {
     }
 
     if (!recipientUsername || !transferAmount || transferAmount <= 0) {
-      toast.error(
-        "Please provide valid recipient username and transfer amount."
-      );
+      toast.error("Please provide valid recipient username and transfer amount.");
       return;
     }
 
@@ -128,8 +125,9 @@ const FundPage = () => {
       );
 
       toast.success(`Transfer Successful: ${response.data.message}`);
-      alert(`Transfer Successful: ${response.data.message}`)
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 5000);
     } catch (error) {
       const errorMsg = error.response?.data?.message || "Transfer failed";
       toast.error(`Error: ${errorMsg}`);
@@ -145,10 +143,10 @@ const FundPage = () => {
   return (
     <main className="min-h-screen bg-white text-black flex items-center justify-center">
       <div className="bg-gray-100 shadow-md rounded-lg p-8 max-w-md w-full mx-5">
+        <Toaster position="top-right" reverseOrder={false} />
         <div className="text-center mb-6">
           <p className="text-xl font-semibold">
-            Byte Balance:{" "}
-            <span className="text-black">B{user.byteBalance}</span>
+            Byte Balance: <span className="text-black">B{user.byteBalance}</span>
           </p>
         </div>
 
@@ -164,9 +162,7 @@ const FundPage = () => {
           <button
             onClick={() => setTab("transfer")}
             className={`flex-1 py-2 font-semibold ${
-              tab === "transfer"
-                ? "bg-black text-white"
-                : "bg-gray-100 text-black"
+              tab === "transfer" ? "bg-black text-white" : "bg-gray-100 text-black"
             } rounded-r-md border border-gray-300`}
           >
             Transfer
@@ -175,15 +171,10 @@ const FundPage = () => {
 
         {tab === "fund" ? (
           <div>
-            <h1 className="text-2xl font-semibold text-center text-black">
-              Fund Your Account
-            </h1>
+            <h1 className="text-2xl font-semibold text-center text-black">Fund Your Account</h1>
             <form className="mt-6 space-y-4">
               <div>
-                <label
-                  htmlFor="fundAmount"
-                  className="block text-lg font-medium"
-                >
+                <label htmlFor="fundAmount" className="block text-lg font-medium">
                   Enter Amount to Fund
                 </label>
                 <input
@@ -199,20 +190,16 @@ const FundPage = () => {
               {amount !== "" && (
                 <div className="mt-4">
                   <p className="text-lg font-medium">
-                    <span className="text-gray-600">Funding Amount:</span> ₦
-                    {amount.toFixed(2)}
+                    <span className="text-gray-600">Funding Amount:</span> ₦{amount.toFixed(2)}
                   </p>
                   <p className="text-lg font-medium">
-                    <span className="text-gray-600">Fee (3%):</span> ₦
-                    {fee.toFixed(2)}
+                    <span className="text-gray-600">Fee (3%):</span> ₦{fee.toFixed(2)}
                   </p>
                   <p className="text-lg font-semibold text-black">
-                    <span className="text-gray-500">Total Amount:</span> ₦
-                    {total.toFixed(2)}
+                    <span className="text-gray-500">Total Amount:</span> ₦{total.toFixed(2)}
                   </p>
                   <p className="text-lg font-medium mt-2">
-                    <span className="text-gray-600">In Bytes:</span> B
-                    {bytes.toFixed(2)}
+                    <span className="text-gray-600">In Bytes:</span> B{bytes.toFixed(2)}
                   </p>
                 </div>
               )}
@@ -229,15 +216,10 @@ const FundPage = () => {
           </div>
         ) : (
           <div>
-            <h1 className="text-2xl font-semibold text-center text-black">
-              Transfer Bytes
-            </h1>
+            <h1 className="text-2xl font-semibold text-center text-black">Transfer Bytes</h1>
             <form className="mt-6 space-y-4">
               <div>
-                <label
-                  htmlFor="transferAmount"
-                  className="block text-lg font-medium"
-                >
+                <label htmlFor="transferAmount" className="block text-lg font-medium">
                   Enter Amount to Transfer
                 </label>
                 <input
@@ -251,10 +233,7 @@ const FundPage = () => {
               </div>
 
               <div>
-                <label
-                  htmlFor="recipientUsername"
-                  className="block text-lg font-medium"
-                >
+                <label htmlFor="recipientUsername" className="block text-lg font-medium">
                   Recipient Username
                 </label>
                 <input
@@ -271,12 +250,7 @@ const FundPage = () => {
                 type="button"
                 onClick={handleTransfer}
                 className="w-full bg-black text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-800 transition duration-200"
-                disabled={
-                  !recipientUsername ||
-                  !transferAmount ||
-                  transferAmount <= 0 ||
-                  transferLoading
-                }
+                disabled={!recipientUsername || !transferAmount || transferAmount <= 0 || transferLoading}
               >
                 {transferLoading ? "Transferring..." : "Transfer"}
               </button>

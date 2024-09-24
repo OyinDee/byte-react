@@ -155,7 +155,7 @@ const UserNavbar = () => {
           >
             Cart
             {itemCount > 0 && (
-              <span className="absolute -top-2 left-4 text-xs text-cheese rounded-full px-2 py-1">
+              <span className="-top-2 left-4 text-xs text-cheese rounded-full px-2 py-1">
                 {itemCount}
               </span>
             )}
@@ -167,7 +167,7 @@ const UserNavbar = () => {
             Notifications
           </Link>
           <Link
-            to="/user/notifs"
+            to="/user/fund"
             className={`text-lg font-semibold ${getLinkClassName(
               "/user/fund"
             )}`}
@@ -181,6 +181,11 @@ const UserNavbar = () => {
             )}`}
           >
             Profile
+          </Link>
+          <Link to='/login'
+            className='text-lg font-semibold' onClick={handleLogout}
+          >
+            Logout
           </Link>
         </div>
       </div>

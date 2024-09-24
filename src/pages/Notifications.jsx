@@ -23,6 +23,7 @@ const Notifications = () => {
         params: { page } 
       });
 
+
       const newNotifications = response.data.notifications;
       if (newNotifications.length < 10) setHasMore(false);
 
