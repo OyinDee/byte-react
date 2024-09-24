@@ -1,4 +1,7 @@
 import React from "react";
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/authContext";
 import NavbarWrapper from "./components/NavbarWrapper";
@@ -14,7 +17,6 @@ import ResetPassword from "./pages/ForgotPassword";
 import Fund from "./pages/Fund";
 import Profile from "./pages/Profile";
 import CallbackPage from "./pages/FundCallback";
-import { ToastContainer } from "react-toastify";
 import CartPage from "./pages/CartPage";
 import RestaurantPage from "./pages/CheckRestaurant";
 import Notifications from "./pages/Notifications";

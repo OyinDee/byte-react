@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Toaster, toast } from "react-hot-toast";
+import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Loading from "./Loader";
+import 'react-toastify/dist/ReactToastify.css';
 
 const FundPage = () => {
   const [amount, setAmount] = useState("");
@@ -143,7 +144,7 @@ const FundPage = () => {
   return (
     <main className="min-h-screen bg-white text-black flex items-center justify-center">
       <div className="bg-gray-100 shadow-md rounded-lg p-8 max-w-md w-full mx-5">
-        <Toaster position="top-right" reverseOrder={false} />
+        <ToastContainer position="top-right" reverseOrder={false} />
         <div className="text-center mb-6">
           <p className="text-xl font-semibold">
             Byte Balance: <span className="text-black">B{user.byteBalance}</span>

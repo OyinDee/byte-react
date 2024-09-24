@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { FaTrashAlt } from "react-icons/fa";
-import { Toaster, toast } from "react-hot-toast";
+import { ToastContainer, toast } from "react-toastify";
 import { jwtDecode } from 'jwt-decode';
+import 'react-toastify/dist/ReactToastify.css';
 
 const CartPage = () => {
   const [cart, setCart] = useState(new Map());
@@ -69,7 +70,7 @@ const CartPage = () => {
       return;
     }
 
-    toast("In the kitchen... Wait a minute!");
+    toast.info("In the kitchen... Wait a minute!");
     setIsCheckoutLoading(true);
 
     const orderDetails = Array.from(cart.entries()).map(([restaurantId, items]) => ({
@@ -128,7 +129,7 @@ const CartPage = () => {
 
   return (
     <div className="p-4 bg-white mb-8">
-      <Toaster />
+      <ToastContainer />
       <div className="max-w-4xl mx-auto text-black">
         {cart.size === 0 ? (
           <p className="text-center text-gray-500">Your cart is empty.</p>
