@@ -160,7 +160,7 @@ const Profile = () => {
               <img
                 src={user?.imageUrl || "/Images/nk.jpg"}
                 alt="ProfilePicture"
-                className="rounded-full border-4 border-black mb-4 object-cover"
+                className="rounded-full border-1 border-black mb-4 object-cover"
                 style={{ width: 150, height: 150 }}
               />
             </div>
@@ -181,6 +181,7 @@ const Profile = () => {
               <h2 className="text-xl font-semibold mb-2">Phone Number</h2>
               <p className="text-lg">{user?.phoneNumber}</p>
             </div>
+        </div>
             <div className="mb-4 lg:mb-0">
               <h2 className="text-xl font-semibold mb-2">Location</h2>
               <p className="text-lg">{user?.location || "Unknown"}</p>
@@ -200,7 +201,6 @@ const Profile = () => {
               </div>
             </div>
           </div>
-        </div>
 
         {/* Buttons */}
         <div className="space-y-2 mt-2">
