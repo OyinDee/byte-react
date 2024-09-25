@@ -132,7 +132,7 @@ const OrderHistory = () => {
                   </div>
                   <div>
                     <button
-                      className="text-blue-500 underline"
+                      className="text-black underline"
                       onClick={() => handleExpandClick(order._id)}
                     >
                       {expandedOrders[order._id] ? 'Show Less' : 'Show More'}

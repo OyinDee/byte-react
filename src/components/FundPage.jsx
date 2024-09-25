@@ -51,7 +51,7 @@ const FundPage = () => {
       setTotal(0);
       setBytes(0);
     } else {
-      const calculatedFee = inputAmount * 0.03;
+      const calculatedFee = inputAmount * 0.05;
       const calculatedTotal = inputAmount + calculatedFee;
       const calculatedBytes = inputAmount * NAIRA_TO_BYTES_RATE;
       setAmount(inputAmount);
@@ -194,7 +194,7 @@ const FundPage = () => {
                     <span className="text-gray-600">Funding Amount:</span> ₦{amount.toFixed(2)}
                   </p>
                   <p className="text-lg font-medium">
-                    <span className="text-gray-600">Fee (3%):</span> ₦{fee.toFixed(2)}
+                    <span className="text-gray-600">Fee (5%):</span> ₦{fee.toFixed(2)}
                   </p>
                   <p className="text-lg font-semibold text-black">
                     <span className="text-gray-500">Total Amount:</span> ₦{total.toFixed(2)}
