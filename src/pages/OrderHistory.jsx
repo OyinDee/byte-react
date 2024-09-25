@@ -4,8 +4,6 @@ import { RingLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-toast.configure();
-
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,7 +18,7 @@ const OrderHistory = () => {
       if (token && byteUser?.username) {
         try {
           const response = await axios.get(
-            `https://mongobyte.onrender.com/api/v1/users/orders/${byteUser.username}`,
+            `https://mongobyte.vercel.app/api/v1/users/orders/${byteUser.username}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setOrders(response.data);
@@ -48,7 +46,7 @@ const OrderHistory = () => {
   const handleAcceptFee = async (orderId) => {
     try {
       await axios.post(
-        `https://mongobyte.onrender.com/api/v1/orders/${orderId}/status`,
+        `https://mongobyte.vercel.app/api/v1/orders/${orderId}/status`,
         { action: 'accept' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -64,7 +62,7 @@ const OrderHistory = () => {
   const handleCancelOrder = async (orderId) => {
     try {
       await axios.post(
-        `https://mongobyte.onrender.com/api/v1/orders/${orderId}/status`,
+        `https://mongobyte.vercel.app/api/v1/orders/${orderId}/status`,
         { action: 'cancel' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );

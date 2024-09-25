@@ -20,7 +20,7 @@ const Profile = () => {
       if (token) {
         try {
           const response = await axios.get(
-            "https://mongobyte.onrender.com/api/v1/users/getProfile",
+            "https://mongobyte.vercel.app/api/v1/users/getProfile",
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -60,7 +60,7 @@ const Profile = () => {
     if (!selectedImage) return;
     try {
       const response = await axios.post(
-        "https://mongobyte.onrender.com/api/v1/users/upload",
+        "https://mongobyte.vercel.app/api/v1/users/upload",
         { image: selectedImage }
       );
       return response.data.url;
@@ -81,7 +81,7 @@ const Profile = () => {
       }
 
       const data = await axios.post(
-        "https://mongobyte.onrender.com/api/v1/users/updateProfile",
+        "https://mongobyte.vercel.app/api/v1/users/updateProfile",
         { imageUrl, bio, location, nearestLandmark },
         { headers: { Authorization: `Bearer ${token}` } }
       );
