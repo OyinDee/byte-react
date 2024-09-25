@@ -180,14 +180,14 @@ const OrderHistory = () => {
                           onClick={() => handleAcceptFee(order.customId)}
                           disabled={processingOrders[order.customId]} 
                         >
-                          {processingOrders[order.customId] ? 'Accepting...' : 'Accept Fee'}
+                          Accept Fee
                         </button>
                         <button
                           className="bg-yellow-500 w-full mt-2 text-white px-4 py-2 rounded"
                           onClick={() => handleCancelOrder(order.customId)}
                           disabled={processingOrders[order.customId]}
                         >
-                          {processingOrders[order.customId] ? 'Canceling...' : 'Cancel Order'}
+                         Cancel Order
                         </button>
                       </div>
                     )}
