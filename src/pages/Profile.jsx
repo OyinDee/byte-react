@@ -15,6 +15,7 @@ const Profile = () => {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [error, setError] = useState(null);
   const profileRef = useRef(null);
+  const snapshotRef = useRef(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -81,6 +82,7 @@ const Profile = () => {
       if (selectedImage) {
         imageUrl = await handleImageUpload();
       }
+
       const data = await axios.post(
         "https://mongobyte.vercel.app/api/v1/users/updateProfile",
         { imageUrl, bio, location, nearestLandmark },
@@ -111,7 +113,8 @@ const Profile = () => {
   };
 
   const takeSnapshot = () => {
-    const profileElement = profileRef.current;
+    const profileElement = snapshotRef.current;
+
     if (profileElement) {
       html2canvas(profileElement, {
         backgroundColor: "#fff",
@@ -153,30 +156,49 @@ const Profile = () => {
           className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 border border-gray-200"
         >
           <div className="flex flex-col items-center text-center relative">
-            <div className="relative">
+            <div className="relative" ref={snapshotRef}>
               <img
                 src={user?.imageUrl || "/Images/nk.jpg"}
                 alt="ProfilePicture"
-                className="rounded-full border-2 border-black mb-4 object-cover"
+                className="rounded-full border-1 border-black mb-4 object-cover"
                 style={{ width: 150, height: 150 }}
               />
+              <h1 className="text-3xl font-bold mb-2 lg:text-4xl">
+                @{user?.username}
+              </h1>
+              <p className="text-lg text-gray-700 mb-2 lg:text-xl">
+                {user?.email}
+              </p>
+              <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600">
+                {user?.bio || "Life is uncertain. Eat dessert first!"}
+              </blockquote>
+              <div className="mt-6 flex flex-col lg:flex-row lg:justify-between">
+                <div className="mb-4 lg:mb-0">
+                  <h2 className="text-xl font-semibold mb-2">Phone Number</h2>
+                  <p className="text-lg">{user?.phoneNumber}</p>
+                </div>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold mb-2 lg:text-4xl">
-              @{user?.username}
-            </h1>
-            <p className="text-lg text-gray-700 mb-2 lg:text-xl">
-              {user?.email}
-            </p>
-
-            <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600">
-              {user?.bio || "Life is uncertain. Eat dessert first!"}
-            </blockquote>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-6 flex flex-col lg:flex-row lg:justify-between">
             <div className="mb-4 lg:mb-0">
-              <h2 className="text-xl font-semibold mb-2">Phone Number</h2>
-              <p className="text-lg">{user?.phoneNumber}</p>
+              <h2 className="text-xl font-semibold mb-2">Location</h2>
+              <p className="text-lg">{user?.location || "Unknown"}</p>
+            </div>
+            <div className="mb-4 lg:mb-0">
+              <h2 className="text-xl font-semibold mb-2">Nearest Landmark</h2>
+              <p className="text-lg">{user?.nearestLandmark || "N/A"}</p>
+            </div>
+            <div className="flex flex-col lg:flex-row lg:justify-between">
+              <div className="mb-4 lg:mb-0">
+                <h2 className="text-xl font-semibold mb-2">Total Bytes</h2>
+                <p className="text-lg">{user?.orderHistory.length}</p>
+              </div>
+              <div className="mb-4 lg:mb-0">
+                <h2 className="text-xl font-semibold mb-2">Byte Balance</h2>
+                <p className="text-lg">{user?.byteBalance}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -191,13 +213,13 @@ const Profile = () => {
 
           <button
             onClick={takeSnapshot}
-            className="bg-black text-white w-full text-lg p-3 rounded-sm shadow-lg  transition-colors duration-200"
+            className="bg-black text-white w-full text-lg p-3 rounded-sm shadow-lg transition-colors duration-200"
           >
             Take Snapshot
           </button>
           <button
             onClick={() => alert("Coming Soon!")}
-            className="bg-yellow-500 text-black w-full text-lg p-3 rounded-sm shadow-lg  transition-colors duration-200"
+            className="bg-yellow-500 text-black w-full text-lg p-3 rounded-sm shadow-lg transition-colors duration-200"
           >
             Check Order History
           </button>
@@ -219,35 +241,34 @@ const Profile = () => {
               placeholder="Update your bio..."
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full p-2 mb-4 border border-gray-300 rounded-sm"
+              className="border w-full p-2 mb-4"
             />
             <input
               type="text"
-              placeholder="Update your location..."
+              placeholder="Update location..."
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-full p-2 mb-4 border border-gray-300 rounded-sm"
+              className="border w-full p-2 mb-4"
             />
             <input
               type="text"
               placeholder="Update nearest landmark..."
               value={nearestLandmark}
               onChange={(e) => setNearestLandmark(e.target.value)}
-              className="w-full p-2 mb-4 border border-gray-300 rounded-sm"
+              className="border w-full p-2 mb-4"
             />
-            <div className="flex justify-between space-x-4">
+            <div className="flex justify-end space-x-2">
               <button
                 onClick={closeModal}
-                className="bg-gray-500 text-white w-full text-lg p-3 rounded-sm shadow-lg hover:bg-gray-700 transition-colors duration-200"
+                className="px-4 py-2 text-sm bg-red-500 text-white rounded-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={updateUserProfile}
-                className="bg-black text-white w-full text-lg p-3 rounded-sm shadow-lg hover:bg-gray-800 transition-colors duration-200"
-                disabled={updateLoading}
+                className="px-4 py-2 text-sm bg-green-500 text-white rounded-sm"
               >
-                {updateLoading ? "Saving..." : "Save"}
+                {updateLoading ? "Updating..." : "Update"}
               </button>
             </div>
           </div>
