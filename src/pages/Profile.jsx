@@ -179,7 +179,6 @@ const Profile = () => {
             </blockquote>
           </div>
           </div>
-       </div>
           <div className="mt-6 flex flex-col lg:flex-row lg:justify-between">
             <div className="mb-4 lg:mb-0">
               <h2 className="text-xl font-semibold mb-2">Phone Number</h2>
@@ -204,7 +203,7 @@ const Profile = () => {
               </div>
             </div>
           </div>
-        
+        </div>
 
         {/* Buttons */}
         <div className="space-y-2 mt-2">
