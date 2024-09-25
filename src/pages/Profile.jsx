@@ -154,10 +154,10 @@ const Profile = () => {
   return (
     <div className="relative min-h-screen pt-5 pb-20 bg-white text-black">
       <div className="relative z-10 flex flex-col items-center justify-center p-4 lg:p-8">
-        <div
-          ref={profileRef} 
-          className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 border border-gray-200"
+        <div className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 border border-gray-200"
         >
+          <div
+          ref={profileRef}>
           <div className="flex flex-col items-center text-center relative">
             <div className="relative">
               <img
@@ -177,6 +177,7 @@ const Profile = () => {
             <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600">
               {user?.bio || "Life is uncertain. Eat dessert first!"}
             </blockquote>
+          </div>
           </div>
        </div>
           <div className="mt-6 flex flex-col lg:flex-row lg:justify-between">
