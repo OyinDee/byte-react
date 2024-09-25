@@ -27,7 +27,7 @@ const OrderHistory = () => {
 
         const sortedOrders = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         const paginatedOrders = sortedOrders.slice(0, page * ordersPerPage);
-
+        console.log(sortedOrders)
         if (isLoadMore) {
           setOrders((prevOrders) => [...prevOrders, ...paginatedOrders.slice(prevOrders.length)]);
         } else {
@@ -146,7 +146,7 @@ const OrderHistory = () => {
                     <ul className="list-disc pl-5">
                       {order.meals.map((mealDetail) => (
                         <li key={mealDetail.meal._id}>
-                          <p>Meal: {mealDetail.meals.name}</p>
+                          <p>Meal: {mealDetail.meal.name}</p>
                           <p>Quantity: {mealDetail.quantity}</p>
                         </li>
                       ))}
