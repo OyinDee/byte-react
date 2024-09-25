@@ -8,7 +8,8 @@ const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrders, setExpandedOrders] = useState({});
-  const [page, setPage] = useState(1);  
+  const [processingOrders, setProcessingOrders] = useState({});
+  const [page, setPage] = useState(1);
   const [hasMoreOrders, setHasMoreOrders] = useState(true);
 
   const ordersPerPage = 10;
@@ -24,10 +25,9 @@ const OrderHistory = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-
         const sortedOrders = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         const paginatedOrders = sortedOrders.slice(0, page * ordersPerPage);
-        console.log(sortedOrders)
+        console.log(sortedOrders);
         if (isLoadMore) {
           setOrders((prevOrders) => [...prevOrders, ...paginatedOrders.slice(prevOrders.length)]);
         } else {
@@ -58,6 +58,12 @@ const OrderHistory = () => {
   };
 
   const handleAcceptFee = async (orderId) => {
+    setProcessingOrders((prevState) => ({
+      ...prevState,
+      [orderId]: true,
+    }));
+    toast.info('Please wait while the fee is being accepted...');
+
     try {
       await axios.post(
         `https://mongobyte.vercel.app/api/v1/orders/${orderId}/status`,
@@ -66,14 +72,23 @@ const OrderHistory = () => {
       );
       toast.success('Fee accepted successfully');
       fetchOrderHistory();
-
     } catch (error) {
       handleAxiosError(error, 'Failed to accept fee.');
-      fetchOrderHistory();
+    } finally {
+      setProcessingOrders((prevState) => ({
+        ...prevState,
+        [orderId]: false,
+      }));
     }
   };
 
   const handleCancelOrder = async (orderId) => {
+    setProcessingOrders((prevState) => ({
+      ...prevState,
+      [orderId]: true,
+    }));
+    toast.info('Please wait while the order is being canceled...');
+
     try {
       await axios.post(
         `https://mongobyte.vercel.app/api/v1/orders/${orderId}/status`,
@@ -84,7 +99,11 @@ const OrderHistory = () => {
       fetchOrderHistory();
     } catch (error) {
       handleAxiosError(error, 'Failed to cancel order.');
-      fetchOrderHistory();
+    } finally {
+      setProcessingOrders((prevState) => ({
+        ...prevState,
+        [orderId]: false,
+      }));
     }
   };
 
@@ -126,6 +145,7 @@ const OrderHistory = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <h2 className="text-xl font-semibold mb-2">Order #{order.customId}</h2>
+                    <p className="text-lg">Requested fee: B{(order.fee/10)}</p>
                     <p className="text-lg">Total: B{order.totalPrice}</p>
                     <p className="text-lg">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
                     <p className="text-lg">Status: {order.status}</p>
@@ -157,14 +177,16 @@ const OrderHistory = () => {
                         <button
                           className="bg-black w-full text-white px-4 py-2 rounded"
                           onClick={() => handleAcceptFee(order.customId)}
+                          disabled={processingOrders[order.customId]} 
                         >
-                          Accept Fee
+                          {processingOrders[order.customId] ? 'Accepting...' : 'Accept Fee'}
                         </button>
                         <button
                           className="bg-yellow-500 w-full mt-2 text-white px-4 py-2 rounded"
                           onClick={() => handleCancelOrder(order.customId)}
+                          disabled={processingOrders[order.customId]}
                         >
-                          Cancel Order
+                          {processingOrders[order.customId] ? 'Canceling...' : 'Cancel Order'}
                         </button>
                       </div>
                     )}
