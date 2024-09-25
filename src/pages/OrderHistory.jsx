@@ -126,7 +126,7 @@ const OrderHistory = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <h2 className="text-xl font-semibold mb-2">Order #{order.customId}</h2>
-                    <p className="text-lg">Total: {order.totalPrice}0 NGN</p>
+                    <p className="text-lg">Total: B{order.totalPrice}</p>
                     <p className="text-lg">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
                     <p className="text-lg">Status: {order.status}</p>
                   </div>
