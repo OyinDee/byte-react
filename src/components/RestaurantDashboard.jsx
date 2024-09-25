@@ -137,7 +137,7 @@ const RestaurantDashboard = () => {
                 ? `₦${restaurant.walletBalance.toFixed(2)}`
                 : "₦0.00"}
             </p>
-            <button className='bg-yellow-500 w-full py-1 mt-3 rounded-lg'>Place Withdrawal</button>
+            <button className='bg-yellow-500 w-full py-2 mt-3 rounded-lg'>Place Withdrawal</button>
           </div>
         </div>
       )}
