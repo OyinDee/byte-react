@@ -13,7 +13,7 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      const response = await axios.post('https://mongobyte.vercel.app/api/v1/restaurants/login', {
+      const response = await axios.post('https://mongobyte.onrender.com/api/v1/restaurants/login', {
         email,
         password,
       });

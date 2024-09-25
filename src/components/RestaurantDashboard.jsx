@@ -27,7 +27,7 @@ const RestaurantDashboard = () => {
         const restaurantCustomId = decodedToken.restaurant.customId;
   
         const restaurantResponse = await axios.get(
-          `https://mongobyte.vercel.app/api/v1/restaurants/${restaurantCustomId}`,
+          `https://mongobyte.onrender.com/api/v1/restaurants/${restaurantCustomId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -54,7 +54,7 @@ const RestaurantDashboard = () => {
   const fetchOrders = async (restaurantId, token) => {
     try {
       const response = await axios.get(
-        `https://mongobyte.vercel.app/api/v1/orders/restaurant/${restaurantId}`,
+        `https://mongobyte.onrender.com/api/v1/orders/restaurant/${restaurantId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -74,7 +74,7 @@ const RestaurantDashboard = () => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.patch(
-        `https://mongobyte.vercel.app/api/v1/orders/${orderId}`,
+        `https://mongobyte.onrender.com/api/v1/orders/${orderId}`,
         { additionalFee: fee, requestDescription },
         {
           headers: {
@@ -232,7 +232,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
       const token = localStorage.getItem("token");
       try {
         const response = await axios.patch(
-          `https://mongobyte.vercel.app/api/v1/orders/deliver/${order.customId}`,
+          `https://mongobyte.onrender.com/api/v1/orders/deliver/${order.customId}`,
           {},
           {
             headers: {
