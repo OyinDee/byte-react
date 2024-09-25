@@ -198,7 +198,7 @@ const CartPage = () => {
               </div>
               <br />
               <label htmlFor="fee" className="text-xs font-medium text-black">
-                Expected delivery + miscellaneous. Specify amount in bytes...
+                Expected/assumed delivery fee + miscellaneous. Specify amount in bytes...
               </label>
               <br />
               <input
