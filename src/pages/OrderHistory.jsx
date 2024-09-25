@@ -145,7 +145,7 @@ const OrderHistory = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <h2 className="text-xl font-semibold mb-2">Order #{order.customId}</h2>
-                    <p className="text-lg">Requested fee: B{(order.fee/10)}</p>
+                    <p className="text-lg">Requested fee: B{(order.fee)}</p>
                     <p className="text-lg">Total: B{order.totalPrice}</p>
                     <p className="text-lg">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
                     <p className="text-lg">Status: {order.status}</p>
@@ -167,6 +167,7 @@ const OrderHistory = () => {
                       {order.meals.map((mealDetail) => (
                         <li key={mealDetail.meal._id}>
                           <p>Meal: {mealDetail.meal.name}</p>
+                          <p>Price: B{mealDetail.meal.price}</p>
                           <p>Quantity: {mealDetail.quantity}</p>
                         </li>
                       ))}
