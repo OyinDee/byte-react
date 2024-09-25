@@ -46,7 +46,7 @@ const ResetPassword = () => {
 
     try {
       const response = await axios.post(
-        "https://mongobyte.onrender.com/api/v1/auth/forgot-password",
+        "https://mongobyte.vercel.app/api/v1/auth/forgot-password",
         { email }
       );
 
@@ -85,7 +85,7 @@ const ResetPassword = () => {
 
     try {
       const response = await axios.post(
-        "https://mongobyte.onrender.com/api/v1/auth/reset-password",
+        "https://mongobyte.vercel.app/api/v1/auth/reset-password",
         {
           email,
           resetCode,

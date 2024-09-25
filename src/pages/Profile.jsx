@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 import { RingLoader } from "react-spinners";
+import html2canvas from "html2canvas"; 
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -11,8 +12,9 @@ const Profile = () => {
   const [nearestLandmark, setNearestLandmark] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [updateLoading, setUpdateLoading] = useState(false); 
+  const [updateLoading, setUpdateLoading] = useState(false);
   const [error, setError] = useState(null);
+  const profileRef = useRef(null); 
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -20,7 +22,7 @@ const Profile = () => {
       if (token) {
         try {
           const response = await axios.get(
-            "https://mongobyte.onrender.com/api/v1/users/getProfile",
+            "https://mongobyte.vercel.app/api/v1/users/getProfile",
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -60,7 +62,7 @@ const Profile = () => {
     if (!selectedImage) return;
     try {
       const response = await axios.post(
-        "https://mongobyte.onrender.com/api/v1/users/upload",
+        "https://mongobyte.vercel.app/api/v1/users/upload",
         { image: selectedImage }
       );
       return response.data.url;
@@ -73,7 +75,7 @@ const Profile = () => {
   const updateUserProfile = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    setUpdateLoading(true); 
+    setUpdateLoading(true);
     try {
       let imageUrl = user?.imageUrl;
       if (selectedImage) {
@@ -81,11 +83,11 @@ const Profile = () => {
       }
 
       const data = await axios.post(
-        "https://mongobyte.onrender.com/api/v1/users/updateProfile",
+        "https://mongobyte.vercel.app/api/v1/users/updateProfile",
         { imageUrl, bio, location, nearestLandmark },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      localStorage.setItem('token', data.data.token)
+      localStorage.setItem("token", data.data.token);
       setUser((prevUser) => ({
         ...prevUser,
         imageUrl,
@@ -97,7 +99,7 @@ const Profile = () => {
       setUpdateLoading(false);
     } catch (error) {
       console.error("Error updating user profile:", error);
-      setUpdateLoading(false); 
+      setUpdateLoading(false);
     }
   };
 
@@ -108,6 +110,25 @@ const Profile = () => {
   const closeModal = () => {
     setIsModalOpen(false);
   };
+
+  const takeSnapshot = () => {
+    const profileElement = profileRef.current;
+  
+    if (profileElement) {
+      html2canvas(profileElement, {
+        backgroundColor: "#fff",
+        useCORS: true, 
+        allowTaint: false, 
+        scale: 2 
+      }).then((canvas) => {
+        const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/png");
+        link.download = "profile_snapshot.png";
+        link.click();
+      });
+    }
+  };
+  
 
   if (loading) {
     return (
@@ -130,7 +151,10 @@ const Profile = () => {
   return (
     <div className="relative min-h-screen pt-5 pb-20 bg-white text-black">
       <div className="relative z-10 flex flex-col items-center justify-center p-4 lg:p-8">
-        <div className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 border border-gray-200">
+        <div
+          ref={profileRef} 
+          className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 border border-gray-200"
+        >
           <div className="flex flex-col items-center text-center relative">
             <div className="relative">
               <img
@@ -141,7 +165,7 @@ const Profile = () => {
               />
             </div>
             <h1 className="text-3xl font-bold mb-2 lg:text-4xl">
-              @{user?.username.toLowerCase()}
+              @{user?.username}
             </h1>
             <p className="text-lg text-gray-700 mb-2 lg:text-xl">
               {user?.email}
@@ -174,20 +198,36 @@ const Profile = () => {
                 <h2 className="text-xl font-semibold mb-2">Byte Balance</h2>
                 <p className="text-lg">{user?.byteBalance}</p>
               </div>
+            </div>
           </div>
-          </div>
+        </div>
 
-          <div className="flex justify-end mt-8">
-            <button
-              onClick={openModal}
-              className="bg-black text-white w-full text-lg p-3 rounded-sm shadow-lg hover:bg-gray-800 transition-colors duration-200"
-            >
-              Edit Profile
-            </button>
-          </div>
+        {/* Buttons */}
+        <div className="space-y-2 mt-2">
+          <button
+            onClick={openModal}
+            className="bg-black text-white w-full text-lg p-3 rounded-sm shadow-lg transition-colors duration-200"
+          >
+            Edit Profile
+          </button>
+
+
+          <button
+            onClick={takeSnapshot}
+            className="bg-black text-white w-full text-lg p-3 rounded-sm shadow-lg  transition-colors duration-200"
+          >
+            Take Snapshot
+          </button>
+          <button
+            onClick={() => alert("Coming Soon!")}
+            className="bg-yellow-500 text-black w-full text-lg p-3 rounded-sm shadow-lg  transition-colors duration-200"
+          >
+            Check Order History
+          </button>
         </div>
       </div>
 
+      {/* Modal for Editing Profile */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg relative z-60">
@@ -203,43 +243,37 @@ const Profile = () => {
               placeholder="Update your bio..."
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="border border-gray-300 p-2 w-full mb-4"
+              className="w-full p-2 mb-4 border border-gray-300 rounded-sm"
             />
             <input
               type="text"
               placeholder="Update your location..."
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="border border-gray-300 p-2 w-full mb-4"
+              className="w-full p-2 mb-4 border border-gray-300 rounded-sm"
             />
             <input
               type="text"
-              placeholder="Nearest Landmark"
+              placeholder="Update nearest landmark..."
               value={nearestLandmark}
               onChange={(e) => setNearestLandmark(e.target.value)}
-              className="border border-gray-300 p-2 w-full mb-4"
+              className="w-full p-2 mb-4 border border-gray-300 rounded-sm"
             />
-
-            {/* Loader during update */}
-            {updateLoading ? (
-              <div className="flex justify-center">
-                <RingLoader color="#FFD700" size={50} />
-              </div>
-            ) : (
+            <div className="flex justify-between space-x-4">
+              <button
+                onClick={closeModal}
+                className="bg-gray-500 text-white w-full text-lg p-3 rounded-sm shadow-lg hover:bg-gray-700 transition-colors duration-200"
+              >
+                Cancel
+              </button>
               <button
                 onClick={updateUserProfile}
-                className="bg-black text-white p-2 rounded-sm hover:bg-gray-800 transition-colors duration-200 ml-3"
+                className="bg-black text-white w-full text-lg p-3 rounded-sm shadow-lg hover:bg-gray-800 transition-colors duration-200"
+                disabled={updateLoading}
               >
-                Save Changes
+                {updateLoading ? "Saving..." : "Save"}
               </button>
-            )}
-
-            <button
-              onClick={closeModal}
-              className="text-red-500 mt-4 hover:text-red-700"
-            >
-              Cancel
-            </button>
+            </div>
           </div>
         </div>
       )}

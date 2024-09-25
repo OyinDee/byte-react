@@ -11,6 +11,8 @@ const RestaurantDashboard = () => {
   const [restaurant, setRestaurant] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visibleOrdersCount, setVisibleOrdersCount] = useState(10);
+
   useEffect(() => {
     const fetchRestaurantAndOrders = async () => {
       const token = localStorage.getItem("token");
@@ -25,7 +27,7 @@ const RestaurantDashboard = () => {
         const restaurantCustomId = decodedToken.restaurant.customId;
   
         const restaurantResponse = await axios.get(
-          `https://mongobyte.onrender.com/api/v1/restaurants/${restaurantCustomId}`,
+          `https://mongobyte.vercel.app/api/v1/restaurants/${restaurantCustomId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -33,11 +35,8 @@ const RestaurantDashboard = () => {
           }
         );
   
-        console.log(restaurantResponse)
         setRestaurant(restaurantResponse.data);
-  
         await fetchOrders(restaurantCustomId, token);
-  
       } catch (error) {
         toast.error(
           error.response && error.response.data.message
@@ -55,7 +54,7 @@ const RestaurantDashboard = () => {
   const fetchOrders = async (restaurantId, token) => {
     try {
       const response = await axios.get(
-        `https://mongobyte.onrender.com/api/v1/orders/restaurant/${restaurantId}`,
+        `https://mongobyte.vercel.app/api/v1/orders/restaurant/${restaurantId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -75,7 +74,7 @@ const RestaurantDashboard = () => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.patch(
-        `https://mongobyte.onrender.com/api/v1/orders/${orderId}`,
+        `https://mongobyte.vercel.app/api/v1/orders/${orderId}`,
         { additionalFee: fee, requestDescription },
         {
           headers: {
@@ -95,6 +94,10 @@ const RestaurantDashboard = () => {
           : "Error updating order status."
       );
     }
+  };
+
+  const handleShowMore = () => {
+    setVisibleOrdersCount((prevCount) => prevCount + 10);
   };
 
   if (loading) {
@@ -134,6 +137,7 @@ const RestaurantDashboard = () => {
                 ? `₦${restaurant.walletBalance.toFixed(2)}`
                 : "₦0.00"}
             </p>
+            <button className='bg-yellow-500 w-full py-1 mt-3 rounded-lg'>Place Withdrawal</button>
           </div>
         </div>
       )}
@@ -167,20 +171,27 @@ const RestaurantDashboard = () => {
         </div>
 
         <div className="space-y-4">
-          {orders.length === 0 ? (
-            <p>No orders found</p>
-          ) : (
-            orders
-              .filter((order) => order.status === activeTab)
-              .map((order) => (
-                <OrderCard
-                  key={order.customId}
-                  order={order}
-                  isPending={order.status === "Pending"}
-                  isConfirmed={order.status === "Confirmed"}
-                  updateOrderStatus={updateOrderStatus}
-                />
-              ))
+          {orders
+            .filter((order) => order.status === activeTab)
+            .slice(0, visibleOrdersCount)
+            .map((order) => (
+              <OrderCard
+                key={order.customId}
+                order={order}
+                isPending={order.status === "Pending"}
+                isConfirmed={order.status === "Confirmed"}
+                updateOrderStatus={updateOrderStatus}
+              />
+            ))}
+
+          {orders.filter((order) => order.status === activeTab).length >
+            visibleOrdersCount && (
+            <button
+              className="bg-gray-300 text-black p-2 rounded-lg mt-4 w-full"
+              onClick={handleShowMore}
+            >
+              Show More
+            </button>
           )}
         </div>
       </div>
@@ -221,7 +232,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
       const token = localStorage.getItem("token");
       try {
         const response = await axios.patch(
-          `https://mongobyte.onrender.com/api/v1/orders/deliver/${order.customId}`,
+          `https://mongobyte.vercel.app/api/v1/orders/deliver/${order.customId}`,
           {},
           {
             headers: {
@@ -246,77 +257,76 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
   };
 
   return (
-    <div className="bg-gray-100 p-4 rounded-lg shadow-md border border-gray-300">
-      <div className="flex justify-between items-center">
-        <p className="text-lg font-bold text-black">Order ID: {order.customId}</p>
+    <div className="bg-gray-100 p-4 rounded-lg shadow-md">
+      <div className="flex justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Order: {order.customId}</h3>
+          <p className="text-sm text-gray-600">Status: {order.status}</p>
+        </div>
         <button
-          className="text-sm font-semibold text-gray-700"
+          className="text-sm text-gray-500"
           onClick={() => setIsOpen(!isOpen)}
         >
-          {isOpen ? "Hide Details" : "View Details"}
+          {isOpen ? "Hide Details" : "Show Details"}
         </button>
       </div>
 
       {isOpen && (
         <div className="mt-4">
-          <p className="text-black font-semibold">Total: ₦{(order.totalPrice * 10).toFixed(2)}</p>
-          <div className="text-gray-600">
-            <p>Location: {order.location}</p>
-            <p>Phone Number: {order.phoneNumber}</p>
-            <p>Status: {order.status}</p>
+        <p className="text-black font-semibold">Total: ₦{(order.totalPrice * 10).toFixed(2)}</p>
+        {/* <div className="text-gray-600"> */}
+          <p>Location: {order.location}</p>
+          <p>Phone Number: {order.phoneNumber}</p>
+          <p>Status: {order.status}</p>
 
-            <div className="mt-2">
-              <h3 className="text-black font-semibold">Meals:</h3>
-              {order.meals.map(({ meal, quantity }, index) => (
-                <p key={index} className="text-gray-700">
-                  {meal.name} - {quantity}x
-                </p>
-              ))}
-            </div>
-
-            <p className="text-gray-600">Note: {order.note}</p>
-            <p className="text-gray-600">
-              Ordered At: {new Date(order.createdAt).toLocaleString()}
-            </p>
-
-            {isPending && (
-              <div className="mt-4">
-                <input
-                  type="number"
-                  value={fees}
-                  onChange={(e) => setFees(e.target.value)}
-                  placeholder="Additional Fee in Naira"
-                  className="p-2 border rounded-lg w-full"
-                />
-                <input
-                  type="text"
-                  value={requestDescription}
-                  onChange={(e) => setRequestDescription(e.target.value)}
-                  placeholder="Description (e.g. delivery fee)"
-                  className="p-2 border rounded-lg w-full mt-2"
-                />
-                <button
-                  className="bg-black text-white p-2 rounded-lg mt-2 w-full"
-                  onClick={onRequest}
-                  disabled={isRequesting}
-                >
-                  {isRequesting ? "Requesting..." : "Request Additional Fee"}
-                </button>
-              </div>
-            )}
-
-            {isConfirmed && (
-              <div className="mt-4">
-                <button
-                  className="bg-black text-white p-2 rounded-lg mt-2 w-full"
-                  onClick={markAsDelivered}
-                  disabled={isDelivering}
-                >
-                  {isDelivering ? "Delivering..." : "Mark as Delivered"}
-                </button>
-              </div>
-            )}
+          <div className="mt-2">
+            <h3 className="text-black font-semibold">Meals:</h3>
+            {order.meals.map(({ meal, quantity }, index) => (
+              <p key={index} className="text-gray-700">
+                {meal.name} - {quantity}x - ₦{meal.price*10}
+              </p>
+            ))}
           </div>
+
+          <p className="text-gray-600">Note: {order.note}</p>
+          <p className="text-gray-600">
+            Ordered At: {new Date(order.createdAt).toLocaleString()}
+          </p>
+
+          {isPending && (
+            <div className="mt-4">
+              <input
+                type="number"
+                placeholder="Enter fee"
+                value={fees}
+                onChange={(e) => setFees(e.target.value)}
+                className="p-2 rounded-lg border border-gray-400 w-full mb-2"
+              />
+              <textarea
+                placeholder="Request description"
+                value={requestDescription}
+                onChange={(e) => setRequestDescription(e.target.value)}
+                className="p-2 rounded-lg border border-gray-400 w-full mb-2"
+              />
+              <button
+                className="bg-yellow-500 text-white p-2 rounded-lg w-full"
+                onClick={onRequest}
+                disabled={isRequesting}
+              >
+                {isRequesting ? "Requesting..." : "Request Fee"}
+              </button>
+            </div>
+          )}
+
+          {isConfirmed && (
+            <button
+              className="bg-green-500 text-white p-2 rounded-lg w-full mt-4"
+              onClick={markAsDelivered}
+              disabled={isDelivering}
+            >
+              {isDelivering ? "Delivering..." : "Mark as Delivered"}
+            </button>
+          )}
         </div>
       )}
     </div>

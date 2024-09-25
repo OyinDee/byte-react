@@ -20,7 +20,7 @@ const CombinedPage = () => {
     const fetchRestaurants = async () => {
       try {
         const response = await axios.get(
-          "https://mongobyte.onrender.com/api/v1/restaurants"
+          "https://mongobyte.vercel.app/api/v1/restaurants"
         );
         
         const sortedRestaurants = response.data.sort((a, b) =>

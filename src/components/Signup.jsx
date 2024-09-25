@@ -55,7 +55,7 @@ const SignUp = () => {
     try {
       const fullPhoneNumber = `${phoneCode}${phoneNumber}`;
 
-      await axios.post("https://mongobyte.onrender.com/api/v1/auth/register", {
+      await axios.post("https://mongobyte.vercel.app/api/v1/auth/register", {
         username: username.trim(),
         email: email.trim(),
         password,
@@ -101,7 +101,7 @@ const SignUp = () => {
       >
         <form
           onSubmit={handleSubmit}
-          className="bg-white bg-opacity-20 backdrop-blur-xs p-8 rounded-lg shadow-lg w-full max-w-md sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl"
+          className="bg-white bg-opacity-40 backdrop-blur-xs p-8 rounded-lg shadow-lg w-full max-w-md sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl"
         >
           <h2 className="text-2xl font-bold mb-6 text-center text-accentwhite">
             Sign Up for Byte!
@@ -142,7 +142,6 @@ const SignUp = () => {
             />
           </div>
 
-          {/* Phone Code and Number */}
           <div className="flex mb-4">
             <input
               type="text"
