@@ -3,6 +3,8 @@ import axios from "axios";
 import {jwtDecode} from "jwt-decode";
 import { RingLoader } from "react-spinners";
 import html2canvas from "html2canvas"; 
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -115,6 +117,7 @@ const Profile = () => {
     const profileElement = profileRef.current;
   
     if (profileElement) {
+      toast.info("Wait a minute....");
       html2canvas(profileElement, {
         backgroundColor: "#fff",
         useCORS: true, 
@@ -175,7 +178,7 @@ const Profile = () => {
               {user?.bio || "Life is uncertain. Eat dessert first!"}
             </blockquote>
           </div>
-
+       </div>
           <div className="mt-6 flex flex-col lg:flex-row lg:justify-between">
             <div className="mb-4 lg:mb-0">
               <h2 className="text-xl font-semibold mb-2">Phone Number</h2>
@@ -200,7 +203,7 @@ const Profile = () => {
               </div>
             </div>
           </div>
-        </div>
+        
 
         {/* Buttons */}
         <div className="space-y-2 mt-2">
