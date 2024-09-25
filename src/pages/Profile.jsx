@@ -173,10 +173,10 @@ const Profile = () => {
                 {user?.bio || "Life is uncertain. Eat dessert first!"}
               </blockquote>
               <div className="mt-6 flex flex-col lg:flex-row lg:justify-between">
-                <div className="mb-4 lg:mb-0">
-                  <h2 className="text-xl font-semibold mb-2">Phone Number</h2>
-                  <p className="text-lg">{user?.phoneNumber}</p>
-                </div>
+              <div className="mb-4 lg:mb-0">
+              <h2 className="text-xl font-semibold mb-2">Location</h2>
+              <p className="text-lg">{user?.location || "Unknown"}</p>
+            </div>
               </div>
             </div>
           </div>
