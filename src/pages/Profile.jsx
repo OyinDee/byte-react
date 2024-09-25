@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { RingLoader } from "react-spinners";
-import html2canvas from "html2canvas"; 
+import html2canvas from "html2canvas";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -14,7 +14,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [error, setError] = useState(null);
-  const profileRef = useRef(null); 
+  const profileRef = useRef(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -81,7 +81,6 @@ const Profile = () => {
       if (selectedImage) {
         imageUrl = await handleImageUpload();
       }
-
       const data = await axios.post(
         "https://mongobyte.vercel.app/api/v1/users/updateProfile",
         { imageUrl, bio, location, nearestLandmark },
@@ -113,13 +112,12 @@ const Profile = () => {
 
   const takeSnapshot = () => {
     const profileElement = profileRef.current;
-  
     if (profileElement) {
       html2canvas(profileElement, {
         backgroundColor: "#fff",
-        useCORS: true, 
-        allowTaint: false, 
-        scale: 2 
+        useCORS: true,
+        allowTaint: false,
+        scale: 2,
       }).then((canvas) => {
         const link = document.createElement("a");
         link.href = canvas.toDataURL("image/png");
@@ -128,7 +126,6 @@ const Profile = () => {
       });
     }
   };
-  
 
   if (loading) {
     return (
@@ -152,7 +149,7 @@ const Profile = () => {
     <div className="relative min-h-screen pt-5 pb-20 bg-white text-black">
       <div className="relative z-10 flex flex-col items-center justify-center p-4 lg:p-8">
         <div
-          ref={profileRef} 
+          ref={profileRef}
           className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 border border-gray-200"
         >
           <div className="flex flex-col items-center text-center relative">
@@ -160,7 +157,7 @@ const Profile = () => {
               <img
                 src={user?.imageUrl || "/Images/nk.jpg"}
                 alt="ProfilePicture"
-                className="rounded-full border-1 border-black mb-4 object-cover"
+                className="rounded-full border-2 border-black mb-4 object-cover"
                 style={{ width: 150, height: 150 }}
               />
             </div>
@@ -176,33 +173,14 @@ const Profile = () => {
             </blockquote>
           </div>
 
-          <div className="mt-6 flex flex-col lg:flex-row lg:justify-between">
+          <div className="mt-6">
             <div className="mb-4 lg:mb-0">
               <h2 className="text-xl font-semibold mb-2">Phone Number</h2>
               <p className="text-lg">{user?.phoneNumber}</p>
             </div>
-        </div>
-            <div className="mb-4 lg:mb-0">
-              <h2 className="text-xl font-semibold mb-2">Location</h2>
-              <p className="text-lg">{user?.location || "Unknown"}</p>
-            </div>
-            <div className="mb-4 lg:mb-0">
-              <h2 className="text-xl font-semibold mb-2">Nearest Landmark</h2>
-              <p className="text-lg">{user?.nearestLandmark || "N/A"}</p>
-            </div>
-            <div className="flex flex-col lg:flex-row lg:justify-between">
-              <div className="mb-4 lg:mb-0">
-                <h2 className="text-xl font-semibold mb-2">Total Bytes</h2>
-                <p className="text-lg">{user?.orderHistory.length}</p>
-              </div>
-              <div className="mb-4 lg:mb-0">
-                <h2 className="text-xl font-semibold mb-2">Byte Balance</h2>
-                <p className="text-lg">{user?.byteBalance}</p>
-              </div>
-            </div>
           </div>
+        </div>
 
-        {/* Buttons */}
         <div className="space-y-2 mt-2">
           <button
             onClick={openModal}
@@ -210,7 +188,6 @@ const Profile = () => {
           >
             Edit Profile
           </button>
-
 
           <button
             onClick={takeSnapshot}
@@ -227,7 +204,6 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Modal for Editing Profile */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg relative z-60">
