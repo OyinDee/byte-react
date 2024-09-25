@@ -23,7 +23,7 @@ import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import MealsPage from "./pages/MealsPage";
-
+import OrderHistory from './pages/OrderHistory'
 function App() {
   return (
     <AuthProvider>
@@ -62,6 +62,10 @@ function App() {
             <Route
               path="/user/fund"
               element={<PrivateRoute element={<Fund />} />}
+            />
+            <Route
+              path="/user/orderhistory"
+              element={<PrivateRoute element={<OrderHistory />} />}
             />
             <Route
               path="/user/checkrestaurant/:id"

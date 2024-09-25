@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { RingLoader } from "react-spinners";
-
+import {useNavigate} from 'react-router-dom'
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -13,7 +13,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [updateLoading, setUpdateLoading] = useState(false); 
   const [error, setError] = useState(null);
-
+  const navigate = useNavigate()
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
@@ -180,19 +180,19 @@ const Profile = () => {
           <div className="flex justify-end mt-8">
             <button
               onClick={openModal}
-              className="bg-black text-white w-full text-lg p-3 rounded-sm shadow-lg hover:bg-gray-800 transition-colors duration-200"
+              className="bg-black text-white w-full text-lg p-3 rounded-md shadow-lg hover:bg-gray-800 transition-colors duration-200"
             >
               Edit Profile
             </button>
           </div>
-        </div>
-      </div>
       <button
-            onClick={() => alert("Redirect to Order History")}
-            className="bg-yellow-500 text-black w-full text-lg p-3 rounded-sm shadow-lg  transition-colors duration-200"
+            onClick={() => navigate('/user/orderhistory')}
+            className="bg-yellow-500 text-black w-full text-lg p-3 mt-2  rounded-md shadow-lg  transition-colors duration-200"
           >
             Check Order History
           </button>
+        </div>
+      </div>
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
