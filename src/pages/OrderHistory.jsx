@@ -7,34 +7,48 @@ import 'react-toastify/dist/ReactToastify.css';
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
   const [expandedOrders, setExpandedOrders] = useState({});
+  const [page, setPage] = useState(1);  
+  const [hasMoreOrders, setHasMoreOrders] = useState(true);
 
-  useEffect(() => {
-    const fetchOrderHistory = async () => {
-      const token = localStorage.getItem('token');
-      const byteUser = JSON.parse(localStorage.getItem('byteUser'));
+  const ordersPerPage = 10;
 
-      if (token && byteUser?.username) {
-        try {
-          const response = await axios.get(
-            `https://mongobyte.vercel.app/api/v1/users/orders/${byteUser.username}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          setOrders(response.data);
-        } catch (error) {
-          handleAxiosError(error, 'Failed to load order history.');
-        } finally {
-          setLoading(false);
+  const fetchOrderHistory = async (isLoadMore = false) => {
+    const token = localStorage.getItem('token');
+    const byteUser = JSON.parse(localStorage.getItem('byteUser'));
+
+    if (token && byteUser?.username) {
+      try {
+        const response = await axios.get(
+          `https://mongobyte.vercel.app/api/v1/users/orders/${byteUser.username}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+
+        const sortedOrders = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const paginatedOrders = sortedOrders.slice(0, page * ordersPerPage);
+
+        if (isLoadMore) {
+          setOrders((prevOrders) => [...prevOrders, ...paginatedOrders.slice(prevOrders.length)]);
+        } else {
+          setOrders(paginatedOrders);
         }
-      } else {
-        toast.error('No user token found. Please log in.');
+
+        setHasMoreOrders(paginatedOrders.length < sortedOrders.length);
+      } catch (error) {
+        handleAxiosError(error, 'Failed to load order history.');
+      } finally {
         setLoading(false);
       }
-    };
+    } else {
+      toast.error('No user token found. Please log in.');
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchOrderHistory();
-  }, []);
+  }, [page]);
 
   const handleExpandClick = (orderId) => {
     setExpandedOrders((prevState) => ({
@@ -51,11 +65,11 @@ const OrderHistory = () => {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       toast.success('Fee accepted successfully');
-      setOrders(orders.map(order => 
-        order._id === orderId ? { ...order, status: 'Confirmed' } : order
-      ));
+      fetchOrderHistory();
+
     } catch (error) {
       handleAxiosError(error, 'Failed to accept fee.');
+      fetchOrderHistory();
     }
   };
 
@@ -67,11 +81,10 @@ const OrderHistory = () => {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       toast.success('Order canceled successfully');
-      setOrders(orders.map(order => 
-        order._id === orderId ? { ...order, status: 'Cancelled' } : order
-      ));
+      fetchOrderHistory();
     } catch (error) {
       handleAxiosError(error, 'Failed to cancel order.');
+      fetchOrderHistory();
     }
   };
 
@@ -86,6 +99,10 @@ const OrderHistory = () => {
       console.error('Error:', error.message);
       toast.error(defaultMessage);
     }
+  };
+
+  const handleLoadMore = () => {
+    setPage((prevPage) => prevPage + 1);
   };
 
   if (loading) {
@@ -109,7 +126,7 @@ const OrderHistory = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <h2 className="text-xl font-semibold mb-2">Order #{order.customId}</h2>
-                    <p className="text-lg">Total: {order.totalPrice} NGN</p>
+                    <p className="text-lg">Total: {order.totalPrice}0 NGN</p>
                     <p className="text-lg">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
                     <p className="text-lg">Status: {order.status}</p>
                   </div>
@@ -125,20 +142,26 @@ const OrderHistory = () => {
 
                 {expandedOrders[order._id] && (
                   <div className="mt-4">
-                    <p>Phone Number: {order.phoneNumber}</p>
-                    <p>Location: {order.location}</p>
-                    <p>Note: {order.note || "No note"}</p>
+                    <h3 className="text-lg font-semibold mb-2">Meal Details</h3>
+                    <ul className="list-disc pl-5">
+                      {order.meals.map((mealDetail) => (
+                        <li key={mealDetail.meal._id}>
+                          <p>Meal: {mealDetail.meal.name}</p>
+                          <p>Quantity: {mealDetail.quantity}</p>
+                        </li>
+                      ))}
+                    </ul>
 
                     {order.status === "Fee Requested" && (
-                      <div className="flex space-x-4 mt-4">
+                      <div className="mt-4">
                         <button
-                          className="bg-green-500 text-white px-4 py-2 rounded"
+                          className="bg-black w-full text-white px-4 py-2 rounded"
                           onClick={() => handleAcceptFee(order._id)}
                         >
                           Accept Fee
                         </button>
                         <button
-                          className="bg-red-500 text-white px-4 py-2 rounded"
+                          className="bg-yellow-500 w-full mt-2 text-white px-4 py-2 rounded"
                           onClick={() => handleCancelOrder(order._id)}
                         >
                           Cancel Order
@@ -150,6 +173,16 @@ const OrderHistory = () => {
               </li>
             ))}
           </ul>
+        )}
+        {hasMoreOrders && (
+          <div className="flex justify-center mt-6">
+            <button
+              className="bg-black text-white px-6 py-2 rounded"
+              onClick={handleLoadMore}
+            >
+              Show More
+            </button>
+          </div>
         )}
       </div>
     </div>

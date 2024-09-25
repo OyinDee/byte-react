@@ -83,11 +83,11 @@ const RestaurantDashboard = () => {
         }
       );
       toast.success(response.data.message);
-      setTimeout(() => {
-        window.location.reload();
-      }, 5000);
+      fetchOrders(restaurant.customId, token);
+
+
     } catch (error) {
-      await fetchOrders(restaurant.customId, token);
+       fetchOrders(restaurant.customId, token);
       toast.error(
         error.response && error.response.data.message
           ? error.response.data.message
@@ -274,7 +274,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
       {isOpen && (
         <div className="mt-4">
         <p className="text-black font-semibold">Total: ₦{(order.totalPrice * 10).toFixed(2)}</p>
-        {/* <div className="text-gray-600"> */}
+
           <p>Location: {order.location}</p>
           <p>Phone Number: {order.phoneNumber}</p>
           <p>Status: {order.status}</p>
@@ -320,7 +320,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
 
           {isConfirmed && (
             <button
-              className="bg-green-500 text-white p-2 rounded-lg w-full mt-4"
+              className="bg-black text-white p-2 rounded-lg w-full mt-4"
               onClick={markAsDelivered}
               disabled={isDelivering}
             >
