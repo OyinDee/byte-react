@@ -146,7 +146,7 @@ const OrderHistory = () => {
                     <ul className="list-disc pl-5">
                       {order.meals.map((mealDetail) => (
                         <li key={mealDetail.meal._id}>
-                          <p>Meal: {mealDetail.meal.name}</p>
+                          <p>Meal: {mealDetail.meals.name}</p>
                           <p>Quantity: {mealDetail.quantity}</p>
                         </li>
                       ))}
@@ -156,13 +156,13 @@ const OrderHistory = () => {
                       <div className="mt-4">
                         <button
                           className="bg-black w-full text-white px-4 py-2 rounded"
-                          onClick={() => handleAcceptFee(order._id)}
+                          onClick={() => handleAcceptFee(order.customId)}
                         >
                           Accept Fee
                         </button>
                         <button
                           className="bg-yellow-500 w-full mt-2 text-white px-4 py-2 rounded"
-                          onClick={() => handleCancelOrder(order._id)}
+                          onClick={() => handleCancelOrder(order.customId)}
                         >
                           Cancel Order
                         </button>
