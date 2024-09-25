@@ -120,7 +120,7 @@ const Profile = () => {
         backgroundColor: "#fff",
         useCORS: true,
         allowTaint: false,
-        scale: 2,
+        scale: 3,
       }).then((canvas) => {
         const link = document.createElement("a");
         link.href = canvas.toDataURL("image/png");
