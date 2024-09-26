@@ -15,7 +15,7 @@ const CallbackPage = () => {
     if (reference) {
       try {
         const response = await axios.get(
-          `https://mongobyte.onrender.com/api/v1/pay/callback?reference=${reference}`
+          `https://mongobyte.vercel.app/api/v1/pay/callback?reference=${reference}`
         );
         setPaymentStatus(response.data.status);
         navigate("/user/profile");

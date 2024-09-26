@@ -22,7 +22,7 @@ const RestaurantPage = () => {
       const fetchRestaurant = async () => {
         try {
           const response = await axios.get(
-            `https://mongobyte.onrender.com/api/v1/users/restdetails/${id}`
+            `https://mongobyte.vercel.app/api/v1/users/restdetails/${id}`
           );
           console.log(response)
 

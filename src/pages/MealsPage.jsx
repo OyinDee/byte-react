@@ -31,7 +31,7 @@ const MealsPage = () => {
     if (window.confirm("Delete meal?")) {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(`https://mongobyte.onrender.com/api/v1/meals/${customId}`, {
+        await axios.delete(`https://mongobyte.vercel.app/api/v1/meals/${customId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setMeals(meals.filter((meal) => meal.customId !== customId));
@@ -65,7 +65,7 @@ const MealsPage = () => {
         setLoadingMeals(true);  
         try {
           const response = await axios.get(
-            `https://mongobyte.onrender.com/api/v1/restaurants/mymeals/${customId}`
+            `https://mongobyte.vercel.app/api/v1/restaurants/mymeals/${customId}`
           );
           setMeals(response.data);
         } catch (error) {
@@ -93,7 +93,7 @@ const MealsPage = () => {
 
   const uploadImage = async (base64Image) => {
     try {
-      const response = await axios.post("https://mongobyte.onrender.com/api/v1/users/upload", {
+      const response = await axios.post("https://mongobyte.vercel.app/api/v1/users/upload", {
         image: base64Image,
       });
       return response.data.url;
@@ -118,7 +118,7 @@ const MealsPage = () => {
 
       if (isEditing && editingMealId) {
         await axios.put(
-          `https://mongobyte.onrender.com/api/v1/meals/${editingMealId}`,
+          `https://mongobyte.vercel.app/api/v1/meals/${editingMealId}`,
           {
             ...form,
             price: Number(form.price),
@@ -138,7 +138,7 @@ const MealsPage = () => {
         toast.success("Meal updated successfully!");
       } else {
         const response = await axios.post(
-          `https://mongobyte.onrender.com/api/v1/meals/${customId}/create`,
+          `https://mongobyte.vercel.app/api/v1/meals/${customId}/create`,
           {
             ...form,
             price: Number(form.price),
@@ -168,7 +168,7 @@ const MealsPage = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `https://mongobyte.onrender.com/api/v1/meals/${meal.customId}`,
+        `https://mongobyte.vercel.app/api/v1/meals/${meal.customId}`,
         { availability: !meal.availability },
         { headers: { Authorization: `Bearer ${token}` } }
       );
