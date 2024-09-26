@@ -2,6 +2,7 @@ import React from "react";
 import RestaurantNavbar from "./RestaurantNavbar";
 import UserNavbar from "./UserNavbar";
 import PublicNavbar from "./PublicNavbar";
+import SuperAdminNavbar from "./SuperAdminNav";
 import { useAuth } from "../context/authContext";
 import { useLocation } from "react-router-dom";
 
@@ -16,6 +17,8 @@ const NavbarWrapper = () => {
       pathname !== "/restaurant/login"
     ) {
       return <RestaurantNavbar />;
+    } else if (pathname.startsWith("/superadmin")) {
+      return <SuperAdminNavbar />;
     } else if (pathname.startsWith("/user")) {
       return <UserNavbar />;
     } else {

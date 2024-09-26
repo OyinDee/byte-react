@@ -11,6 +11,7 @@ import { CartProvider } from "./context/cartContext";
 import PrivateRoute from "./components/PrivateRoute";
 import UserDashboard from "./pages/UserDashboard";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard"; 
 import SignUpSuccess from "./pages/SignupSuccess";
 import SignUp from "./components/Signup";
 import ResetPassword from "./pages/ForgotPassword";
@@ -24,6 +25,7 @@ import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import MealsPage from "./pages/MealsPage";
 import OrderHistory from './pages/OrderHistory'
+
 function App() {
   return (
     <AuthProvider>
@@ -31,13 +33,11 @@ function App() {
         <Router>
           <NavbarWrapper />
           <Routes>
-
             <Route path="/" element={<Home />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signupsuccess" element={<SignUpSuccess />} />
             <Route path="/forgot-password" element={<ResetPassword />} />
-            
 
             <Route
               path="/user"
@@ -71,11 +71,12 @@ function App() {
               path="/user/checkrestaurant/:id"
               element={<PrivateRoute element={<RestaurantPage />} />}
             />
+
             <Route
               path="/restaurant/dashboard"
               element={<PrivateRoute element={<RestaurantDashboard />} />}
             />
-              <Route
+            <Route
               path="/restaurant/notifications"
               element={<PrivateRoute element={<Notifications />} />}
             />
@@ -84,6 +85,11 @@ function App() {
               element={<PrivateRoute element={<MealsPage />} />}
             />
             <Route path="/restaurant/login" element={<AdminLogin />} />
+
+            <Route
+              path="/superadmin/dashboard"
+              element={<PrivateRoute element={<SuperAdminDashboard />} />} 
+            />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
