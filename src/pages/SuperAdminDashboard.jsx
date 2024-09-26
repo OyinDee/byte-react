@@ -103,9 +103,7 @@ const SuperAdminDashboard = () => {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-3xl font-bold text-yellow-500">Super Admin Dashboard</h1>
-
+    <div className="p-4 min-h-screen my-20">
       <div className="mt-6">
         <h2 className="text-2xl font-semibold">Add New Restaurant</h2>
         <input
