@@ -53,6 +53,7 @@ const RestaurantDashboard = () => {
 
 
   const handleWithdrawal = async () => {
+    toast.info("Wait a minute...")
     if (!restaurant.walletBalance || isNaN(restaurant.walletBalance) || parseFloat(restaurant.walletBalance) <= 0) {
       toast.error("Please enter a valid amount.");
       return;

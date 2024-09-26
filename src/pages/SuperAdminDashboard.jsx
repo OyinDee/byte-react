@@ -21,7 +21,7 @@ const SuperAdminDashboard = () => {
     const fetchRestaurants = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("https://mongobyte.onrender.com/api/superadmin/restaurants", {
+        const response = await axios.get("https://mongobyte.onrender.com/api/superadmin/allrestaurants", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setRestaurants(response.data);
@@ -175,7 +175,7 @@ const SuperAdminDashboard = () => {
           name="image"
           accept="image/*"
           onChange={handleImageChange}
-          className="border p-2 m-2"
+          className="border p-2 my-2 w-full"
         />
         <button
           onClick={handleAddRestaurant}
