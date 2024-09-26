@@ -105,14 +105,14 @@ const SuperAdminDashboard = () => {
   return (
     <div className="p-4 min-h-screen my-20">
       <div className="mt-6">
-        <h2 className="text-2xl font-semibold">Add New Restaurant</h2>
+        <h2 className="text-2xl font-semibold text-center">Add New Restaurant</h2>
         <input
           type="text"
           name="name"
           value={newRestaurant.name}
           onChange={handleInputChange}
           placeholder="Name"
-          className="border p-2 m-2"
+          className="border p-2 my-2 w-full rounded-md"
         />
         <input
           type="email"
@@ -120,7 +120,7 @@ const SuperAdminDashboard = () => {
           value={newRestaurant.email}
           onChange={handleInputChange}
           placeholder="Email"
-          className="border p-2 m-2"
+          className="border p-2 my-2 w-full rounded-md"
         />
         <input
           type="text"
@@ -128,7 +128,7 @@ const SuperAdminDashboard = () => {
           value={newRestaurant.description}
           onChange={handleInputChange}
           placeholder="Description"
-          className="border p-2 m-2"
+          className="border p-2 my-2 w-full rounded-md"
         />
         <input
           type="text"
@@ -136,7 +136,7 @@ const SuperAdminDashboard = () => {
           value={newRestaurant.location}
           onChange={handleInputChange}
           placeholder="Location"
-          className="border p-2 m-2"
+          className="border p-2 my-2 w-full rounded-md"
         />
         <input
           type="text"
@@ -144,7 +144,7 @@ const SuperAdminDashboard = () => {
           value={newRestaurant.contactNumber}
           onChange={handleInputChange}
           placeholder="Contact Number"
-          className="border p-2 m-2"
+          className="border  p-2 my-2 w-full rounded-md"
         />
         <input
           type="text"
@@ -152,7 +152,7 @@ const SuperAdminDashboard = () => {
           value={newRestaurant.bankName}
           onChange={handleInputChange}
           placeholder="Bank Name"
-          className="border p-2 m-2"
+          className="border  p-2 my-2 w-full rounded-md"
         />
         <input
           type="text"
@@ -160,7 +160,7 @@ const SuperAdminDashboard = () => {
           value={newRestaurant.accountNumber}
           onChange={handleInputChange}
           placeholder="Account Number"
-          className="border p-2 m-2"
+          className="border p-2 my-2 w-full rounded-md"
         />
         <input
           type="text"
@@ -168,7 +168,7 @@ const SuperAdminDashboard = () => {
           value={newRestaurant.accountHolder}
           onChange={handleInputChange}
           placeholder="Account Holder's Name"
-          className="border p-2 m-2"
+          className="border p-2 my-2 w-full rounded-md"
         />
         <input
           type="file"
@@ -179,7 +179,7 @@ const SuperAdminDashboard = () => {
         />
         <button
           onClick={handleAddRestaurant}
-          className="bg-yellow-500 text-white p-2 mt-4"
+          className="bg-yellow-500 text-white py-2 mt-4 w-full rounded-lg"
         >
           Add Restaurant
         </button>
