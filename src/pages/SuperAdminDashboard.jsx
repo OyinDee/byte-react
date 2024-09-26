@@ -80,7 +80,7 @@ const SuperAdminDashboard = () => {
       });
 
       toast.success("Restaurant added successfully!");
-      const response = await axios.get("https://mongobyte.onrender.com/api/superadmin/restaurants", {
+      const response = await axios.get("https://mongobyte.onrender.com/api/superadmin/allrestaurants", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRestaurants(response.data);
