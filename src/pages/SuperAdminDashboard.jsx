@@ -11,6 +11,9 @@ const SuperAdminDashboard = () => {
     location: "",
     contactNumber: "",
     password: "",
+    bankName: "",
+    accountNumber: "",
+    accountHolder: "",
   });
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -88,6 +91,9 @@ const SuperAdminDashboard = () => {
         location: "",
         contactNumber: "",
         password: "",
+        bankName: "",
+        accountNumber: "",
+        accountHolder: "",
       });
       setSelectedImage(null);
     } catch (error) {
@@ -140,6 +146,30 @@ const SuperAdminDashboard = () => {
           value={newRestaurant.contactNumber}
           onChange={handleInputChange}
           placeholder="Contact Number"
+          className="border p-2 m-2"
+        />
+        <input
+          type="text"
+          name="bankName"
+          value={newRestaurant.bankName}
+          onChange={handleInputChange}
+          placeholder="Bank Name"
+          className="border p-2 m-2"
+        />
+        <input
+          type="text"
+          name="accountNumber"
+          value={newRestaurant.accountNumber}
+          onChange={handleInputChange}
+          placeholder="Account Number"
+          className="border p-2 m-2"
+        />
+        <input
+          type="text"
+          name="accountHolder"
+          value={newRestaurant.accountHolder}
+          onChange={handleInputChange}
+          placeholder="Account Holder's Name"
           className="border p-2 m-2"
         />
         <input
