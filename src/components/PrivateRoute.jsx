@@ -11,8 +11,8 @@ const PrivateRoute = ({ element }) => {
     if (!loading) {
       if (!auth) {
         setRedirect("/login");
-      } else if (auth.user && auth.user.superAdmin) {
-        setRedirect("/superadmin/");
+      } else if (auth.user && auth.user.superAdmin  && (window.location.pathname.startsWith("/restaurant") ||  window.location.pathname.startsWith("/user"))) {
+        setRedirect("/superadmin/dashboard");
       } else if (auth.user && window.location.pathname.startsWith("/restaurant")) {
         setRedirect("/user");
       } else if (auth.restaurant && window.location.pathname.startsWith("/user")) {
