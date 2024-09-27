@@ -149,7 +149,7 @@ const SignUp = () => {
               value={phoneCode}
               onChange={(e) => setPhoneCode(e.target.value)}
               className="w-1/3 p-2 border text-black border-gray-300 rounded-l mt-1"
-              placeholder="Country code (e.g., +1)"
+              placeholder="+234"
               required
             />
             <input
@@ -158,7 +158,7 @@ const SignUp = () => {
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               className="w-2/3 p-2 border text-black border-gray-300 rounded-r mt-1"
-              placeholder="Phone number (10 digits)"
+              placeholder="80XXXXXXXX"
               required
             />
           </div>
