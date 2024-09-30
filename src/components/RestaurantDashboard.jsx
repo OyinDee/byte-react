@@ -307,7 +307,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
 
       {isOpen && (
         <div className="mt-4">
-        <p className="text-black font-semibold">Total: ₦{(order.totalPrice * 10).toFixed(2)}</p>
+        <p className="text-black font-semibold">Total: ₦{(order.totalPrice).toFixed(2)}</p>
 
           <p>Location: {order.location}</p>
           <p>Phone Number: {order.phoneNumber}</p>
@@ -317,7 +317,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
             <h3 className="text-black font-semibold">Meals:</h3>
             {order.meals.map(({ meal, quantity }, index) => (
               <p key={index} className="text-gray-700">
-                {meal.name} - {quantity}x - ₦{meal.price*10}
+                {meal.name} - {quantity}x - ₦{meal.price}
               </p>
             ))}
           </div>
