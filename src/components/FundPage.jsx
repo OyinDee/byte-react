@@ -79,7 +79,7 @@ const FundPage = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ amount: total/10 }),
+          body: JSON.stringify({ amount: total }),
         }
       );
 
