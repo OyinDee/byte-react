@@ -18,7 +18,7 @@ const FundPage = () => {
   const [user, setUser] = useState(null);
 
   const navigate = useNavigate();
-  const NAIRA_TO_BYTES_RATE = 0.1;
+  const NAIRA_TO_BYTES_RATE = 1;
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -79,7 +79,7 @@ const FundPage = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ amount: total }),
+          body: JSON.stringify({ amount: total/10 }),
         }
       );
 
@@ -147,7 +147,7 @@ const FundPage = () => {
         <ToastContainer position="top-right" reverseOrder={false} />
         <div className="text-center mb-6">
           <p className="text-xl font-semibold">
-            Byte Balance: <span className="text-black">B{user.byteBalance}</span>
+            Byte Balance: <span className="text-black">B{user.byteBalance}0</span>
           </p>
         </div>
 
