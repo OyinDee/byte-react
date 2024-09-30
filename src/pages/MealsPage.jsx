@@ -37,6 +37,8 @@ const MealsPage = () => {
         setMeals(meals.filter((meal) => meal.customId !== customId));
         toast.success("Meal deleted successfully!");
       } catch (error) {
+        alert(error.message)
+        console.log(error)
         toast.error("Error deleting meal!");
       }
     }
