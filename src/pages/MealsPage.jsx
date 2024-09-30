@@ -37,8 +37,7 @@ const MealsPage = () => {
         setMeals(meals.filter((meal) => meal.customId !== customId));
         toast.success("Meal deleted successfully!");
       } catch (error) {
-        alert(error.message)
-        console.log(error)
+        
         toast.error("Error deleting meal!");
       }
     }
@@ -67,7 +66,7 @@ const MealsPage = () => {
         setLoadingMeals(true);  
         try {
           const response = await axios.get(
-            `https://mongobyte.onrender.com/api/v1/restaurants/mymeals/${customId}`
+            `https://mongobyte.onrender.com/api/v1/meals/${customId}`
           );
           setMeals(response.data);
         } catch (error) {
