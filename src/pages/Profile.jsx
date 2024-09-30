@@ -172,7 +172,7 @@ const Profile = () => {
               </div>
               <div className="mb-4 lg:mb-0">
                 <h2 className="text-xl font-semibold mb-2">Byte Balance</h2>
-                <p className="text-lg">{user?.byteBalance}</p>
+                <p className="text-lg">{user?.byteBalance*10}</p>
               </div>
           </div>
           </div>
