@@ -66,7 +66,7 @@ const MealsPage = () => {
         setLoadingMeals(true);  
         try {
           const response = await axios.get(
-            `https://mongobyte.onrender.com/api/v1/meals/${customId}`
+            `https://mongobyte.onrender.com/api/v1/restaurants/mymeals/${customId}`
           );
           setMeals(response.data);
         } catch (error) {
