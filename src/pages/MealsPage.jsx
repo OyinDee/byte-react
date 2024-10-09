@@ -6,8 +6,8 @@ import 'react-toastify/dist/ReactToastify.css';
 
 
 const Loader = () => (
-  <div className="flex justify-center items-center">
-    <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-black"></div>
+  <div className="flex items-center justify-center">
+    <div className="inline-block w-8 h-8 text-black border-4 rounded-full spinner-border animate-spin"></div>
   </div>
 );
 
@@ -185,9 +185,9 @@ const MealsPage = () => {
   };
 
   return (
-    <div className="p-4 bg-white text-black min-h-screen pb-20"> 
-      <div className="max-w-xl mx-auto pb-20">
-        <h2 className="text-xl font-semibold mb-4"> {isEditing ? "Update Meal" : "Add New Meal"}</h2>
+    <div className="min-h-screen p-4 pb-20 text-black bg-white"> 
+      <div className="max-w-xl pb-20 mx-auto">
+        <h2 className="mb-4 text-xl font-semibold"> {isEditing ? "Update Meal" : "Add New Meal"}</h2>
         <form onSubmit={handleFormSubmit} className="p-4 rounded-lg">
           <input
             type="text"
@@ -195,7 +195,7 @@ const MealsPage = () => {
             value={form.name}
             onChange={handleInputChange}
             required
-            className="w-full mb-2 p-2 border rounded bg-white text-black" 
+            className="w-full p-2 mb-2 text-black bg-white border rounded" 
             placeholder="Name"
           />
           <input
@@ -203,14 +203,14 @@ const MealsPage = () => {
             name="description"
             value={form.description}
             onChange={handleInputChange}
-            className="w-full mb-2 p-2 border rounded bg-white text-black"
+            className="w-full p-2 mb-2 text-black bg-white border rounded"
             placeholder="Description"
           />
           <select
             name="tag"
             value={form.tag}
             onChange={handleInputChange}
-            className="w-full mb-2 p-2 border rounded bg-white text-black"
+            className="w-full p-2 mb-2 text-black bg-white border rounded"
           >
             <option value="combo">Combo</option>
             <option value="add-on">Add-On</option>
@@ -222,7 +222,7 @@ const MealsPage = () => {
             value={form.price}
             onChange={handleInputChange}
             required
-            className="w-full mb-2 p-2 border rounded bg-white text-black"
+            className="w-full p-2 mb-2 text-black bg-white border rounded"
             placeholder="Price (B)"
           />
           <select
@@ -234,7 +234,7 @@ const MealsPage = () => {
                 availability: e.target.value === "true",
               }))
             }
-            className="w-full mb-2 p-2 border rounded bg-white text-black"
+            className="w-full p-2 mb-2 text-black bg-white border rounded"
           >
             <option value="true">Available</option>
             <option value="false">Not Available</option>
@@ -244,14 +244,14 @@ const MealsPage = () => {
             type="file"
             accept="image/*"
             onChange={handleImageChange}
-            className="w-full mb-2 p-2 border rounded bg-white text-black"
+            className="w-full p-2 mb-2 text-black bg-white border rounded"
           />
           {selectedImage && <img src={selectedImage} alt="Selected Meal" className="w-full mb-4" />}
           {!selectedImage && form.imageUrl && <img src={form.imageUrl} alt="Meal" className="w-full mb-4" />}
           
           <button
             type="submit"
-            className="w-full bg-black text-white p-2 rounded"
+            className="w-full p-2 text-white bg-black rounded"
             disabled={isLoading}
           >
             {isLoading ? "Saving..." : isEditing ? "Update Meal" : "Add Meal"}
@@ -260,16 +260,16 @@ const MealsPage = () => {
       </div>
 
       <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">My Meals</h2>
+        <h2 className="mb-4 text-xl font-semibold">My Meals</h2>
         {loadingMeals ? <Loader /> : (
           <ul className="space-y-4">
             {meals.map((meal) => (
-              <li key={meal.customId} className="border rounded-lg p-4">
-                <div className="flex justify-between items-center">
+              <li key={meal.customId} className="p-4 border rounded-lg">
+                <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-bold">{meal.name}</h3>
                     <p>{meal.description}</p>
-                    <p>Price: B{meal.price}</p>
+                    <p>Price: ₦{meal.price}</p>
                     <p>Tag: {meal.tag}</p>
                     <p>Availability: {meal.availability ? "Available" : "Not Available"}</p>
                   </div>
@@ -283,13 +283,13 @@ const MealsPage = () => {
                       {meal.availability ? "Mark as Unavailable" : "Mark as Available"}
                     </button>
                     <button
-                      className="bg-black py-2 px-4  text-white mr-2"
+                      className="px-4 py-2 mr-2 text-white bg-black"
                       onClick={() => handleEdit(meal)}
                     >
                       Edit
                     </button>
                     <button
-                      className="bg-black py-2 px-4 text-red-500 mr-2"
+                      className="px-4 py-2 mr-2 text-red-500 bg-black"
                       onClick={() => handleDelete(meal.customId)}
                     >
                       Delete

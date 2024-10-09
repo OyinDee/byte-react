@@ -179,7 +179,7 @@ const CartPage = () => {
                     </div>
                     <div className="flex flex-col items-end">
                       <p className="text-lg font-bold text-black">
-                        B{meal.price.toFixed(2)}
+                      ₦{meal.price.toFixed(2)}
                       </p>
                       <button
                         onClick={() =>
@@ -221,7 +221,7 @@ const CartPage = () => {
               />
               <div className="flex items-center justify-between mt-4">
                 <p className="text-lg font-semibold text-black">
-                  Total: B{totalAmountPerRestaurant(items).toFixed(2)}
+                  Total: ₦{totalAmountPerRestaurant(items).toFixed(2)}
                 </p>
               </div>
               <div className="flex mt-4 space-x-2">

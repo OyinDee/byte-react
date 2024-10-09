@@ -135,7 +135,7 @@ const MealCard = ({ meal, restaurantId, hideImage }) => {
       )}
       <h3 className="mb-2 text-xl font-semibold">{meal.name}</h3>
       <span>{meal.description}</span>
-      <p className="mb-2 text-lg font-bold">B{meal.price.toFixed(2)}</p>
+      <p className="mb-2 text-lg font-bold">₦{meal.price.toFixed(2)}</p>
       <div className="flex items-center mb-4">
         <button
           onClick={handleDecrease}

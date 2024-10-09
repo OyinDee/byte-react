@@ -133,20 +133,20 @@ const OrderHistory = () => {
   }
 
   return (
-    <div className="relative min-h-screen bg-white text-black pt-5 pb-20">
-      <div className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 border border-gray-200">
-        <h1 className="text-3xl font-bold mb-6 text-center text-black">Order History</h1>
+    <div className="relative min-h-screen pt-5 pb-20 text-black bg-white">
+      <div className="w-full max-w-4xl p-8 mx-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+        <h1 className="mb-6 text-3xl font-bold text-center text-black">Order History</h1>
         {orders.length === 0 ? (
           <p className="text-center text-gray-500">No orders found.</p>
         ) : (
           <ul className="space-y-4">
             {orders.map((order) => (
-              <li key={order._id} className="border p-4 rounded-lg bg-gray-100 shadow-sm">
-                <div className="flex justify-between items-center">
+              <li key={order._id} className="p-4 bg-gray-100 border rounded-lg shadow-sm">
+                <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-semibold mb-2">Order #{order.customId}</h2>
-                    <p className="text-lg">Requested fee: B{(order.fee)}</p>
-                    <p className="text-lg">Total: B{order.totalPrice}</p>
+                    <h2 className="mb-2 text-xl font-semibold">Order #{order.customId}</h2>
+                    <p className="text-lg">Requested fee: ₦{(order.fee)}</p>
+                    <p className="text-lg">Total: ₦{order.totalPrice}</p>
                     <p className="text-lg">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
                     <p className="text-lg">Status: {order.status}</p>
                   </div>
@@ -162,12 +162,12 @@ const OrderHistory = () => {
 
                 {expandedOrders[order._id] && (
                   <div className="mt-4">
-                    <h3 className="text-lg font-semibold mb-2">Meal Details</h3>
-                    <ul className="list-disc pl-5">
+                    <h3 className="mb-2 text-lg font-semibold">Meal Details</h3>
+                    <ul className="pl-5 list-disc">
                       {order.meals.map((mealDetail) => (
                         <li key={mealDetail.meal._id}>
                           <p>Meal: {mealDetail.meal.name}</p>
-                          <p>Price: B{mealDetail.meal.price}</p>
+                          <p>Price: ₦{mealDetail.meal.price}</p>
                           <p>Quantity: {mealDetail.quantity}</p>
                         </li>
                       ))}
@@ -176,14 +176,14 @@ const OrderHistory = () => {
                     {order.status === "Fee Requested" && (
                       <div className="mt-4">
                         <button
-                          className="bg-black w-full text-white px-4 py-2 rounded"
+                          className="w-full px-4 py-2 text-white bg-black rounded"
                           onClick={() => handleAcceptFee(order.customId)}
                           disabled={processingOrders[order.customId]} 
                         >
                           Accept Fee
                         </button>
                         <button
-                          className="bg-yellow-500 w-full mt-2 text-white px-4 py-2 rounded"
+                          className="w-full px-4 py-2 mt-2 text-white bg-yellow-500 rounded"
                           onClick={() => handleCancelOrder(order.customId)}
                           disabled={processingOrders[order.customId]}
                         >
@@ -200,7 +200,7 @@ const OrderHistory = () => {
         {hasMoreOrders && (
           <div className="flex justify-center mt-6">
             <button
-              className="bg-black text-white px-6 py-2 rounded"
+              className="px-6 py-2 text-white bg-black rounded"
               onClick={handleLoadMore}
             >
               Show More

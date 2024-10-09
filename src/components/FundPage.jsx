@@ -142,12 +142,12 @@ const FundPage = () => {
   }
 
   return (
-    <main className="min-h-screen bg-white text-black flex items-center justify-center">
-      <div className="bg-gray-100 shadow-md rounded-lg p-8 max-w-md w-full mx-5">
+    <main className="flex items-center justify-center min-h-screen text-black bg-white">
+      <div className="w-full max-w-md p-8 mx-5 bg-gray-100 rounded-lg shadow-md">
         <ToastContainer position="top-right" reverseOrder={false} />
-        <div className="text-center mb-6">
+        <div className="mb-6 text-center">
           <p className="text-xl font-semibold">
-            Byte Balance: <span className="text-black">B{user.byteBalance}0</span>
+            Balance: <span className="text-black">₦{user.byteBalance}0</span>
           </p>
         </div>
 
@@ -183,7 +183,7 @@ const FundPage = () => {
                   id="fundAmount"
                   onChange={handleAmountChange}
                   value={amount === "" ? "" : amount}
-                  className="mt-2 w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black"
+                  className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black"
                   placeholder="Enter amount"
                 />
               </div>
@@ -199,16 +199,13 @@ const FundPage = () => {
                   <p className="text-lg font-semibold text-black">
                     <span className="text-gray-500">Total Amount:</span> ₦{total.toFixed(2)}
                   </p>
-                  <p className="text-lg font-medium mt-2">
-                    <span className="text-gray-600">In Bytes:</span> B{bytes.toFixed(2)}
-                  </p>
                 </div>
               )}
 
               <button
                 type="button"
                 onClick={handleContinue}
-                className="w-full bg-black text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-800 transition duration-200"
+                className="w-full px-4 py-2 font-semibold text-white transition duration-200 bg-black rounded-md hover:bg-gray-800"
                 disabled={amount === "" || total <= 0 || loading}
               >
                 {loading ? "Processing..." : "Continue"}
@@ -228,7 +225,7 @@ const FundPage = () => {
                   id="transferAmount"
                   value={transferAmount === "" ? "" : transferAmount}
                   onChange={(e) => setTransferAmount(Number(e.target.value))}
-                  className="mt-2 w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black"
+                  className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black"
                   placeholder="Enter amount"
                 />
               </div>
@@ -242,7 +239,7 @@ const FundPage = () => {
                   id="recipientUsername"
                   value={recipientUsername}
                   onChange={(e) => setRecipientUsername(e.target.value)}
-                  className="mt-2 w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black"
+                  className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black"
                   placeholder="Recipient username"
                 />
               </div>
@@ -250,7 +247,7 @@ const FundPage = () => {
               <button
                 type="button"
                 onClick={handleTransfer}
-                className="w-full bg-black text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-800 transition duration-200"
+                className="w-full px-4 py-2 font-semibold text-white transition duration-200 bg-black rounded-md hover:bg-gray-800"
                 disabled={!recipientUsername || !transferAmount || transferAmount <= 0 || transferLoading}
               >
                 {transferLoading ? "Transferring..." : "Transfer"}
