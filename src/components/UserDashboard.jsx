@@ -54,19 +54,19 @@ const CombinedPage = () => {
 
   return (
     <div>
-      <main className="p-4 lg:p-8 bg-white text-black pt-5 pb-20 min-h-screen lg:pt-5">
+      <main className="min-h-screen p-4 pt-5 pb-20 text-black bg-white lg:p-8 lg:pt-5">
         <section className="mb-6">
-          <div className="flex justify-center items-center space-x-4">
+          <div className="flex items-center justify-center space-x-4">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search restaurants or meals..."
-              className="p-2 w-full lg:w-1/2 rounded border border-gray-300 focus:outline-none focus:ring focus:border-black"
+              className="w-full p-2 border border-gray-300 rounded lg:w-1/2 focus:outline-none focus:ring focus:border-black"
             />
             <button
               onClick={handleSearch}
-              className="p-2 bg-black text-white rounded hover:bg-gray-800 transition-colors duration-200"
+              className="p-2 text-white transition-colors duration-200 bg-black rounded hover:bg-gray-800"
             >
               Search
             </button>
@@ -74,17 +74,17 @@ const CombinedPage = () => {
         </section>
 
         <section className="mt-12">
-          <h2 className="text-2xl font-semibold mb-8">Restaurants</h2>
+          <h2 className="mb-8 text-2xl font-semibold">Restaurants</h2>
           {loading ? (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-white text-black">
+            <div className="flex flex-col items-center justify-center min-h-screen text-black bg-white">
               <RingLoader
-                color="#000000" // black color for the loader
+                color="#000000" 
                 size={100}
                 speedMultiplier={1.5}
               />
             </div>
           ) : error ? (
-            <div className="flex justify-center items-center min-h-screen bg-white text-red-500">
+            <div className="flex items-center justify-center min-h-screen text-red-500 bg-white">
               <p>{error}</p>
             </div>
           ) : (
@@ -94,7 +94,7 @@ const CombinedPage = () => {
                   <div
                     key={restaurant.customId}
                     data-aos="fade-up"
-                    className="bg-white shadow-md rounded-lg border border-gray-200"
+                    className="bg-white border border-gray-200 rounded-lg shadow-md"
                   >
                     <div className="flex items-center p-4">
                       <img
@@ -102,7 +102,7 @@ const CombinedPage = () => {
                         alt={restaurant.name}
                         width={80}
                         height={80}
-                        className="w-20 h-20 object-cover rounded-full"
+                        className="object-cover w-20 h-20 rounded-full"
                       />
                       <div className="ml-4">
                         <h2 className="text-xl font-semibold text-black">
@@ -116,12 +116,17 @@ const CombinedPage = () => {
                     <hr className="border-gray-300" />
                     <div className="p-4">
                       {restaurant.meals.length > 0 ? (
-                        <ul className="list-disc pl-5 text-black">
+                        <ul className="pl-5 text-black list-disc">
                           {restaurant.meals.slice(0, 3).map((meal) => (
                             <li key={meal.customId}>{meal.name}</li>
                           ))}
                           {restaurant.meals.length > 3 && (
-                            <li className="text-gray-500">
+                            <li className="text-gray-500"
+                            onClick={() =>
+                              navigate(
+                                `/user/checkrestaurant/${restaurant.customId}`
+                              )
+                            }>
                               ...there&apos;s more
                             </li>
                           )}
@@ -133,7 +138,7 @@ const CombinedPage = () => {
                       )}
                       {restaurant.meals.length > 0 && (
                         <button
-                          className="mt-4 p-2 w-full bg-black text-white rounded hover:bg-gray-800 transition-colors duration-200"
+                          className="w-full p-2 mt-4 text-white transition-colors duration-200 bg-black rounded hover:bg-gray-800"
                           onClick={() =>
                             navigate(
                               `/user/checkrestaurant/${restaurant.customId}`

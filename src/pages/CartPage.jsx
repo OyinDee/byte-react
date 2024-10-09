@@ -8,7 +8,7 @@ const CartPage = () => {
   const [cart, setCart] = useState(new Map());
   const [user, setUser] = useState(null);
   const [note, setNote] = useState('');
-  const [fee, setFee] = useState(70);
+  const [fee, setFee] = useState(700);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   useEffect(() => {
@@ -69,25 +69,33 @@ const CartPage = () => {
       toast.error("Complete profile setup to proceed with the order.");
       return;
     }
-
+  
     toast.info("In the kitchen... Wait a minute!");
     setIsCheckoutLoading(true);
-
-    const orderDetails = Array.from(cart.entries()).map(([restaurantId, items]) => ({
+  
+    const itemsForRestaurant = cart.get(restaurantId) || [];
+  
+    if (itemsForRestaurant.length === 0) {
+      toast.error("No items to checkout.");
+      setIsCheckoutLoading(false);
+      return;
+    }
+  
+    const orderDetails = {
       restaurantCustomId: restaurantId,
-      meals: items.map(({ meal, quantity }) => ({
+      meals: itemsForRestaurant.map(({ meal, quantity }) => ({
         mealId: meal.customId,
         quantity,
       })),
-      totalPrice: totalAmountPerRestaurant(items),
+      totalPrice: totalAmountPerRestaurant(itemsForRestaurant),
       location: user.location,
       phoneNumber: user.phoneNumber,
       user: user._id,
       note,
       nearestLandmark: user.nearestLandmark || "",
       fee: fee || 70,
-    }));
-
+    };
+  
     try {
       const response = await fetch("https://mongobyte.onrender.com/api/v1/orders/create", {
         method: "POST",
@@ -96,19 +104,20 @@ const CartPage = () => {
         },
         body: JSON.stringify(orderDetails),
       });
-
+  
       if (!response.ok) {
         throw new Error("Failed to place the order.");
       }
-
+  
       await response.json();
+  
       setCart(prevCart => {
         const newCart = new Map(prevCart);
         newCart.delete(restaurantId);
         localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
         return newCart;
       });
-
+  
       toast.success("Order placed successfully!");
       setNote('');
       setTimeout(() => {
@@ -120,6 +129,7 @@ const CartPage = () => {
       setIsCheckoutLoading(false);
     }
   };
+  
 
   const totalAmountPerRestaurant = (items) =>
     items.reduce(
@@ -128,7 +138,7 @@ const CartPage = () => {
     );
 
   return (
-    <div className="p-4 bg-white mb-8">
+    <div className="p-4 mb-8 bg-white">
       <ToastContainer />
       <div className="max-w-4xl mx-auto text-black">
         {cart.size === 0 ? (
@@ -137,9 +147,9 @@ const CartPage = () => {
           Array.from(cart.entries()).map(([restaurantId, items]) => (
             <div
               key={restaurantId}
-              className="border-b border-gray-200 mb-8 pb-6"
+              className="pb-6 mb-8 border-b border-gray-200"
             >
-              <h2 className="text-xl font-semibold mb-4 text-black">
+              <h2 className="mb-4 text-xl font-semibold text-black">
                 Restaurant: {items.length > 0 ? items[0].meal.restaurantId : "Unknown"}
               </h2>
               <div className="space-y-4">
@@ -150,7 +160,7 @@ const CartPage = () => {
                   >
                     <div className="flex items-center space-x-4">
                       {meal.imageUrl && (
-                        <div className="relative w-20 h-20 rounded-lg overflow-hidden">
+                        <div className="relative w-20 h-20 overflow-hidden rounded-lg">
                           <img
                             src={meal.imageUrl}
                             alt={meal.name}
@@ -175,7 +185,7 @@ const CartPage = () => {
                         onClick={() =>
                           handleRemoveItem(restaurantId, meal.customId)
                         }
-                        className="text-red-500 hover:text-red-700 flex justify-center"
+                        className="flex justify-center text-red-500 hover:text-red-700"
                       >
                         <FaTrashAlt />
                       </button>
@@ -189,7 +199,7 @@ const CartPage = () => {
                 </label>
                 <textarea
                   id="note"
-                  className="w-full p-1 border border-gray-300 rounded mt-2"
+                  className="w-full p-1 mt-2 border border-gray-300 rounded"
                   rows="3"
                   placeholder="Special requests or preferences"
                   value={note}
@@ -198,23 +208,23 @@ const CartPage = () => {
               </div>
               <br />
               <label htmlFor="fee" className="text-xs font-medium text-black">
-                Expected/assumed delivery fee + miscellaneous. Specify amount in bytes...
+                Expected/assumed delivery fee + miscellaneous. Specify amount in naira...
               </label>
               <br />
               <input
                 type="number"
                 id="fee"
-                placeholder="Add requests and transfer amount in BYTES!"
+                placeholder="Add requests and transportation fees in naira"
                 value={fee}
                 onChange={(e) => setFee(e.target.value)}
                 className="w-full border"
               />
-              <div className="flex justify-between items-center mt-4">
+              <div className="flex items-center justify-between mt-4">
                 <p className="text-lg font-semibold text-black">
                   Total: B{totalAmountPerRestaurant(items).toFixed(2)}
                 </p>
               </div>
-              <div className="mt-4 flex space-x-2">
+              <div className="flex mt-4 space-x-2">
                 <button
                   onClick={() => handleCheckout(restaurantId)}
                   className={`w-full bg-black text-white px-6 py-3 rounded hover:bg-gray-800 ${
@@ -226,7 +236,7 @@ const CartPage = () => {
                 </button>
                 <button
                   onClick={() => handleClearCart(restaurantId)}
-                  className="bg-red-500 text-white px-4 py-3 rounded hover:bg-red-600 flex items-center justify-center"
+                  className="flex items-center justify-center px-4 py-3 text-white bg-red-500 rounded hover:bg-red-600"
                 >
                   <FaTrashAlt />
                 </button>

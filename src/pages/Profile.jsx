@@ -45,6 +45,12 @@ const Profile = () => {
     fetchUser();
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("byteUser");
+    navigate('/')
+  };
+  
   const handleImageChange = (event) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
@@ -112,7 +118,7 @@ const Profile = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black">
-        <div className="flex flex-col items-center text-center z-10">
+        <div className="z-10 flex flex-col items-center text-center">
           <RingLoader color="#FFD700" size={100} speedMultiplier={1.5} />
         </div>
       </div>
@@ -121,58 +127,58 @@ const Profile = () => {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen text-red-500">
+      <div className="flex items-center justify-center min-h-screen text-red-500">
         <p>{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen pt-5 pb-20 bg-white text-black">
+    <div className="relative min-h-screen pt-5 pb-20 text-black bg-white">
       <div className="relative z-10 flex flex-col items-center justify-center p-4 lg:p-8">
-        <div className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 border border-gray-200">
-          <div className="flex flex-col items-center text-center relative">
+        <div className="w-full max-w-4xl p-8 mx-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+          <div className="relative flex flex-col items-center text-center">
             <div className="relative">
               <img
                 src={user?.imageUrl || "/Images/nk.jpg"}
                 alt="ProfilePicture"
-                className="rounded-full border-4 border-black mb-4 object-cover"
+                className="object-cover mb-4 border-4 border-black rounded-full"
                 style={{ width: 150, height: 150 }}
               />
             </div>
-            <h1 className="text-3xl font-bold mb-2 lg:text-4xl">
+            <h1 className="mb-2 text-3xl font-bold lg:text-4xl">
               @{user?.username.toLowerCase()}
             </h1>
-            <p className="text-lg text-gray-700 mb-2 lg:text-xl">
+            <p className="mb-2 text-lg text-gray-700 lg:text-xl">
               {user?.email}
             </p>
 
-            <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600">
+            <blockquote className="pl-4 italic text-gray-600 border-l-4 border-gray-300">
               {user?.bio || "Life is uncertain. Eat dessert first!"}
             </blockquote>
           </div>
 
-          <div className="mt-6 flex flex-col lg:flex-row lg:justify-between">
+          <div className="flex flex-col mt-6 lg:flex-row lg:justify-between">
             <div className="mb-4 lg:mb-0">
-              <h2 className="text-xl font-semibold mb-2">Phone Number</h2>
+              <h2 className="mb-2 text-xl font-semibold">Phone Number</h2>
               <p className="text-lg">{user?.phoneNumber}</p>
             </div>
             <div className="mb-4 lg:mb-0">
-              <h2 className="text-xl font-semibold mb-2">Location</h2>
+              <h2 className="mb-2 text-xl font-semibold">Location</h2>
               <p className="text-lg">{user?.location || "Unknown"}</p>
             </div>
             <div className="mb-4 lg:mb-0">
-              <h2 className="text-xl font-semibold mb-2">Nearest Landmark</h2>
+              <h2 className="mb-2 text-xl font-semibold">Nearest Landmark</h2>
               <p className="text-lg">{user?.nearestLandmark || "N/A"}</p>
             </div>
             <div className="flex flex-col lg:flex-row lg:justify-between">
               <div className="mb-4 lg:mb-0">
-                <h2 className="text-xl font-semibold mb-2">Total Bytes</h2>
+                <h2 className="mb-2 text-xl font-semibold">Total Bytes</h2>
                 <p className="text-lg">{user?.orderHistory.length}</p>
               </div>
               <div className="mb-4 lg:mb-0">
-                <h2 className="text-xl font-semibold mb-2">Byte Balance</h2>
-                <p className="text-lg">{user?.byteBalance*10}</p>
+                <h2 className="mb-2 text-xl font-semibold">Byte Balance</h2>
+                <p className="text-lg">{user?.byteBalance}</p>
               </div>
           </div>
           </div>
@@ -180,24 +186,36 @@ const Profile = () => {
           <div className="flex justify-end mt-8">
             <button
               onClick={openModal}
-              className="bg-black text-white w-full text-lg p-3 rounded-md shadow-lg hover:bg-gray-800 transition-colors duration-200"
+              className="w-full p-3 text-lg text-white transition-colors duration-200 bg-black rounded-md shadow-lg hover:bg-gray-800"
             >
               Edit Profile
             </button>
           </div>
       <button
             onClick={() => navigate('/user/orderhistory')}
-            className="bg-yellow-500 text-black w-full text-lg p-3 mt-2  rounded-md shadow-lg  transition-colors duration-200"
+            className="w-full p-3 mt-2 text-lg text-black transition-colors duration-200 bg-yellow-500 rounded-md shadow-lg"
           >
             Check Order History
+          </button>
+          <button
+            onClick={() => navigate('/user/fund')}
+            className="w-full p-3 mt-2 text-lg text-black transition-colors duration-200 bg-yellow-500 rounded-md shadow-lg"
+          >
+            Fund
+          </button>
+          <button
+            onClick={() => handleLogout()}
+            className="w-full p-3 mt-2 text-lg text-white transition-colors duration-200 bg-black rounded-md shadow-lg"
+          >
+            Logout
           </button>
         </div>
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg relative z-60">
-            <h2 className="text-2xl mb-4">Edit Profile</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative w-full max-w-lg p-8 bg-white rounded-lg shadow-lg z-60">
+            <h2 className="mb-4 text-2xl">Edit Profile</h2>
             <input
               type="file"
               accept="image/*"
@@ -209,21 +227,21 @@ const Profile = () => {
               placeholder="Update your bio..."
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="border border-gray-300 p-2 w-full mb-4"
+              className="w-full p-2 mb-4 border border-gray-300"
             />
             <input
               type="text"
               placeholder="Update your location..."
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="border border-gray-300 p-2 w-full mb-4"
+              className="w-full p-2 mb-4 border border-gray-300"
             />
             <input
               type="text"
               placeholder="Nearest Landmark"
               value={nearestLandmark}
               onChange={(e) => setNearestLandmark(e.target.value)}
-              className="border border-gray-300 p-2 w-full mb-4"
+              className="w-full p-2 mb-4 border border-gray-300"
             />
 
             {/* Loader during update */}
@@ -234,7 +252,7 @@ const Profile = () => {
             ) : (
               <button
                 onClick={updateUserProfile}
-                className="bg-black text-white p-2 rounded-sm hover:bg-gray-800 transition-colors duration-200 ml-3"
+                className="p-2 ml-3 text-white transition-colors duration-200 bg-black rounded-sm hover:bg-gray-800"
               >
                 Save Changes
               </button>
@@ -242,7 +260,7 @@ const Profile = () => {
 
             <button
               onClick={closeModal}
-              className="text-red-500 mt-4 hover:text-red-700"
+              className="mt-4 text-red-500 hover:text-red-700"
             >
               Cancel
             </button>

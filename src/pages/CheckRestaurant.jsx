@@ -51,12 +51,12 @@ const RestaurantPage = () => {
   if (loading) return <Loader />;
 
   return (
-    <div className="p-4 bg-white min-h-screen mb-20">
+    <div className="min-h-screen p-4 mb-20 bg-white">
       <ToastContainer />
       <div className="max-w-4xl mx-auto text-black">
         {restaurant && (
           <>
-            <div className="flex justify-between items-center mb-20">
+            <div className="flex items-center justify-between mb-20">
               <div>
                 <h1 className="text-3xl font-bold text-black">
                   {restaurant.name}
@@ -69,7 +69,7 @@ const RestaurantPage = () => {
                   <img
                     src={restaurant.imageUrl}
                     alt={restaurant.name}
-                    className="rounded w-full h-full object-cover"
+                    className="object-cover w-full h-full rounded"
                   />
                 </div>
               )}
@@ -78,13 +78,13 @@ const RestaurantPage = () => {
             {["regular", "combo", "add-on"].map((section) => (
               <div key={section}>
                 <button
-                  className="w-full text-left py-2 bg-black text-white px-4 rounded-md mb-2"
+                  className="w-full px-4 py-2 mb-2 text-left text-white bg-black rounded-md"
                   onClick={() => toggleSection(section)}
                 >
                   {section.toUpperCase()}
                 </button>
                 {!collapsedSections[section] && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {filteredMeals(section).map((meal) => (
                       <MealCard
                         key={meal.customId}
@@ -131,14 +131,15 @@ const MealCard = ({ meal, restaurantId, hideImage }) => {
       }`}
     >
       {!hideImage && (
-        <img src={meal.imageUrl} alt="" className="w-full h-40 object-cover" />
+        <img src={meal.imageUrl} alt="" className="object-cover w-full h-40" />
       )}
-      <h3 className="text-xl font-semibold mb-2">{meal.name}</h3>
-      <p className="text-lg font-bold mb-2">B{meal.price.toFixed(2)}</p>
+      <h3 className="mb-2 text-xl font-semibold">{meal.name}</h3>
+      <span>{meal.description}</span>
+      <p className="mb-2 text-lg font-bold">B{meal.price.toFixed(2)}</p>
       <div className="flex items-center mb-4">
         <button
           onClick={handleDecrease}
-          className="bg-black text-white py-1 px-2 rounded-l hover:bg-gray-800"
+          className="px-2 py-1 text-white bg-black rounded-l hover:bg-gray-800"
         >
           -
         </button>
@@ -147,17 +148,17 @@ const MealCard = ({ meal, restaurantId, hideImage }) => {
           min="1"
           value={quantity}
           readOnly
-          className="w-16 p-2 border-t border-b border-gray-300 text-center"
+          className="w-16 p-2 text-center border-t border-b border-gray-300"
         />
         <button
           onClick={handleIncrease}
-          className="bg-black text-white py-1 px-2 rounded-r hover:bg-gray-800"
+          className="px-2 py-1 text-white bg-black rounded-r hover:bg-gray-800"
         >
           +
         </button>
         <button
           onClick={handleAddToCart}
-          className="bg-black w-full ml-4 text-white py-2 px-4 rounded hover:bg-gray-800"
+          className="w-full px-4 py-2 ml-4 text-white bg-black rounded hover:bg-gray-800"
           disabled={!meal.availability}  >
           Add to Cart
         </button>
