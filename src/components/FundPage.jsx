@@ -147,7 +147,7 @@ const FundPage = () => {
         <ToastContainer position="top-right" reverseOrder={false} />
         <div className="mb-6 text-center">
           <p className="text-xl font-semibold">
-            Balance: <span className="text-black">₦{user.byteBalance}0</span>
+            Balance: <span className="text-black">₦{user.byteBalance}</span>
           </p>
         </div>
 
