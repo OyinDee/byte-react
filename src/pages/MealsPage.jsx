@@ -48,7 +48,7 @@ const MealsPage = () => {
       description: meal.description || "",
       tag: meal.tag || "regular",
       price: meal.price.toString(),
-      per: meal.per || "",  
+      per: meal.per.toLowerCase() || "",  
       imageUrl: meal.imageUrl || "",  
       availability: meal.availability,
     });
@@ -142,6 +142,7 @@ const MealsPage = () => {
           `https://mongobyte.onrender.com/api/v1/meals/${customId}/create`,
           {
             ...form,
+            per: form.per.toLowerCase(),
             price: Number(form.price),
             imageUrl,
           }
