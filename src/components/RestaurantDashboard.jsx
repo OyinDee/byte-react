@@ -53,14 +53,13 @@ const RestaurantDashboard = () => {
 
 
   const handleWithdrawal = async () => {
-    toast.info("Wait a minute...")
+    toast.info("Wait a minute...");
     if (!restaurant.walletBalance || isNaN(restaurant.walletBalance) || parseFloat(restaurant.walletBalance) <= 0) {
       toast.error("Please enter a valid amount.");
       return;
     }
 
     const token = localStorage.getItem("token");
-
 
     try {
       const response = await axios.post(
@@ -73,18 +72,18 @@ const RestaurantDashboard = () => {
         }
       );
       toast.success(response.data.message);
-        setTimeout(() => {
-    window.location.reload();
-  }, 2000);
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     } catch (error) {
       toast.error(
         error.response && error.response.data.message
           ? error.response.data.message
           : "Error processing withdrawal."
       );
-  
+    }
   };
- }
+
   const fetchOrders = async (restaurantId, token) => {
     try {
       const response = await axios.get(
@@ -118,10 +117,8 @@ const RestaurantDashboard = () => {
       );
       toast.success(response.data.message);
       fetchOrders(restaurant.customId, token);
-
-
     } catch (error) {
-       fetchOrders(restaurant.customId, token);
+      fetchOrders(restaurant.customId, token);
       toast.error(
         error.response && error.response.data.message
           ? error.response.data.message
@@ -171,7 +168,12 @@ const RestaurantDashboard = () => {
                 ? `₦${restaurant.walletBalance.toFixed(2)}`
                 : "₦0.00"}
             </p>
-            <button className='bg-yellow-500 w-full py-2 mt-3 rounded-lg' onClick={handleWithdrawal}>Place Withdrawal</button>
+            <button
+              className="bg-yellow-500 w-full py-2 mt-3 rounded-lg"
+              onClick={handleWithdrawal}
+            >
+              Place Withdrawal
+            </button>
           </div>
         </div>
       )}
