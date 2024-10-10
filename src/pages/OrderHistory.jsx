@@ -145,7 +145,7 @@ const OrderHistory = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="mb-2 text-xl font-semibold">Order #{order.customId}</h2>
-                    <p className="text-lg">Requested fee: ₦{(order.fee)}</p>
+                    <p className="text-lg">Fee: ₦{(order.fee)}</p>
                     <p className="text-lg">Total: ₦{order.totalPrice}</p>
                     <p className="text-lg">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
                     <p className="text-lg">Status: {order.status}</p>
