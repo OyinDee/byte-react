@@ -174,7 +174,7 @@ const CartPage = () => {
                           {meal.name}
                         </h3>
                         <p className="text-sm text-gray-500">
-                          Quantity: {quantity}
+                          Quantity: {quantity} per {per||"meal"} 
                         </p>
                       </div>
                     </div>
