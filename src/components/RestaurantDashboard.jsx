@@ -328,7 +328,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
           </p>
 
           {isPending && (
-          <span className="text-black font-semibold">Total: ₦{(order.totalPrice-order.fee).toFixed(2)}</span>
+          <span className="text-black font-semibold">Total: ₦{((order.totalPrice) - (order.fee)||0).toFixed(2)}</span>
             <div className="mt-4">
               <input
                 type="number"
