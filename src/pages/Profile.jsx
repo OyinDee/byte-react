@@ -177,8 +177,8 @@ const Profile = () => {
                 <p className="text-lg">{user?.orderHistory.length}</p>
               </div>
               <div className="mb-4 lg:mb-0">
-                <h2 className="mb-2 text-xl font-semibold">Byte Balance</h2>
-                <p className="text-lg">{user?.byteBalance}</p>
+                <h2 className="mb-2 text-xl font-semibold">Balance</h2>
+                <p className="text-lg"> &#8358;{user?.byteBalance}</p>
               </div>
           </div>
           </div>
