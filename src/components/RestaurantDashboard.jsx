@@ -371,6 +371,5 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
     </div>
   );
 };
-};
 
 export default RestaurantDashboard;
