@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+importimport { useEffect, useState } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
-
 
 const Loader = () => (
   <div className="flex items-center justify-center">
@@ -18,6 +17,7 @@ const MealsPage = () => {
     description: "",
     tag: "regular",
     price: "",
+    per: "", 
     imageUrl: "",
     availability: true,
   });
@@ -37,7 +37,6 @@ const MealsPage = () => {
         setMeals(meals.filter((meal) => meal.customId !== customId));
         toast.success("Meal deleted successfully!");
       } catch (error) {
-        
         toast.error("Error deleting meal!");
       }
     }
@@ -49,6 +48,7 @@ const MealsPage = () => {
       description: meal.description || "",
       tag: meal.tag || "regular",
       price: meal.price.toString(),
+      per: meal.per || "",  
       imageUrl: meal.imageUrl || "",  
       availability: meal.availability,
     });
@@ -154,6 +154,7 @@ const MealsPage = () => {
         description: "",
         tag: "regular",
         price: "",
+        per: "", 
         imageUrl: "",
         availability: true,
       });
@@ -165,7 +166,7 @@ const MealsPage = () => {
   };
 
   const toggleAvailability = async (meal) => {
-    toast.info("Wait...")
+    toast.info("Wait...");
     try {
       const token = localStorage.getItem("token");
       await axios.put(
@@ -225,6 +226,18 @@ const MealsPage = () => {
             className="w-full p-2 mb-2 text-black bg-white border rounded"
             placeholder="Price (B)"
           />
+          <input
+            type="text"
+            name="per"
+            value={form.per}
+            onChange={handleInputChange}
+            className="w-full p-2 mb-2 text-black bg-white border rounded"
+            placeholder="Per (e.g., slice, unit)"
+          />
+          <small className="block mb-2 text-gray-500">
+            slice, 5 pieces, unit, pack, spoon, scoop, cup
+          </small>
+
           <select
             name="availability"
             value={form.availability ? "true" : "false"}
@@ -269,7 +282,7 @@ const MealsPage = () => {
                   <div>
                     <h3 className="text-lg font-bold">{meal.name}</h3>
                     <p>{meal.description}</p>
-                    <p>Price: ₦{meal.price}</p>
+                    <p>Price: ₦{meal.price} {meal.per||""} </p>
                     <p>Tag: {meal.tag}</p>
                     <p>Availability: {meal.availability ? "Available" : "Not Available"}</p>
                   </div>
