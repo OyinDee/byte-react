@@ -225,7 +225,7 @@ const MealsPage = () => {
             onChange={handleInputChange}
             required
             className="w-full p-2 mb-2 text-black bg-white border rounded"
-            placeholder="Price (B)"
+            placeholder="Price (NGN)"
           />
           <input
             type="text"
