@@ -60,6 +60,12 @@ const CartPage = () => {
     });
   };
 
+  const totalAmountPerRestaurant = (items, fee) =>
+    items.reduce(
+      (sum, item) => sum + (item.meal?.price ?? 0) * (item.quantity ?? 0),
+      0
+    ) + parseFloat(fee || 0);
+
   const handleCheckout = async (restaurantId) => {
     if (!user) {
       toast.error("You need to log in first.");
@@ -69,33 +75,35 @@ const CartPage = () => {
       toast.error("Complete profile setup to proceed with the order.");
       return;
     }
-  
+
     toast.info("In the kitchen... Wait a minute!");
     setIsCheckoutLoading(true);
-  
+
     const itemsForRestaurant = cart.get(restaurantId) || [];
-  
+
     if (itemsForRestaurant.length === 0) {
       toast.error("No items to checkout.");
       setIsCheckoutLoading(false);
       return;
     }
-  
+
+    const totalAmount = totalAmountPerRestaurant(itemsForRestaurant, fee);
+    
     const orderDetails = {
       restaurantCustomId: restaurantId,
       meals: itemsForRestaurant.map(({ meal, quantity }) => ({
         mealId: meal.customId,
         quantity,
       })),
-      totalPrice: totalAmountPerRestaurant(itemsForRestaurant),
+      totalPrice: totalAmount,
       location: user.location,
       phoneNumber: user.phoneNumber,
       user: user._id,
       note,
       nearestLandmark: user.nearestLandmark || "",
-      fee: fee || 70,
+      fee: parseFloat(fee) || 700,
     };
-  
+
     try {
       const response = await fetch("https://mongobyte.onrender.com/api/v1/orders/create", {
         method: "POST",
@@ -104,20 +112,20 @@ const CartPage = () => {
         },
         body: JSON.stringify(orderDetails),
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to place the order.");
       }
-  
+
       await response.json();
-  
+
       setCart(prevCart => {
         const newCart = new Map(prevCart);
         newCart.delete(restaurantId);
         localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
         return newCart;
       });
-  
+
       toast.success("Order placed successfully!");
       setNote('');
       setTimeout(() => {
@@ -129,13 +137,6 @@ const CartPage = () => {
       setIsCheckoutLoading(false);
     }
   };
-  
-
-  const totalAmountPerRestaurant = (items) =>
-    items.reduce(
-      (sum, item) => sum + (item.meal?.price ?? 0) * (item.quantity ?? 0),
-      0
-    );
 
   return (
     <div className="p-4 mb-8 bg-white">
@@ -179,7 +180,7 @@ const CartPage = () => {
                     </div>
                     <div className="flex flex-col items-end">
                       <p className="text-lg font-bold text-black">
-                      ₦{meal.price.toFixed(2)}
+                        ₦{meal.price.toFixed(2)}
                       </p>
                       <button
                         onClick={() =>
@@ -221,7 +222,7 @@ const CartPage = () => {
               />
               <div className="flex items-center justify-between mt-4">
                 <p className="text-lg font-semibold text-black">
-                  Total: ₦{totalAmountPerRestaurant(items).toFixed(2)}
+                  Total: ₦{totalAmountPerRestaurant(items, fee).toFixed(2)}
                 </p>
               </div>
               <div className="flex mt-4 space-x-2">
