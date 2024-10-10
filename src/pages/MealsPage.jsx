@@ -283,7 +283,7 @@ const MealsPage = () => {
                   <div>
                     <h3 className="text-lg font-bold">{meal.name}</h3>
                     <p>{meal.description}</p>
-                    <p>Price: ₦{meal.price} {meal.per||""} </p>
+                    <p>Price: ₦{meal.price} per {meal.per||"..."} </p>
                     <p>Tag: {meal.tag}</p>
                     <p>Availability: {meal.availability ? "Available" : "Not Available"}</p>
                   </div>
