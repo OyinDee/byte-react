@@ -16,16 +16,14 @@ const RestaurantDashboard = () => {
   useEffect(() => {
     const fetchRestaurantAndOrders = async () => {
       const token = localStorage.getItem("token");
-      
       if (!token) {
         toast.error("Token not found.");
         return;
       }
-  
+
       try {
         const decodedToken = jwtDecode(token);
         const restaurantCustomId = decodedToken.restaurant.customId;
-  
         const restaurantResponse = await axios.get(
           `https://mongobyte.onrender.com/api/v1/restaurants/${restaurantCustomId}`,
           {
@@ -34,7 +32,6 @@ const RestaurantDashboard = () => {
             },
           }
         );
-  
         setRestaurant(restaurantResponse.data);
         await fetchOrders(restaurantCustomId, token);
       } catch (error) {
@@ -47,10 +44,9 @@ const RestaurantDashboard = () => {
         setLoading(false);
       }
     };
-  
+
     fetchRestaurantAndOrders();
   }, []);
-
 
   const handleWithdrawal = async () => {
     toast.info("Wait a minute...");
@@ -278,9 +274,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
         );
         toast.success(response.data.message);
         setIsDelivering(false);
-        setTimeout(() => {
-          window.location.reload();
-        }, 5000);
+        fetchOrders(restaurant.customId, token);
       } catch (error) {
         toast.error(
           error.response && error.response.data.message
@@ -328,43 +322,44 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
           </p>
 
           {isPending && (
-          <span className="text-black font-semibold">Total: ₦{((order.totalPrice) - (order.fee)||0).toFixed(2)}</span>
-            <div className="mt-4">
-              <input
-                type="number"
-                placeholder="Enter fee"
-                value={fees}
-                onChange={(e) => setFees(e.target.value)}
-                className="p-2 rounded-lg border border-gray-400 w-full mb-2"
-              />
-              <textarea
-                placeholder="Request description"
-                value={requestDescription}
-                onChange={(e) => setRequestDescription(e.target.value)}
-                className="p-2 rounded-lg border border-gray-400 w-full mb-2"
-              />
-              <button
-                className="bg-yellow-500 text-white p-2 rounded-lg w-full"
-                onClick={onRequest}
-                disabled={isRequesting}
-              >
-                {isRequesting ? "Requesting..." : "Request Fee"}
-              </button>
-            </div>
-          )}
-
-          {isConfirmed && (
-          <p className="text-black font-semibold">Total: ₦{(order.totalPrice).toFixed(2)}</p>
-            <button
-              className="bg-black text-white p-2 rounded-lg w-full mt-4"
-              onClick={markAsDelivered}
-              disabled={isDelivering}
-            >
-              {isDelivering ? "Delivering..." : "Mark as Delivered"}
-            </button>
-          )}
-        </div>
-      )}
+  <>
+    <span className="text-black font-semibold">Total: ₦{((order.totalPrice) - (order.fee)||0).toFixed(2)}</span>
+    <div className="mt-4">
+      <input
+        type="number"
+        placeholder="Enter fee"
+        value={fees}
+        onChange={(e) => setFees(e.target.value)}
+        className="p-2 rounded-lg border border-gray-400 w-full mb-2"
+      />
+      <textarea
+        placeholder="Request description"
+        value={requestDescription}
+        onChange={(e) => setRequestDescription(e.target.value)}
+        className="p-2 rounded-lg border border-gray-400 w-full mb-2"
+      />
+      <button
+        className="bg-yellow-500 text-white p-2 rounded-lg w-full"
+        onClick={onRequest}
+        disabled={isRequesting}
+      >
+        {isRequesting ? "Requesting..." : "Request Fee"}
+      </button>
+    </div>
+  </>
+)}
+{isConfirmed && (
+  <>
+    <p className="text-black font-semibold">Total: ₦{(order.totalPrice).toFixed(2)}</p>
+    <button
+      className="bg-black text-white p-2 rounded-lg w-full mt-4"
+      onClick={markAsDelivered}
+      disabled={isDelivering}
+    >
+      {isDelivering ? "Delivering..." : "Mark as Delivered"}
+    </button>
+  </>
+)}
     </div>
   );
 };
