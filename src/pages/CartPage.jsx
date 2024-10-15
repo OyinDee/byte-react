@@ -133,10 +133,8 @@ const CartPage = () => {
         localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
         return newCart;
       });
-
       toast.success("Order placed successfully!");
-      toast.success("Order placed successfully!");
-      toast.success("Cart has been cleared too...");
+      toast.info("Cart has been cleared too...");
       setNote('');
       setTimeout(() => {
         window.location.reload();
