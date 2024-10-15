@@ -89,6 +89,15 @@ const CartPage = () => {
 
     const totalAmount = totalAmountPerRestaurant(itemsForRestaurant, fee);
     
+    const byteUser = JSON.parse(localStorage.getItem("byteUser"));
+    const userBalance = byteUser?.byteBalance || 0;
+
+    if (userBalance < totalAmount) {
+      toast.error("Insufficient balance.");
+      setIsCheckoutLoading(false);
+      return;
+    }
+
     const orderDetails = {
       restaurantCustomId: restaurantId,
       meals: itemsForRestaurant.map(({ meal, quantity }) => ({
