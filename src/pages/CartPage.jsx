@@ -75,8 +75,7 @@ const CartPage = () => {
       toast.error("Complete profile setup to proceed with the order.");
       return;
     }
-
-    toast.info("In the kitchen... Wait a minute!");
+  
     setIsCheckoutLoading(true);
 
     const itemsForRestaurant = cart.get(restaurantId) || [];
@@ -93,11 +92,11 @@ const CartPage = () => {
     const userBalance = byteUser?.byteBalance || 0;
 
     if (userBalance < (totalAmount-parseFloat(fee)) ) {
-      toast.error("Insufficient balance.");
+      toast.error("Insufficient balance. Fund your account and try again!");
       setIsCheckoutLoading(false);
       return;
     }
-
+    toast.info("In the kitchen... Wait a minute!");
     const orderDetails = {
       restaurantCustomId: restaurantId,
       meals: itemsForRestaurant.map(({ meal, quantity }) => ({
@@ -136,6 +135,8 @@ const CartPage = () => {
       });
 
       toast.success("Order placed successfully!");
+      toast.success("Order placed successfully!");
+      toast.success("Cart has been cleared too...");
       setNote('');
       setTimeout(() => {
         window.location.reload();
