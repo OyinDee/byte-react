@@ -92,7 +92,7 @@ const CartPage = () => {
     const byteUser = JSON.parse(localStorage.getItem("byteUser"));
     const userBalance = byteUser?.byteBalance || 0;
 
-    if (userBalance < totalAmount) {
+    if (userBalance < (total Amount-parseFloat(fee)) ) {
       toast.error("Insufficient balance.");
       setIsCheckoutLoading(false);
       return;
