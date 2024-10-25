@@ -78,7 +78,7 @@ const CombinedPage = () => {
           {loading ? (
             <div className="flex flex-col items-center justify-center min-h-screen text-black bg-white">
               <RingLoader
-                color="#000000" 
+                color="#ff860d" 
                 size={100}
                 speedMultiplier={1.5}
               />

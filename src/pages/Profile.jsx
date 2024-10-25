@@ -119,7 +119,7 @@ const Profile = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black">
         <div className="z-10 flex flex-col items-center text-center">
-          <RingLoader color="#FFD700" size={100} speedMultiplier={1.5} />
+          <RingLoader color="#ff860d" size={100} speedMultiplier={1.5} />
         </div>
       </div>
     );
@@ -247,7 +247,7 @@ const Profile = () => {
             {/* Loader during update */}
             {updateLoading ? (
               <div className="flex justify-center">
-                <RingLoader color="#FFD700" size={50} />
+                <RingLoader color="#ff860d" size={50} />
               </div>
             ) : (
               <button
