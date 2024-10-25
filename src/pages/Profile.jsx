@@ -186,7 +186,7 @@ const Profile = () => {
           <div className="flex justify-end mt-8">
             <button
               onClick={openModal}
-              className="w-full p-3 text-lg text-black transition-colors duration-200 bg-yellow-500 rounded-md shadow-lg hover:bg-gray-800"
+              className="w-full p-3 text-lg text-black transition-colors duration-200 bg-cheese rounded-md shadow-lg hover:bg-gray-800"
             >
               Edit Profile
             </button>
@@ -199,7 +199,7 @@ const Profile = () => {
           </button>
           <button
             onClick={() => navigate('/user/fund')}
-            className="w-full p-3 mt-2 text-lg text-black transition-colors duration-200 bg-yellow-500 rounded-md shadow-lg"
+            className="w-full p-3 mt-2 text-lg text-black transition-colors duration-200 bg-cheese rounded-md shadow-lg"
           >
             Fund
           </button>

@@ -165,7 +165,7 @@ const RestaurantDashboard = () => {
                 : "₦0.00"}
             </p>
             <button
-              className="bg-yellow-500 w-full py-2 mt-3 rounded-lg"
+              className="bg-cheese w-full py-2 mt-3 rounded-lg"
               onClick={handleWithdrawal}
             >
               Place Withdrawal
@@ -342,7 +342,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
                   className="p-2 rounded-lg border border-gray-400 w-full mb-2"
                 />
                 <button
-                  className="bg-yellow-500 text-white p-2 rounded-lg w-full"
+                  className="bg-cheese text-white p-2 rounded-lg w-full"
                   onClick={onRequest}
                   disabled={isRequesting}
                 >

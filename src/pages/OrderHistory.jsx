@@ -183,11 +183,11 @@ const OrderHistory = () => {
                           Accept Fee
                         </button>
                         <button
-                          className="w-full px-4 py-2 mt-2 text-white bg-yellow-500 rounded"
+                          className="w-full px-4 py-2 mt-2 text-white bg-cheese rounded"
                           onClick={() => handleCancelOrder(order.customId)}
                           disabled={processingOrders[order.customId]}
                         >
-                         Cancel Order
+                          Cancel Order
                         </button>
                       </div>
                     )}

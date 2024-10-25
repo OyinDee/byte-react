@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 
 const Loader = () => (
   <div className="flex justify-center items-center">
-    <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-yellow-500"></div>
+    <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-cheese"></div>
   </div>
 );
 
@@ -196,7 +196,7 @@ const SuperAdminDashboard = () => {
             />
             <button
               onClick={handleAddRestaurant}
-              className="bg-yellow-500 text-white py-2 mt-4 w-full rounded-lg"
+              className="bg-cheese text-white py-2 mt-4 w-full rounded-lg"
             >
               Add Restaurant
             </button>

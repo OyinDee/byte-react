@@ -12,14 +12,14 @@ const NotFound = () => {
         </p>
         <p className="text-sm mb-8">
           Try going back to our{" "}
-          <a href="/" className="text-yellow-400 hover:underline">
+          <a href="/" className="text-cheese hover:underline">
             homepage
           </a>{" "}
           or use the navigation menu to find what you’re looking for.
         </p>
         <button
           onClick={() => window.history.back()}
-          className="bg-yellow-400 text-black px-6 py-3 rounded hover:bg-yellow-500 transition-colors"
+          className="bg-cheese text-black px-6 py-3 rounded hover:bg-cheese transition-colors"
         >
           Go Back
         </button>
