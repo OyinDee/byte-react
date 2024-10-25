@@ -23,13 +23,13 @@ const Footer = () => {
             <FaFacebook size={24} />
           </a>
           <a
-            href="#"
+            href="https://www.instagram.com/byte.chows/profilecard/?igsh=MXBmb215emZ2OWNnOQ=="
             className="text-accentwhite mx-4 hover:text-cheese transition-colors duration-200"
           >
             <FaInstagram size={24} />
           </a>
           <a
-            href="#"
+            href="https://x.com/bytechows?t=g01iiJhi_07Jt0cdaT9siw&s=09"
             className="text-accentwhite mx-4 hover:text-cheese transition-colors duration-200"
           >
             <FaTwitter size={24} />
