@@ -4,7 +4,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        cheese: "#FFD700", 
+        cheese: "#ff860d", 
         pepperoni: "#FF6347", 
         crust: "#8B4513", 
         olive: "#000000",
