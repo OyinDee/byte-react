@@ -129,7 +129,7 @@ const ResetPassword = () => {
       {isLoading && (
         <div className="flex flex-col items-center justify-center min-h-screen bg-black text-accentwhite">
           <RingLoader
-            color="#FFD700" 
+            color="#ff860d" 
             size={100}
             speedMultiplier={1.5}
           />

@@ -98,7 +98,7 @@ const Notifications = () => {
 
         {loading && (
           <div className="flex justify-center mt-8">
-            <RingLoader color="#FFD700" size={60} speedMultiplier={1.5} />
+            <RingLoader color="#ff860d" size={60} speedMultiplier={1.5} />
           </div>
         )}
       </div>

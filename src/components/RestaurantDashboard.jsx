@@ -131,7 +131,7 @@ const RestaurantDashboard = () => {
     return (
       <div className="flex items-center justify-center">
         <div className="flex flex-col items-center text-center z-10">
-          <RingLoader color="#FFD700" size={100} speedMultiplier={1.5} />
+          <RingLoader color="#ff860d" size={100} speedMultiplier={1.5} />
         </div>
       </div>
     );

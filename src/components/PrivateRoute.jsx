@@ -24,7 +24,7 @@ const PrivateRoute = ({ element }) => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-black">
-        <RingLoader color="#FFD700" size={100} speedMultiplier={1.5} />
+        <RingLoader color="#ff860d" size={100} speedMultiplier={1.5} />
         <p className="text-gray-300 mt-2">
           Please wait a moment while we prepare your meal.
         </p>

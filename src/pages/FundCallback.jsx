@@ -37,7 +37,7 @@ const CallbackPage = () => {
     <div className="flex items-center justify-center min-h-screen bg-black">
       <div className="z-10 flex flex-col items-center text-center">
         <RingLoader
-          color="#FFD700" 
+          color="#ff860d" 
           size={100}
           speedMultiplier={1.5}
         />

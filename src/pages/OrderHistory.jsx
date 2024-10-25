@@ -127,7 +127,7 @@ const OrderHistory = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
-        <RingLoader color="#FFD700" size={100} />
+        <RingLoader color="#ff860d" size={100} />
       </div>
     );
   }
