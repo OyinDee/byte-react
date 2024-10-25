@@ -2,7 +2,7 @@ import { FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <footer className="bg-olive text-accentwhite py-6">
+    <footer className="bg-olive text-accentwhite py-6 mb-6">
       <div className="container mx-auto px-4 text-center">
         <div className="flex justify-center space-x-6 mb-4">
           <a href="#" className="hover:text-cheese transition">
