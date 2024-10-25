@@ -5,8 +5,8 @@ module.exports = {
     extend: {
       colors: {
         cheese: "#ff860d", 
-        pepperoni: "#FF6347", 
-        crust: "#8B4513", 
+        pepperoni: "#ff860d", 
+        crust: "#ff860d", 
         olive: "#000000",
         accentwhite: "#FFFFFF", 
       },
