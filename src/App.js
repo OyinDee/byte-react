@@ -28,12 +28,7 @@ import OrderHistory from './pages/OrderHistory';
 
 function App() {
   useEffect(() => {
-    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    if (isMobile && window.screen.orientation && window.screen.orientation.lock) {
-      window.screen.orientation.lock('portrait').catch((error) => {
-        console.error('Failed to lock orientation:', error);
-      });
-    }
+    window.screen.orientation.lock('portrait')
   }, []);
 
   return (
