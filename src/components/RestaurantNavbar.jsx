@@ -30,7 +30,7 @@ const RestaurantNavbar = () => {
         <Link to="/restaurant" className="text-accentwhite text-2xl font-bold">
           Byte!
         </Link>
-        <div className="py-3 fixed bottom-0 inset-x-0 bg-olive p-4 md:hidden flex justify-between items-center z-50">
+        <div className="py-5 fixed bottom-0 inset-x-0 bg-olive p-4 md:hidden flex justify-between items-center z-50">
           <ul className="flex justify-between w-full text-accentwhite">
             <li>
               <Link
