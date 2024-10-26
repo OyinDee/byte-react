@@ -3,22 +3,24 @@ import { FaTrashAlt } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import { jwtDecode } from 'jwt-decode';
 import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from 'react-router-dom';
 
 const CartPage = () => {
   const [cart, setCart] = useState(new Map());
   const [user, setUser] = useState(null);
   const [note, setNote] = useState('');
-  const [fee, setFee] = useState(700);
+  const [fee, setFee] = useState(1000);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const storedUser = jwtDecode(localStorage.token);
-    if (storedUser) {
-      try {
-        setUser(storedUser.user);
-      } catch (error) {
-        setUser(null);
-      }
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      const storedUser = jwtDecode(storedToken);
+      setUser(storedUser.user);
+    } else {
+      toast.error("You need to log in to access the cart.");
+      navigate("/login");
     }
 
     const storedCart = localStorage.getItem("cart");
@@ -30,7 +32,7 @@ const CartPage = () => {
         setCart(new Map());
       }
     }
-  }, []);
+  }, [navigate]);
 
   const handleRemoveItem = (restaurantId, mealId) => {
     setCart(prevCart => {
@@ -75,9 +77,8 @@ const CartPage = () => {
       toast.error("Complete profile setup to proceed with the order.");
       return;
     }
-  
-    setIsCheckoutLoading(true);
 
+    setIsCheckoutLoading(true);
     const itemsForRestaurant = cart.get(restaurantId) || [];
 
     if (itemsForRestaurant.length === 0) {
@@ -87,15 +88,15 @@ const CartPage = () => {
     }
 
     const totalAmount = totalAmountPerRestaurant(itemsForRestaurant, fee);
-    
     const byteUser = JSON.parse(localStorage.getItem("byteUser"));
     const userBalance = byteUser?.byteBalance || 0;
 
-    if (userBalance < (totalAmount-parseFloat(fee)) ) {
+    if (userBalance < (totalAmount - parseFloat(fee))) {
       toast.error("Insufficient balance. Fund your account and try again!");
       setIsCheckoutLoading(false);
       return;
     }
+
     toast.info("In the kitchen... Wait a minute!");
     const orderDetails = {
       restaurantCustomId: restaurantId,
@@ -109,7 +110,7 @@ const CartPage = () => {
       user: user._id,
       note,
       nearestLandmark: user.nearestLandmark || "",
-      fee: parseFloat(fee) || 700,
+      fee: parseFloat(fee) || 1000,
     };
 
     try {
@@ -126,7 +127,6 @@ const CartPage = () => {
       }
 
       await response.json();
-
       setCart(prevCart => {
         const newCart = new Map(prevCart);
         newCart.delete(restaurantId);
@@ -154,46 +154,28 @@ const CartPage = () => {
           <p className="text-center text-gray-500">Your cart is empty.</p>
         ) : (
           Array.from(cart.entries()).map(([restaurantId, items]) => (
-            <div
-              key={restaurantId}
-              className="pb-6 mb-8 border-b border-gray-200"
-            >
+            <div key={restaurantId} className="pb-6 mb-8 border-b border-gray-200">
               <h2 className="mb-4 text-xl font-semibold text-black">
                 Restaurant: {items.length > 0 ? items[0].meal.restaurantId : "Unknown"}
               </h2>
               <div className="space-y-4">
                 {Array.isArray(items) && items.map(({ meal, quantity }) => (
-                  <div
-                    key={meal.customId}
-                    className="flex items-center justify-between"
-                  >
+                  <div key={meal.customId} className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       {meal.imageUrl && (
                         <div className="relative w-20 h-20 overflow-hidden rounded-lg">
-                          <img
-                            src={meal.imageUrl}
-                            alt={meal.name}
-                            className="object-cover w-full h-full"
-                          />
+                          <img src={meal.imageUrl} alt={meal.name} className="object-cover w-full h-full" />
                         </div>
                       )}
                       <div>
-                        <h3 className="text-lg font-semibold text-black">
-                          {meal.name}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          Quantity: {quantity} {meal.per||"meal"}(s)
-                        </p>
+                        <h3 className="text-lg font-semibold text-black">{meal.name}</h3>
+                        <p className="text-sm text-gray-500">Quantity: {quantity} {meal.per || "meal"}(s)</p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end">
-                      <p className="text-lg font-bold text-black">
-                        ₦{meal.price.toFixed(2)}
-                      </p>
+                      <p className="text-lg font-bold text-black">₦{meal.price.toFixed(2)}</p>
                       <button
-                        onClick={() =>
-                          handleRemoveItem(restaurantId, meal.customId)
-                        }
+                        onClick={() => handleRemoveItem(restaurantId, meal.customId)}
                         className="flex justify-center text-red-500 hover:text-red-700"
                       >
                         <FaTrashAlt />
@@ -203,9 +185,7 @@ const CartPage = () => {
                 ))}
               </div>
               <div className="mt-4">
-                <label htmlFor="note" className="text-sm font-medium text-black">
-                  Add a note for your order:
-                </label>
+                <label htmlFor="note" className="text-sm font-medium text-black">Add a note for your order:</label>
                 <textarea
                   id="note"
                   className="w-full p-1 mt-2 border border-gray-300 rounded"
@@ -216,9 +196,7 @@ const CartPage = () => {
                 />
               </div>
               <br />
-              <label htmlFor="fee" className="text-xs font-medium text-black">
-                Expected/assumed delivery fee + miscellaneous. Specify amount in naira...
-              </label>
+              <label htmlFor="fee" className="text-xs font-medium text-black">Expected/assumed delivery fee + miscellaneous. Specify amount in naira...</label>
               <br />
               <input
                 type="number"
@@ -229,16 +207,12 @@ const CartPage = () => {
                 className="w-full border"
               />
               <div className="flex items-center justify-between mt-4">
-                <p className="text-lg font-semibold text-black">
-                  Total: ₦{totalAmountPerRestaurant(items, fee).toFixed(2)}
-                </p>
+                <p className="text-lg font-semibold text-black">Total: ₦{totalAmountPerRestaurant(items, fee).toFixed(2)}</p>
               </div>
               <div className="flex mt-4 space-x-2">
                 <button
                   onClick={() => handleCheckout(restaurantId)}
-                  className={`w-full bg-black text-white px-6 py-3 rounded hover:bg-gray-800 ${
-                    isCheckoutLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  className={`w-full bg-black text-white px-6 py-3 rounded hover:bg-gray-800 ${isCheckoutLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                   disabled={isCheckoutLoading}
                 >
                   {isCheckoutLoading ? "Processing..." : "Checkout"}
