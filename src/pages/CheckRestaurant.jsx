@@ -75,12 +75,14 @@ const RestaurantPage = () => {
 
             {["regular", "combo", "add-on"].map((section) => (
               <div key={section}>
-                <button
-                  className="w-full justify-between px-4 py-2 mb-2 text-white bg-black rounded-md"
-                  onClick={() => toggleSection(section)}
-                >
-                  {section.toUpperCase()} {collapsedSections[section] ? "▼" : "▲"}
-                </button>
+            <button
+  className="flex justify-between w-full px-4 py-2 mb-2 text-white bg-black rounded-md"
+  onClick={() => toggleSection(section)}
+>
+  <span>{section.toUpperCase()}</span>
+  <span>{collapsedSections[section] ? "▼" : "▲"}</span>
+</button>
+
                 {!collapsedSections[section] && (
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {filteredMeals(section).map((meal) => (
