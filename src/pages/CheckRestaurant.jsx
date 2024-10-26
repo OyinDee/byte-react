@@ -76,7 +76,7 @@ const RestaurantPage = () => {
             {["regular", "combo", "add-on"].map((section) => (
               <div key={section}>
                 <button
-                  className="w-full px-4 py-2 mb-2 text-left text-white bg-black rounded-md"
+                  className="w-full justify-between px-4 py-2 mb-2 text-white bg-black rounded-md"
                   onClick={() => toggleSection(section)}
                 >
                   {section.toUpperCase()} {collapsedSections[section] ? "▼" : "▲"}
