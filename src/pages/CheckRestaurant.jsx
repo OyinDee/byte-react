@@ -6,15 +6,14 @@ import axios from "axios";
 import { useCart } from "../context/cartContext"; 
 import Loader from '../components/Loader';
 
-
 const RestaurantPage = () => {
   const { id } = useParams(); 
   const [restaurant, setRestaurant] = useState(null); 
   const [loading, setLoading] = useState(true);
   const [collapsedSections, setCollapsedSections] = useState({
-    regular: false,
-    combo: false,
-    "add-on": false,
+    regular: true, 
+    combo: true, 
+    "add-on": true, 
   });
 
   useEffect(() => {
@@ -24,8 +23,7 @@ const RestaurantPage = () => {
           const response = await axios.get(
             `https://mongobyte.onrender.com/api/v1/users/restdetails/${id}`
           );
-          console.log(response)
-
+          console.log(response);
           setRestaurant(response.data); 
         } catch (error) {
           toast.error("Error fetching restaurant details.");
@@ -81,7 +79,7 @@ const RestaurantPage = () => {
                   className="w-full px-4 py-2 mb-2 text-left text-white bg-black rounded-md"
                   onClick={() => toggleSection(section)}
                 >
-                  {section.toUpperCase()}
+                  {section.toUpperCase()} {collapsedSections[section] ? "▼" : "▲"}
                 </button>
                 {!collapsedSections[section] && (
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -125,58 +123,51 @@ const MealCard = ({ meal, restaurantId, hideImage }) => {
   };
 
   return (
- <div
-  className={`border rounded-lg p-4 shadow-md ${
-    !meal.availability ? "opacity-50" : ""
-  }`}
->
-  {!hideImage && (
-    <img src={meal.imageUrl} alt="" className="object-cover w-full h-40" />
-  )}
-  <h3 className="mb-2 text-xl font-semibold">{meal.name}</h3>
-  <span>{meal.description}</span>
-  
-  {!meal.availability && (
-    <p className="text-red-500 font-semibold">Unavailable</p>
-  )}
-  
-  <p className="mb-2 text-lg font-bold">
-    &#8358;{meal.price.toFixed(2)}
-    {meal.per && (
-      <span className="text-sm font-normal"> per {meal.per}</span>
-    )}
-  </p>
-  
-  <div className="flex items-center mb-4">
-    <button
-      onClick={handleDecrease}
-      className="px-2 py-1 text-white bg-black rounded-l hover:bg-gray-800"
-    >
-      -
-    </button>
-    <input
-      type="number"
-      min="1"
-      value={quantity}
-      readOnly
-      className="w-16 p-2 text-center border-t border-b border-gray-300"
-    />
-    <button
-      onClick={handleIncrease}
-      className="px-2 py-1 text-white bg-black rounded-r hover:bg-gray-800"
-    >
-      +
-    </button>
-    <button
-      onClick={handleAddToCart}
-      className="w-full px-4 py-2 ml-4 text-white bg-black rounded hover:bg-gray-800"
-      disabled={!meal.availability}
-    >
-      Add to Cart
-    </button>
-  </div>
-</div>
+    <div className={`border rounded-lg p-4 shadow-md ${!meal.availability ? "opacity-50" : ""}`}>
+      {!hideImage && (
+        <img src={meal.imageUrl} alt="" className="object-cover w-full h-40" />
+      )}
+      <h3 className="mb-2 text-xl font-semibold">{meal.name}</h3>
+      <span>{meal.description}</span>
+      {!meal.availability && (
+        <p className="text-red-500 font-semibold">Unavailable</p>
+      )}
+      <p className="mb-2 text-lg font-bold">
+        &#8358;{meal.price.toFixed(2)}
+        {meal.per && (
+          <span className="text-sm font-normal"> per {meal.per}</span>
+        )}
+      </p>
+      <div className="flex items-center mb-4">
+        <button
+          onClick={handleDecrease}
+          className="px-2 py-1 text-white bg-black rounded-l hover:bg-gray-800"
+        >
+          -
+        </button>
+        <input
+          type="number"
+          min="1"
+          value={quantity}
+          readOnly
+          className="w-16 p-2 text-center border-t border-b border-gray-300"
+        />
+        <button
+          onClick={handleIncrease}
+          className="px-2 py-1 text-white bg-black rounded-r hover:bg-gray-800"
+        >
+          +
+        </button>
+        <button
+          onClick={handleAddToCart}
+          className="w-full px-4 py-2 ml-4 text-white bg-black rounded hover:bg-gray-800"
+          disabled={!meal.availability}
+        >
+          Add to Cart
+        </button>
+      </div>
+    </div>
   );
 };
 
-export default RestaurantPage; 
+export default RestaurantPage;
