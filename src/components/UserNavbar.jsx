@@ -37,7 +37,7 @@ const UserNavbar = () => {
           Byte!
         </Link>
 
-        <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between p-4 bg-olive md:hidden">
+        <div className="py-3 fixed inset-x-0 bottom-0 z-50 flex items-center justify-between p-4 bg-olive md:hidden">
           <ul className="flex justify-between w-full text-accentwhite">
             <li>
               <Link
