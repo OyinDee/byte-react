@@ -36,9 +36,13 @@ const CombinedPage = () => {
     fetchRestaurants();
   }, []);
 
-  const handleSearch = () => {
-    // Not needed since we're displaying all restaurants
-  };
+  const filteredRestaurants = restaurants.filter(restaurant => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      restaurant.name.toLowerCase().includes(searchLower) ||
+      restaurant.meals.some(meal => meal.name.toLowerCase().includes(searchLower))
+    );
+  });
 
   return (
     <div>
@@ -53,7 +57,6 @@ const CombinedPage = () => {
               className="w-full p-2 border border-gray-300 rounded lg:w-1/2 focus:outline-none focus:ring focus:border-black"
             />
             <button
-              onClick={handleSearch}
               className="p-2 text-white transition-colors duration-200 bg-black rounded hover:bg-gray-800"
             >
               Search
@@ -73,7 +76,7 @@ const CombinedPage = () => {
             </div>
           ) : (
             <div className="space-y-8">
-              {restaurants.map((restaurant) => (
+              {filteredRestaurants.map((restaurant) => (
                 <div
                   key={restaurant.customId}
                   data-aos="fade-up"
@@ -89,11 +92,12 @@ const CombinedPage = () => {
                     />
                     <div className="ml-4">
                       <h2 className="text-xl font-semibold text-black">
-                        {restaurant.name} { !restaurant.isActive && <span className="text-red-500">(Unavailable)</span>}
+                        {restaurant.name}
                       </h2>
-                      <p className="text-gray-600">
-                        {restaurant.description}
-                      </p>
+                      {!restaurant.isActive && (
+                        <div className="text-red-500 font-semibold">Currently Unavailable</div>
+                      )}
+                      <p className="text-gray-600">{restaurant.description}</p>
                     </div>
                   </div>
                   <hr className="border-gray-300" />
@@ -104,15 +108,11 @@ const CombinedPage = () => {
                           <li key={meal.customId}>{meal.name}</li>
                         ))}
                         {restaurant.meals.length > 3 && (
-                          <li className="text-gray-500">
-                            ...there&apos;s more
-                          </li>
+                          <li className="text-gray-500">...there&apos;s more</li>
                         )}
                       </ul>
                     ) : (
-                      <div className="text-gray-500">
-                        No meals available for this restaurant.
-                      </div>
+                      <div className="text-gray-500">No meals available for this restaurant.</div>
                     )}
                     <button
                       className={`w-full p-2 mt-4 text-white transition-colors duration-200 ${restaurant.isActive ? "bg-black hover:bg-gray-800" : "bg-gray-300 cursor-not-allowed"}`}
