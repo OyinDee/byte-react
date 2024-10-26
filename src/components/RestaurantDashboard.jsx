@@ -270,3 +270,138 @@ const TabButton = ({ icon, label, isActive, onClick }) => (
     }`}
     onClick={onClick}
   >
+    {icon}
+    <span className="hidden md:inline">{label}</span>
+  </button>
+);
+
+const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [fees, setFees] = useState("");
+  const [requestDescription, setRequestDescription] = useState("");
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [isDelivering, setIsDelivering] = useState(false);
+
+  const onRequest = async () => {
+    if (isPending && fees) {
+      setIsRequesting(true);
+      await updateOrderStatus(order.customId, requestDescription, fees);
+      setIsRequesting(false);
+    }
+  };
+
+  const markAsDelivered = async () => {
+    if (isConfirmed) {
+      setIsDelivering(true);
+      const token = localStorage.getItem("token");
+      try {
+        const response = await axios.patch(
+          `https://mongobyte.onrender.com/api/v1/orders/deliver/${order.customId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        toast.success(response.data.message);
+        setIsDelivering(false);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } catch (error) {
+        toast.error(
+          error.response && error.response.data.message
+            ? error.response.data.message
+            : "Error marking order as delivered."
+        );
+        setIsDelivering(false);
+      }
+    }
+  };
+
+  return (
+    <div className="bg-gray-100 p-4 rounded-lg shadow-md">
+      <div className="flex justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Order: {order.customId}</h3>
+          <p className="text-sm text-gray-600">Status: {order.status}</p>
+        </div>
+        <button
+          className="text-sm text-gray-500"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {isOpen ? "Hide Details" : "Show Details"}
+        </button>
+      </div>
+
+      {isOpen && (
+        <div className="mt-4">
+          <p>Location: {order.location}</p>
+          <p>Phone Number: {order.phoneNumber}</p>
+
+          <div className="mt-2">
+            <h3 className="text-black font-semibold">Meals:</h3>
+            {order.meals.map(({ meal, quantity }, index) => (
+              <p key={index} className="text-gray-700">
+                {meal.name} - {quantity}x - ₦{meal.price}
+              </p>
+            ))}
+          </div>
+
+          <p className="text-gray-600">Note: {order.note}</p>
+          <p className="text-gray-600">
+            Ordered At: {new Date(order.createdAt).toLocaleString()}
+          </p>
+
+          {isPending && (
+            <>
+              <span className="text-black font-semibold">
+                Total: ₦{((order.totalPrice) - (order.fee) || 0).toFixed(2)}
+              </span>
+              <div className="mt-4">
+                <input
+                  type="number"
+                  placeholder="Enter fee"
+                  value={fees}
+                  onChange={(e) => setFees(e.target.value)}
+                  className="p-2 rounded-lg border border-gray-400 w-full mb-2"
+                />
+                <textarea
+                  placeholder="Request description"
+                  value={requestDescription}
+                  onChange={(e) => setRequestDescription(e.target.value)}
+                  className="p-2 rounded-lg border border-gray-400 w-full mb-2"
+                />
+                <button
+                  className="bg-cheese text-white p-2 rounded-lg w-full"
+                  onClick={onRequest}
+                  disabled={isRequesting}
+                >
+                  {isRequesting ? "Requesting..." : "Request Fee"}
+                </button>
+              </div>
+            </>
+          )}
+
+          {isConfirmed && (
+            <>
+              <p className="text-black font-semibold">
+                Total: ₦{order.totalPrice.toFixed(2)}
+              </p>
+              <button
+                className="bg-black text-white p-2 rounded-lg w-full mt-4"
+                onClick={markAsDelivered}
+                disabled={isDelivering}
+              >
+                {isDelivering ? "Delivering..." : "Mark as Delivered"}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default RestaurantDashboard;
