@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -24,9 +24,18 @@ import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import MealsPage from "./pages/MealsPage";
-import OrderHistory from './pages/OrderHistory'
+import OrderHistory from './pages/OrderHistory';
 
 function App() {
+  useEffect(() => {
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    if (isMobile && screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('portrait').catch((error) => {
+        console.error('Failed to lock orientation:', error);
+      });
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <CartProvider>
@@ -38,59 +47,19 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signupsuccess" element={<SignUpSuccess />} />
             <Route path="/forgot-password" element={<ResetPassword />} />
-
-            <Route
-              path="/user"
-              element={<PrivateRoute element={<UserDashboard />} />}
-            />
-            <Route
-              path="/user/notifs"
-              element={<PrivateRoute element={<Notifications />} />}
-            />
-            <Route
-              path="/user/profile"
-              element={<PrivateRoute element={<Profile />} />}
-            />
-            <Route
-              path="/user/cart"
-              element={<PrivateRoute element={<CartPage />} />}
-            />
-            <Route
-              path="/user/fund/callback"
-              element={<PrivateRoute element={<CallbackPage />} />}
-            />
-            <Route
-              path="/user/fund"
-              element={<PrivateRoute element={<Fund />} />}
-            />
-            <Route
-              path="/user/orderhistory"
-              element={<PrivateRoute element={<OrderHistory />} />}
-            />
-            <Route
-              path="/user/checkrestaurant/:id"
-              element={<PrivateRoute element={<RestaurantPage />} />}
-            />
-
-            <Route
-              path="/restaurant/dashboard"
-              element={<PrivateRoute element={<RestaurantDashboard />} />}
-            />
-            <Route
-              path="/restaurant/notifications"
-              element={<PrivateRoute element={<Notifications />} />}
-            />
-            <Route
-              path="/restaurant/menu"
-              element={<PrivateRoute element={<MealsPage />} />}
-            />
+            <Route path="/user" element={<PrivateRoute element={<UserDashboard />} />} />
+            <Route path="/user/notifs" element={<PrivateRoute element={<Notifications />} />} />
+            <Route path="/user/profile" element={<PrivateRoute element={<Profile />} />} />
+            <Route path="/user/cart" element={<PrivateRoute element={<CartPage />} />} />
+            <Route path="/user/fund/callback" element={<PrivateRoute element={<CallbackPage />} />} />
+            <Route path="/user/fund" element={<PrivateRoute element={<Fund />} />} />
+            <Route path="/user/orderhistory" element={<PrivateRoute element={<OrderHistory />} />} />
+            <Route path="/user/checkrestaurant/:id" element={<PrivateRoute element={<RestaurantPage />} />} />
+            <Route path="/restaurant/dashboard" element={<PrivateRoute element={<RestaurantDashboard />} />} />
+            <Route path="/restaurant/notifications" element={<PrivateRoute element={<Notifications />} />} />
+            <Route path="/restaurant/menu" element={<PrivateRoute element={<MealsPage />} />} />
             <Route path="/restaurant/login" element={<AdminLogin />} />
-
-            <Route
-              path="/superadmin/dashboard"
-              element={<PrivateRoute element={<SuperAdminDashboard />} />} 
-            />
-
+            <Route path="/superadmin/dashboard" element={<PrivateRoute element={<SuperAdminDashboard />} />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <ToastContainer />
@@ -101,3 +70,4 @@ function App() {
 }
 
 export default App;
+ 
