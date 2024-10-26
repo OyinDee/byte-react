@@ -182,9 +182,9 @@ const RestaurantDashboard = () => {
                 <div className="p-4">
   <button
     onClick={toggleActiveStatus}
-    className={`px-4 py-2 rounded-lg ${restaurant.isActive ? "bg-cheese" : "bg-gray-500"} text-white`}
+    className={`px-4 py-2 rounded-lg ${restaurant.isActive ? "bg-red-500": "bg-cheese"} text-white`}
   >
-    {restaurant.isActive ? "Open" : "Closed"}
+    {restaurant.isActive ? "Close" : "Open"}
   </button>
 </div>
 
