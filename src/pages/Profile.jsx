@@ -147,7 +147,7 @@ const Profile = () => {
               />
             </div>
             <h1 className="mb-2 text-3xl font-bold lg:text-4xl">
-              @{user?.username.toLowerCase()}
+              @{user?.username}
             </h1>
             <p className="mb-2 text-lg text-gray-700 lg:text-xl">
               {user?.email}
