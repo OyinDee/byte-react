@@ -178,11 +178,11 @@ const RestaurantDashboard = () => {
               <p className="text-md text-gray-600">Contact: {restaurant.contactNumber}</p>
               <p className="text-md text-gray-600">Email: {restaurant.email}</p>
               <div className="flex items-center mt-4">
-                <span className="mr-2">{restaurant.isActive ? "Open" : "Closed"}</span>
+                <span className="mr-2">{restaurant.isActive ? "Your restaurant is currently open" : "The restaurant is closed"}</span>
                 <div className="p-4">
   <button
     onClick={toggleActiveStatus}
-    className={`px-4 py-2 rounded-lg ${restaurant.isActive ? "bg-red-500": "bg-cheese"} text-white`}
+    className={`px-4 py-2 w-full rounded-lg ${restaurant.isActive ? "bg-red-500": "bg-cheese"} text-white`}
   >
     {restaurant.isActive ? "Close" : "Open"}
   </button>
