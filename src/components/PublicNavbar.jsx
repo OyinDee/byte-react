@@ -13,7 +13,7 @@ const PublicNavbar = () => {
   };
 
   return (
-    <nav className="bg-olive p-4 py-3">
+    <nav className="bg-olive p-4 py-6">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <Link
           to="/restaurant/login"
