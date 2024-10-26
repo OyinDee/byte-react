@@ -177,7 +177,7 @@ const RestaurantDashboard = () => {
               <p className="text-md text-gray-600 mt-2">Location: {restaurant.location}</p>
               <p className="text-md text-gray-600">Contact: {restaurant.contactNumber}</p>
               <p className="text-md text-gray-600">Email: {restaurant.email}</p>
-              <div className="flex items-center mt-4">
+              <div className="flex-col items-center mt-4">
                 <span className="mr-2">{restaurant.isActive ? "Your restaurant is currently open" : "The restaurant is closed"}</span>
                 <div className="p-4">
   <button
@@ -187,8 +187,7 @@ const RestaurantDashboard = () => {
     {restaurant.isActive ? "Close" : "Open"}
   </button>
 </div>
-
-              </div>
+           </div>
             </div>
           </div>
 
