@@ -8,7 +8,7 @@ import { RingLoader } from "react-spinners";
 const CombinedPage = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [restaurantSearchResults, setRestaurantSearchResults] = useState([]);
+  const [mealSearchResults, setMealSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -16,17 +16,15 @@ const CombinedPage = () => {
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });
     AOS.refresh();
-  
+
     const fetchRestaurants = async () => {
       try {
         const response = await axios.get(
           "https://mongobyte.onrender.com/api/v1/restaurants"
         );
-        
         const sortedRestaurants = response.data.sort((a, b) =>
           a.name.localeCompare(b.name)
         );
-        
         setRestaurants(sortedRestaurants);
       } catch {
         setError("Error fetching restaurants. Please try again.");
@@ -34,22 +32,25 @@ const CombinedPage = () => {
         setLoading(false);
       }
     };
-  
+
     fetchRestaurants();
   }, []);
-  
 
   const handleSearch = () => {
     const searchLower = searchQuery.toLowerCase();
-    const restaurantResults = restaurants.filter(
-      (restaurant) =>
-        restaurant.name.toLowerCase().includes(searchLower) ||
-        restaurant.meals.some((meal) =>
-          meal.name.toLowerCase().includes(searchLower)
-        )
-    );
+    const results = restaurants
+      .filter(restaurant => restaurant.isActive) // Only active restaurants
+      .flatMap(restaurant =>
+        restaurant.meals
+          .filter(meal => meal.name.toLowerCase().includes(searchLower)
+          )
+          .map(meal => ({
+            restaurant,
+            meal
+          }))
+      );
 
-    setRestaurantSearchResults(restaurantResults);
+    setMealSearchResults(results);
   };
 
   return (
@@ -61,7 +62,7 @@ const CombinedPage = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search restaurants or meals..."
+              placeholder="Search for meals..."
               className="w-full p-2 border border-gray-300 rounded lg:w-1/2 focus:outline-none focus:ring focus:border-black"
             />
             <button
@@ -74,14 +75,10 @@ const CombinedPage = () => {
         </section>
 
         <section className="mt-12">
-          <h2 className="mb-8 text-2xl font-semibold">Restaurants</h2>
+          <h2 className="mb-8 text-2xl font-semibold">Meals</h2>
           {loading ? (
             <div className="flex flex-col items-center justify-center min-h-screen text-black bg-white">
-              <RingLoader
-                color="#ff860d" 
-                size={100}
-                speedMultiplier={1.5}
-              />
+              <RingLoader color="#ff860d" size={100} speedMultiplier={1.5} />
             </div>
           ) : error ? (
             <div className="flex items-center justify-center min-h-screen text-red-500 bg-white">
@@ -89,10 +86,10 @@ const CombinedPage = () => {
             </div>
           ) : (
             <div className="space-y-8">
-              {(searchQuery ? restaurantSearchResults : restaurants).map(
-                (restaurant) => (
+              {mealSearchResults.length > 0 ? (
+                mealSearchResults.map(({ restaurant, meal }) => (
                   <div
-                    key={restaurant.customId}
+                    key={meal.customId}
                     data-aos="fade-up"
                     className="bg-white border border-gray-200 rounded-lg shadow-md"
                   >
@@ -106,51 +103,28 @@ const CombinedPage = () => {
                       />
                       <div className="ml-4">
                         <h2 className="text-xl font-semibold text-black">
-                          {restaurant.name}
+                          {meal.name} at {restaurant.name}
                         </h2>
-                        <p className="text-gray-600">
-                          {restaurant.description}
-                        </p>
+                        <p className="text-gray-600">{restaurant.description}</p>
                       </div>
                     </div>
                     <hr className="border-gray-300" />
                     <div className="p-4">
-                      {restaurant.meals.length > 0 ? (
-                        <ul className="pl-5 text-black list-disc">
-                          {restaurant.meals.slice(0, 3).map((meal) => (
-                            <li key={meal.customId}>{meal.name}</li>
-                          ))}
-                          {restaurant.meals.length > 3 && (
-                            <li className="text-gray-500"
-                            onClick={() =>
-                              navigate(
-                                `/user/checkrestaurant/${restaurant.customId}`
-                              )
-                            }>
-                              ...there&apos;s more
-                            </li>
-                          )}
-                        </ul>
-                      ) : (
-                        <div className="text-gray-500">
-                          No meals available for this restaurant.
-                        </div>
-                      )}
-                      {restaurant.meals.length > 0 && (
-                        <button
-                          className="w-full p-2 mt-4 text-white transition-colors duration-200 bg-black rounded hover:bg-gray-800"
-                          onClick={() =>
-                            navigate(
-                              `/user/checkrestaurant/${restaurant.customId}`
-                            )
-                          }
-                        >
-                          Check Restaurant
-                        </button>
-                      )}
+                      <button
+                        className="w-full p-2 mt-4 text-white transition-colors duration-200 bg-black rounded hover:bg-gray-800"
+                        onClick={() =>
+                          navigate(`/user/checkrestaurant/${restaurant.customId}`)
+                        }
+                      >
+                        Order Now
+                      </button>
                     </div>
                   </div>
-                )
+                ))
+              ) : (
+                <div className="text-gray-500">
+                  No meals found for the current search or all restaurants are unavailable.
+                </div>
               )}
             </div>
           )}
