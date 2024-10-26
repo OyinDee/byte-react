@@ -44,8 +44,8 @@ const Login = () => {
 
     try {
       const response = await axios.post('https://mongobyte.onrender.com/api/v1/auth/login', {
-        username.trim(),
-        password,
+        username: username.trim(),
+        password: password.trim(),
       });
 
       if (response.status === 200) {
