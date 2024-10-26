@@ -178,13 +178,16 @@ const RestaurantDashboard = () => {
               <p className="text-md text-gray-600">Contact: {restaurant.contactNumber}</p>
               <p className="text-md text-gray-600">Email: {restaurant.email}</p>
               <div className="flex items-center mt-4">
-                <span className="mr-2">{restaurant.isActive ? "Active" : "Inactive"}</span>
-                <button
-                  onClick={toggleActiveStatus}
-                  className={`px-4 py-2 rounded-lg ${restaurant.isActive ? "bg-red-500" : "bg-green-500"} text-white`}
-                >
-                  {restaurant.isActive ? "Deactivate" : "Activate"}
-                </button>
+                <span className="mr-2">{restaurant.isActive ? "Open" : "Closed"}</span>
+                <div className="p-4">
+  <button
+    onClick={toggleActiveStatus}
+    className={`px-4 py-2 rounded-lg ${restaurant.isActive ? "bg-cheese" : "bg-gray-500"} text-white`}
+  >
+    {restaurant.isActive ? "Open" : "Closed"}
+  </button>
+</div>
+
               </div>
             </div>
           </div>
