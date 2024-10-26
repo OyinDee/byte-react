@@ -29,8 +29,8 @@ import OrderHistory from './pages/OrderHistory';
 function App() {
   useEffect(() => {
     const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    if (isMobile && screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('portrait').catch((error) => {
+    if (isMobile && window.screen.orientation && window.screen.orientation.lock) {
+      window.screen.orientation.lock('portrait').catch((error) => {
         console.error('Failed to lock orientation:', error);
       });
     }
@@ -54,7 +54,7 @@ function App() {
             <Route path="/user/fund/callback" element={<PrivateRoute element={<CallbackPage />} />} />
             <Route path="/user/fund" element={<PrivateRoute element={<Fund />} />} />
             <Route path="/user/orderhistory" element={<PrivateRoute element={<OrderHistory />} />} />
-            <Route path="/user/checkrestaurant/:id" element={<PrivateRoute element={<RestaurantPage />} />} />
+            <Route path="/user/checkrestaurant/:id" element={<RestaurantPage />} />
             <Route path="/restaurant/dashboard" element={<PrivateRoute element={<RestaurantDashboard />} />} />
             <Route path="/restaurant/notifications" element={<PrivateRoute element={<Notifications />} />} />
             <Route path="/restaurant/menu" element={<PrivateRoute element={<MealsPage />} />} />
@@ -65,9 +65,4 @@ function App() {
           <ToastContainer />
         </Router>
       </CartProvider>
-    </AuthProvider>
-  );
-}
-
-export default App;
- 
+    </AuthProvider
