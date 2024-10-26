@@ -8,7 +8,6 @@ import { RingLoader } from "react-spinners";
 const CombinedPage = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [mealSearchResults, setMealSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -22,6 +21,7 @@ const CombinedPage = () => {
         const response = await axios.get(
           "https://mongobyte.onrender.com/api/v1/restaurants"
         );
+
         const sortedRestaurants = response.data.sort((a, b) =>
           a.name.localeCompare(b.name)
         );
@@ -37,20 +37,7 @@ const CombinedPage = () => {
   }, []);
 
   const handleSearch = () => {
-    const searchLower = searchQuery.toLowerCase();
-    const results = restaurants
-      .filter(restaurant => restaurant.isActive) // Only active restaurants
-      .flatMap(restaurant =>
-        restaurant.meals
-          .filter(meal => meal.name.toLowerCase().includes(searchLower)
-          )
-          .map(meal => ({
-            restaurant,
-            meal
-          }))
-      );
-
-    setMealSearchResults(results);
+    // Not needed since we're displaying all restaurants
   };
 
   return (
@@ -62,7 +49,7 @@ const CombinedPage = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for meals..."
+              placeholder="Search for restaurants or meals..."
               className="w-full p-2 border border-gray-300 rounded lg:w-1/2 focus:outline-none focus:ring focus:border-black"
             />
             <button
@@ -75,7 +62,7 @@ const CombinedPage = () => {
         </section>
 
         <section className="mt-12">
-          <h2 className="mb-8 text-2xl font-semibold">Meals</h2>
+          <h2 className="mb-8 text-2xl font-semibold">Restaurants</h2>
           {loading ? (
             <div className="flex flex-col items-center justify-center min-h-screen text-black bg-white">
               <RingLoader color="#ff860d" size={100} speedMultiplier={1.5} />
@@ -86,46 +73,57 @@ const CombinedPage = () => {
             </div>
           ) : (
             <div className="space-y-8">
-              {mealSearchResults.length > 0 ? (
-                mealSearchResults.map(({ restaurant, meal }) => (
-                  <div
-                    key={meal.customId}
-                    data-aos="fade-up"
-                    className="bg-white border border-gray-200 rounded-lg shadow-md"
-                  >
-                    <div className="flex items-center p-4">
-                      <img
-                        src={restaurant.imageUrl}
-                        alt={restaurant.name}
-                        width={80}
-                        height={80}
-                        className="object-cover w-20 h-20 rounded-full"
-                      />
-                      <div className="ml-4">
-                        <h2 className="text-xl font-semibold text-black">
-                          {meal.name} at {restaurant.name}
-                        </h2>
-                        <p className="text-gray-600">{restaurant.description}</p>
-                      </div>
-                    </div>
-                    <hr className="border-gray-300" />
-                    <div className="p-4">
-                      <button
-                        className="w-full p-2 mt-4 text-white transition-colors duration-200 bg-black rounded hover:bg-gray-800"
-                        onClick={() =>
-                          navigate(`/user/checkrestaurant/${restaurant.customId}`)
-                        }
-                      >
-                        Order Now
-                      </button>
+              {restaurants.map((restaurant) => (
+                <div
+                  key={restaurant.customId}
+                  data-aos="fade-up"
+                  className={`bg-white border border-gray-200 rounded-lg shadow-md ${!restaurant.isActive ? "opacity-50" : ""}`}
+                >
+                  <div className="flex items-center p-4">
+                    <img
+                      src={restaurant.imageUrl}
+                      alt={restaurant.name}
+                      width={80}
+                      height={80}
+                      className="object-cover w-20 h-20 rounded-full"
+                    />
+                    <div className="ml-4">
+                      <h2 className="text-xl font-semibold text-black">
+                        {restaurant.name} { !restaurant.isActive && <span className="text-red-500">(Unavailable)</span>}
+                      </h2>
+                      <p className="text-gray-600">
+                        {restaurant.description}
+                      </p>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="text-gray-500">
-                  No meals found for the current search or all restaurants are unavailable.
+                  <hr className="border-gray-300" />
+                  <div className="p-4">
+                    {restaurant.meals.length > 0 ? (
+                      <ul className="pl-5 text-black list-disc">
+                        {restaurant.meals.slice(0, 3).map((meal) => (
+                          <li key={meal.customId}>{meal.name}</li>
+                        ))}
+                        {restaurant.meals.length > 3 && (
+                          <li className="text-gray-500">
+                            ...there&apos;s more
+                          </li>
+                        )}
+                      </ul>
+                    ) : (
+                      <div className="text-gray-500">
+                        No meals available for this restaurant.
+                      </div>
+                    )}
+                    <button
+                      className={`w-full p-2 mt-4 text-white transition-colors duration-200 ${restaurant.isActive ? "bg-black hover:bg-gray-800" : "bg-gray-300 cursor-not-allowed"}`}
+                      onClick={() => restaurant.isActive ? navigate(`/user/checkrestaurant/${restaurant.customId}`) : alert("This restaurant is currently unavailable.")}
+                      disabled={!restaurant.isActive}
+                    >
+                      Check Restaurant
+                    </button>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           )}
         </section>
