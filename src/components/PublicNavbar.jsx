@@ -13,7 +13,7 @@ const PublicNavbar = () => {
   };
 
   return (
-    <nav className="bg-olive p-4 py-6">
+    <nav className="bg-olive p-4">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <Link
           to="/restaurant/login"
@@ -21,7 +21,7 @@ const PublicNavbar = () => {
         >
           Byte!
         </Link>
-        <div className="fixed bottom-0 inset-x-0 bg-olive p-4 md:hidden flex justify-between items-center z-50">
+        <div className="py-6 fixed bottom-0 inset-x-0 bg-olive p-4 md:hidden flex justify-between items-center z-50">
           <ul className="flex justify-between w-full px-10 text-accentwhite">
             <li>
               <Link
