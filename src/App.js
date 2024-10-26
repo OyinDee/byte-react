@@ -65,4 +65,8 @@ function App() {
           <ToastContainer />
         </Router>
       </CartProvider>
-    </AuthProvider
+    </AuthProvider>
+  );
+}
+
+export 
