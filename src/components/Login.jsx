@@ -111,7 +111,7 @@ const Login = () => {
             <input
               type="text"
               id="username"
-              value={username}
+              value={username.trim()}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full p-2 border text-black border-gray-300 rounded mt-1"
               placeholder="Enter your username..."
