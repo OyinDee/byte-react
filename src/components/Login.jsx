@@ -44,7 +44,7 @@ const Login = () => {
 
     try {
       const response = await axios.post('https://mongobyte.onrender.com/api/v1/auth/login', {
-        username,
+        username.trim(),
         password,
       });
 
@@ -111,7 +111,7 @@ const Login = () => {
             <input
               type="text"
               id="username"
-              value={username.trim()}
+              value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full p-2 border text-black border-gray-300 rounded mt-1"
               placeholder="Enter your username..."
