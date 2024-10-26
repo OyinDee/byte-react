@@ -140,7 +140,7 @@ const Profile = () => {
           <div className="relative flex flex-col items-center text-center">
             <div className="relative">
               <img
-                src={user?.imageUrl || "/Images/nk.jpg"}
+                src={user?.imageUrl || "https://res.cloudinary.com/dol47ucmj/image/upload/v1729928426/jm9dfybhu5pqqevrhyke.jpg"}
                 alt="ProfilePicture"
                 className="object-cover mb-4 border-4 border-black rounded-full"
                 style={{ width: 150, height: 150 }}
