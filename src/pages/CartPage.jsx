@@ -96,50 +96,59 @@ const CartPage = () => {
       setIsCheckoutLoading(false);
       return;
     }
+toast.info("In the kitchen... Wait a minute!");
+const orderDetails = {
+  restaurantCustomId: restaurantId,
+  meals: itemsForRestaurant.map(({ meal, quantity }) => ({
+    mealId: meal.customId,
+    quantity,
+  })),
+  totalPrice: totalAmount,
+  location: user.location,
+  phoneNumber: user.phoneNumber,
+  user: user._id,
+  note,
+  nearestLandmark: user.nearestLandmark || "",
+  fee: parseFloat(fee) || 1000,
+};
 
-    toast.info("In the kitchen... Wait a minute!");
-    const orderDetails = {
-      restaurantCustomId: restaurantId,
-      meals: itemsForRestaurant.map(({ meal, quantity }) => ({
-        mealId: meal.customId,
-        quantity,
-      })),
-      totalPrice: totalAmount,
-      location: user.location,
-      phoneNumber: user.phoneNumber,
-      user: user._id,
-      note,
-      nearestLandmark: user.nearestLandmark || "",
-      fee: parseFloat(fee) || 1000,
-    };
+try {
+  const response = await fetch("https://mongobyte.onrender.com/api/v1/orders/create", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(orderDetails),
+  });
 
-    try {
-      const response = await fetch("https://mongobyte.onrender.com/api/v1/orders/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(orderDetails),
-      });
+  const responseData = await response.json();
 
-      await response.json();
-      setCart(prevCart => {
-        const newCart = new Map(prevCart);
-        newCart.delete(restaurantId);
-        localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
-        return newCart;
-      });
-      toast.success("Order placed successfully!");
-      toast.info("Cart has been cleared too...");
-      setNote('');
-      setTimeout(() => {
-        window.location.reload();
-      }, 5000);
-    } catch (error) {
-      toast.error(error.message || "Something went wrong.");
-    } finally {
-      setIsCheckoutLoading(false);
-    }
+  if (!response.ok) {
+    toast.dismiss();
+    const errorMessage = responseData.message || "Failed to place the order.";
+    throw new Error(errorMessage);
+  }
+
+  setCart(prevCart => {
+    const newCart = new Map(prevCart);
+    newCart.delete(restaurantId);
+    localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
+    return newCart;
+  });
+  toast.dismiss();
+  toast.success("Order placed successfully!");
+  toast.info("Cart has been cleared too...");
+  setNote('');
+  
+  setTimeout(() => {
+    window.location.reload();
+  }, 5000);
+
+} catch (error) {
+  toast.error(error.message || "Something went wrong.");
+} finally {
+  setIsCheckoutLoading(false);
+  }
   };
 
   return (
