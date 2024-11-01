@@ -122,10 +122,6 @@ const CartPage = () => {
         body: JSON.stringify(orderDetails),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to place the order.");
-      }
-
       await response.json();
       setCart(prevCart => {
         const newCart = new Map(prevCart);
