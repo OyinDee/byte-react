@@ -27,10 +27,6 @@ import MealsPage from "./pages/MealsPage";
 import OrderHistory from './pages/OrderHistory';
 
 function App() {
-  useEffect(() => {
-    window.screen.orientation.lock('portrait')
-  }, []);
-
   return (
     <AuthProvider>
       <CartProvider>
