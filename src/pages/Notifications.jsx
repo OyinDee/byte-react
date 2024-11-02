@@ -40,7 +40,7 @@ const Notifications = () => {
 
   useEffect(() => {
     fetchNotifications(true);
-  }, []); 
+  }, [fetchNotifications]); 
 
   useEffect(() => {
     if (page > 1) {
@@ -61,7 +61,7 @@ const Notifications = () => {
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasMore]);
+  }, [hasMore, handleScroll ]);
 
   return (
     <div className="p-8 bg-white min-h-screen mb-20">
