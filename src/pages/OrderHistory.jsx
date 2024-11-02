@@ -48,7 +48,7 @@ const OrderHistory = () => {
 
   useEffect(() => {
     fetchOrderHistory();
-  }, [page, fetchOrderHistory]);
+  }, [page]);
 
   const handleExpandClick = (orderId) => {
     setExpandedOrders((prevState) => ({
