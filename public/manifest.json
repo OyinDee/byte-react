@@ -1,25 +1,38 @@
 {
+    "name": "Byte!",
+    "short_name": "Byte!",
+    "description": "Your go-to food ordering app!",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
     "theme_color": "#141414",
     "background_color": "#ffffff",
     "icons": [
         {
-            "purpose": "maskable",
-            "sizes": "512x512",
             "src": "/public/Images/Asset4@4x1.png",
-            "type": "image/png"
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
         },
         {
-            "purpose": "any",
-            "sizes": "512x512",
             "src": "/public/Images/Asset4@4x1.png",
-            "type": "image/png"
+            "sizes": "256x256",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/public/Images/Asset4@4x1.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/public/Images/Asset4@4x1.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable any"
         }
     ],
-    "orientation": "portrait-primary",
-    "display": "standalone",
-    "dir": "auto",
     "lang": "en-US",
-    "name": "Byte!",
-    "short_name": "Byte!",
-    "start_url": "/"
+    "dir": "auto"
 }
