@@ -61,7 +61,7 @@ const Notifications = () => {
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasMore, handleScroll ]);
+  }, [hasMore]);
 
   return (
     <div className="p-8 bg-white min-h-screen mb-20">
