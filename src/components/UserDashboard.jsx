@@ -19,7 +19,7 @@ const CombinedPage = () => {
     const fetchRestaurants = async () => {
       try {
         const response = await axios.get(
-          "https://mongobyte.onrender.com/api/v1/restaurants"
+          "https://bytee-13c6d30f0e92.herokuapp.com/api/v1/restaurants"
         );
 
         const sortedRestaurants = response.data.sort((a, b) =>

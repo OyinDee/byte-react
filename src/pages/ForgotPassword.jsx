@@ -46,7 +46,7 @@ const ResetPassword = () => {
 
     try {
       const response = await axios.post(
-        "https://mongobyte.onrender.com/api/v1/auth/forgot-password",
+        "https://bytee-13c6d30f0e92.herokuapp.com/api/v1/auth/forgot-password",
         { email }
       );
 
@@ -85,7 +85,7 @@ const ResetPassword = () => {
 
     try {
       const response = await axios.post(
-        "https://mongobyte.onrender.com/api/v1/auth/reset-password",
+        "https://bytee-13c6d30f0e92.herokuapp.com/api/v1/auth/reset-password",
         {
           email,
           resetCode,

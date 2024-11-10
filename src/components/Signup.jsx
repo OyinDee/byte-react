@@ -55,7 +55,7 @@ const SignUp = () => {
     try {
       const fullPhoneNumber = `${phoneCode}${phoneNumber}`;
 
-      await axios.post("https://mongobyte.onrender.com/api/v1/auth/register", {
+      await axios.post("https://bytee-13c6d30f0e92.herokuapp.com/api/v1/auth/register", {
         username: username.trim(),
         email: email.trim(),
         password,

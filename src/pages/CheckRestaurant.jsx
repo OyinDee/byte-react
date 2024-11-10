@@ -21,7 +21,7 @@ const RestaurantPage = () => {
       const fetchRestaurant = async () => {
         try {
           const response = await axios.get(
-            `https://mongobyte.onrender.com/api/v1/users/restdetails/${id}`
+            `https://bytee-13c6d30f0e92.herokuapp.com/api/v1/users/restdetails/${id}`
           );
           console.log(response);
           setRestaurant(response.data); 

@@ -15,7 +15,7 @@ const SignUpSuccess = () => {
     try {
       // Send verification code to backend
       const response = await axios.get(
-        "https://mongobyte.onrender.com/api/v1/auth/verify-email",
+        "https://bytee-13c6d30f0e92.herokuapp.com/api/v1/auth/verify-email",
         { params: { code: verificationCode } }
       );
       if (response.status === 200) {

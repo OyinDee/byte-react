@@ -16,7 +16,7 @@ const Notifications = () => {
       setLoading(true);
       setError(null);
 
-      const response = await axios.get(`https://mongobyte.onrender.com/api/v1/users/notifications`, {
+      const response = await axios.get(`https://bytee-13c6d30f0e92.herokuapp.com/api/v1/users/notifications`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
