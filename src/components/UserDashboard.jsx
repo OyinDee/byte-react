@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { RingLoader } from "react-spinners";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const CombinedPage = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -21,7 +23,6 @@ const CombinedPage = () => {
         const response = await axios.get(
           "https://bytee-13c6d30f0e92.herokuapp.com/api/v1/restaurants"
         );
-
         const sortedRestaurants = response.data.sort((a, b) =>
           a.name.localeCompare(b.name)
         );
@@ -44,8 +45,16 @@ const CombinedPage = () => {
     );
   });
 
+  const handleRestaurantClick = (restaurant) => {
+    if (!restaurant.isActive) {
+      toast.warn("This restaurant is unavailable, you won't be able to place an order.");
+    }
+    navigate(`/user/checkrestaurant/${restaurant.customId}`);
+  };
+
   return (
     <div>
+      <ToastContainer position="top-center" autoClose={3000} />
       <main className="min-h-screen p-4 pt-5 pb-20 text-black bg-white lg:p-8 lg:pt-5">
         <section className="mb-6">
           <div className="flex items-center justify-center space-x-4">
@@ -56,9 +65,7 @@ const CombinedPage = () => {
               placeholder="Search for restaurants or meals..."
               className="w-full p-2 border border-gray-300 rounded lg:w-1/2 focus:outline-none focus:ring focus:border-black"
             />
-            <button
-              className="p-2 text-white transition-colors duration-200 bg-black rounded hover:bg-gray-800"
-            >
+            <button className="p-2 text-white transition-colors duration-200 bg-black rounded hover:bg-gray-800">
               Search
             </button>
           </div>
@@ -108,16 +115,15 @@ const CombinedPage = () => {
                           <li key={meal.customId}>{meal.name}</li>
                         ))}
                         {restaurant.meals.length > 3 && (
-                          <li className="text-gray-500">...there&apos;s more</li>
+                          <li className="text-gray-500">...there's more</li>
                         )}
                       </ul>
                     ) : (
                       <div className="text-gray-500">No meals available for this restaurant.</div>
                     )}
                     <button
-                      className={`w-full p-2 mt-4 text-white transition-colors duration-200 ${restaurant.isActive ? "bg-black hover:bg-gray-800" : "bg-gray-300 cursor-not-allowed"}`}
-                      onClick={() => restaurant.isActive ? navigate(`/user/checkrestaurant/${restaurant.customId}`) : alert("This restaurant is currently unavailable.")}
-                      disabled={!restaurant.isActive}
+                      className={`w-full p-2 mt-4 text-white transition-colors duration-200 ${restaurant.isActive ? "bg-black hover:bg-gray-800" : "bg-gray-300"}`}
+                      onClick={() => handleRestaurantClick(restaurant)}
                     >
                       Check Restaurant
                     </button>
