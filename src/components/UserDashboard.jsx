@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { RingLoader } from "react-spinners";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const CombinedPage = () => {
@@ -54,7 +54,6 @@ const CombinedPage = () => {
 
   return (
     <div>
-      <ToastContainer position="top-center" autoClose={3000} />
       <main className="min-h-screen p-4 pt-5 pb-20 text-black bg-white lg:p-8 lg:pt-5">
         <section className="mb-6">
           <div className="flex items-center justify-center space-x-4">
@@ -122,7 +121,7 @@ const CombinedPage = () => {
                       <div className="text-gray-500">No meals available for this restaurant.</div>
                     )}
                     <button
-                      className={`w-full p-2 mt-4 text-white transition-colors duration-200 ${restaurant.isActive ? "bg-black hover:bg-gray-800" : "bg-gray-300"}`}
+                      className={`w-full p-2 mt-4 text-white transition-colors duration-200 ${restaurant.isActive ? "bg-black hover:bg-gray-800" : "bg-gray-500"}`}
                       onClick={() => handleRestaurantClick(restaurant)}
                     >
                       Check Restaurant
