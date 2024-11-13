@@ -341,7 +341,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
         <div className="mt-4">
           <p>Location: {order.location}</p>
           <p>Phone Number: {order.phoneNumber}</p>
-
+<p>Nearest Landmark: {order.nearestLandmark}</p>
           <div className="mt-2">
             <h3 className="text-black font-semibold">Meals:</h3>
             {order.meals.map(({ meal, quantity }, index) => (
