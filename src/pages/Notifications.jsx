@@ -4,9 +4,9 @@ import { RingLoader } from "react-spinners";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
-  const [visibleNotifications, setVisibleNotifications] = useState(10); 
-  const [loading, setLoading] = useState(false); 
-  const [error, setError] = useState(null); 
+  const [visibleNotifications, setVisibleNotifications] = useState(10);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchNotifications = async () => {
     const token = localStorage.getItem("token");
@@ -22,7 +22,7 @@ const Notifications = () => {
       });
 
       const newNotifications = response.data.notifications;
-      setNotifications(newNotifications); 
+      setNotifications(newNotifications.reverse()); 
     } catch (error) {
       console.error("Error fetching notifications:", error);
       setError("Failed to load notifications. Please try again.");
@@ -33,7 +33,7 @@ const Notifications = () => {
 
   useEffect(() => {
     fetchNotifications();
-  }, []); 
+  }, []);
 
   const handleShowMore = () => {
     setVisibleNotifications((prev) => prev + 10);
