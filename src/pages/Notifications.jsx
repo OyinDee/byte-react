@@ -4,7 +4,7 @@ import { RingLoader } from "react-spinners";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
-  const [visibleNotifications, setVisibleNotifications] = useState(5); 
+  const [visibleNotifications, setVisibleNotifications] = useState(10); 
   const [loading, setLoading] = useState(false); 
   const [error, setError] = useState(null); 
 
