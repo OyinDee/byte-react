@@ -1,15 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { RingLoader } from "react-spinners";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
+  const [visibleNotifications, setVisibleNotifications] = useState(5); 
   const [loading, setLoading] = useState(false); 
   const [error, setError] = useState(null); 
-  const [page, setPage] = useState(1); 
-  const [hasMore, setHasMore] = useState(true); 
 
-  const fetchNotifications = useCallback(async (isInitialLoad = false) => {
+  const fetchNotifications = async () => {
     const token = localStorage.getItem("token");
 
     try {
@@ -19,49 +18,26 @@ const Notifications = () => {
       const response = await axios.get(`https://bytee-13c6d30f0e92.herokuapp.com/api/v1/users/notifications`, {
         headers: {
           Authorization: `Bearer ${token}`,
-        },
-        params: { page } 
+        }
       });
 
-
       const newNotifications = response.data.notifications;
-      if (newNotifications.length < 10) setHasMore(false);
-
-      setNotifications((prev) => 
-        isInitialLoad ? [...newNotifications] : [...prev, ...newNotifications]
-      ); 
+      setNotifications(newNotifications); 
     } catch (error) {
       console.error("Error fetching notifications:", error);
       setError("Failed to load notifications. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, [page]);
-
-  useEffect(() => {
-    fetchNotifications(true);
-  }, [fetchNotifications]); 
-
-  useEffect(() => {
-    if (page > 1) {
-
-      fetchNotifications();
-    }
-  }, [page, fetchNotifications]);
-
-  const handleScroll = () => {
-    if (
-      window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 1 &&
-      hasMore
-    ) {
-      setPage((prevPage) => prevPage + 1); 
-    }
   };
 
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasMore]);
+    fetchNotifications();
+  }, []); 
+
+  const handleShowMore = () => {
+    setVisibleNotifications((prev) => prev + 10);
+  };
 
   return (
     <div className="p-8 bg-white min-h-screen mb-20">
@@ -75,7 +51,7 @@ const Notifications = () => {
         )}
 
         {notifications.length > 0 ? (
-          notifications.map((notification) => (
+          notifications.slice(0, visibleNotifications).map((notification) => (
             <div
               key={notification._id}
               className="bg-white border border-gray-200 p-4 rounded-lg shadow hover:shadow-lg transition-shadow"
@@ -99,6 +75,17 @@ const Notifications = () => {
         {loading && (
           <div className="flex justify-center mt-8">
             <RingLoader color="#ff860d" size={60} speedMultiplier={1.5} />
+          </div>
+        )}
+
+        {visibleNotifications < notifications.length && !loading && (
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={handleShowMore}
+              className="bg-blue-500 text-white py-2 px-4 rounded-lg"
+            >
+              Show More
+            </button>
           </div>
         )}
       </div>
