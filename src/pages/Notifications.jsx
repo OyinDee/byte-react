@@ -82,7 +82,7 @@ const Notifications = () => {
           <div className="flex justify-center mt-8">
             <button
               onClick={handleShowMore}
-              className="bg-blue-500 text-white py-2 px-4 rounded-lg"
+              className="bg-black w-full text-white py-2 px-4 rounded-lg"
             >
               Show More
             </button>
