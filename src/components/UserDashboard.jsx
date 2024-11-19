@@ -23,9 +23,11 @@ const CombinedPage = () => {
         const response = await axios.get(
           "https://bytee-13c6d30f0e92.herokuapp.com/api/v1/restaurants"
         );
-        const sortedRestaurants = response.data.sort((a, b) =>
-          a.name.localeCompare(b.name)
-        );
+        const sortedRestaurants = response.data.slice();
+for (let i = sortedRestaurants.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [sortedRestaurants[i], sortedRestaurants[j]] = [sortedRestaurants[j], sortedRestaurants[i]];
+}
         setRestaurants(sortedRestaurants);
       } catch {
         setError("Error fetching restaurants. Please try again.");
@@ -114,7 +116,14 @@ const CombinedPage = () => {
                           <li key={meal.customId}>{meal.name}</li>
                         ))}
                         {restaurant.meals.length > 3 && (
-                          <li className="text-gray-500">...there's more</li>
+                          {restaurant.meals.length > 3 && (
+  <li
+    className="text-gray-500 cursor-pointer"
+    onClick={() => handleRestaurantClick(restaurant)}
+  >
+    ...there's more
+  </li>
+)}
                         )}
                       </ul>
                     ) : (
