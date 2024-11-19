@@ -201,7 +201,7 @@ try {
                 />
               </div>
               <br />
-              <label htmlFor="fee" className="text-xs font-medium text-black">Expected/assumed delivery fee + miscellaneous. Specify amount in naira...</label>
+              <label htmlFor="fee" className="text-xs font-medium text-black">Expected Delivery Fee + Miscellaneous (₦[Amount]): This amount represents the maximum you authorize for takeaway packaging, transportation, or other miscellaneous expenses. The exact amount will be deducted as specified, but the maximum limit will not be disclosed to the restaurant. </label>
               <br />
               <input
                 type="number"
