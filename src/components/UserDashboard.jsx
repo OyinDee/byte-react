@@ -123,7 +123,6 @@ for (let i = sortedRestaurants.length - 1; i > 0; i--) {
     ...there's more
   </li>
 )}
-                        )}
                       </ul>
                     ) : (
                       <div className="text-gray-500">No meals available for this restaurant.</div>
