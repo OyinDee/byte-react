@@ -116,7 +116,6 @@ for (let i = sortedRestaurants.length - 1; i > 0; i--) {
                           <li key={meal.customId}>{meal.name}</li>
                         ))}
                         {restaurant.meals.length > 3 && (
-                          {restaurant.meals.length > 3 && (
   <li
     className="text-gray-500 cursor-pointer"
     onClick={() => handleRestaurantClick(restaurant)}
