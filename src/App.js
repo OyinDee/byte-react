@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/authContext";
 import NavbarWrapper from "./components/NavbarWrapper";
 import Home from "./pages/Home";
@@ -25,15 +25,20 @@ import AdminLogin from "./pages/AdminLogin";
 import MealsPage from "./pages/MealsPage";
 import OrderHistory from './pages/OrderHistory';
 
-function App() {
+function ScrollToTop() {
+  const { pathname } = useLocation();
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+  }, [pathname]);
+  return null;
+}
 
+function App() {
   return (
     <AuthProvider>
       <CartProvider>
         <Router>
+          <ScrollToTop />
           <NavbarWrapper />
           <Routes>
             <Route path="/" element={<Home />} />
