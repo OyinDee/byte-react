@@ -3,17 +3,17 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { useCart } from "../context/cartContext"; 
+import { useCart } from "../context/cartContext";
 import Loader from '../components/Loader';
 
 const RestaurantPage = () => {
-  const { id } = useParams(); 
-  const [restaurant, setRestaurant] = useState(null); 
+  const { id } = useParams();
+  const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [collapsedSections, setCollapsedSections] = useState({
-    regular: true, 
-    combo: true, 
-    "add-on": true, 
+    regular: true,
+    combo: true,
+    "add-on": true,
   });
 
   useEffect(() => {
@@ -23,8 +23,7 @@ const RestaurantPage = () => {
           const response = await axios.get(
             `https://bytee-13c6d30f0e92.herokuapp.com/api/v1/users/restdetails/${id}`
           );
-          console.log(response);
-          setRestaurant(response.data); 
+          setRestaurant(response.data);
         } catch (error) {
           toast.error("Error fetching restaurant details.");
         } finally {
@@ -75,24 +74,30 @@ const RestaurantPage = () => {
 
             {["regular", "combo", "add-on"].map((section) => (
               <div key={section}>
-            <button
-  className="flex justify-between w-full px-4 py-2 mb-2 text-white bg-black rounded-md"
-  onClick={() => toggleSection(section)}
->
-  <span>{section.toUpperCase()}</span>
-  <span>{collapsedSections[section] ? "▼" : "▲"}</span>
-</button>
+                <button
+                  className="flex justify-between w-full px-4 py-2 mb-2 text-white bg-black rounded-md"
+                  onClick={() => toggleSection(section)}
+                >
+                  <span>{section.toUpperCase()}</span>
+                  <span>{collapsedSections[section] ? "▼" : "▲"}</span>
+                </button>
 
                 {!collapsedSections[section] && (
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {filteredMeals(section).map((meal) => (
-                      <MealCard
-                        key={meal.customId}
-                        meal={meal}
-                        restaurantId={restaurant.customId}
-                        hideImage={section === "add-on"}
-                      />
-                    ))}
+                    {filteredMeals(section).length > 0 ? (
+                      filteredMeals(section).map((meal) => (
+                        <MealCard
+                          key={meal.customId}
+                          meal={meal}
+                          restaurantId={restaurant.customId}
+                          hideImage={section === "add-on"}
+                        />
+                      ))
+                    ) : (
+                      <p className="col-span-full text-center text-gray-500">
+                        No meals in this category, check other categories.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
