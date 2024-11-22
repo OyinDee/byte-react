@@ -24,10 +24,10 @@ const CombinedPage = () => {
           "https://bytee-13c6d30f0e92.herokuapp.com/api/v1/restaurants"
         );
         const sortedRestaurants = response.data.slice();
-for (let i = sortedRestaurants.length - 1; i > 0; i--) {
-  const j = Math.floor(Math.random() * (i + 1));
-  [sortedRestaurants[i], sortedRestaurants[j]] = [sortedRestaurants[j], sortedRestaurants[i]];
-}
+        for (let i = sortedRestaurants.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [sortedRestaurants[i], sortedRestaurants[j]] = [sortedRestaurants[j], sortedRestaurants[i]];
+        }
         setRestaurants(sortedRestaurants);
       } catch {
         setError("Error fetching restaurants. Please try again.");
@@ -39,11 +39,11 @@ for (let i = sortedRestaurants.length - 1; i > 0; i--) {
     fetchRestaurants();
   }, []);
 
-  const filteredRestaurants = restaurants.filter(restaurant => {
+  const filteredRestaurants = restaurants.filter((restaurant) => {
     const searchLower = searchQuery.toLowerCase();
     return (
       restaurant.name.toLowerCase().includes(searchLower) ||
-      restaurant.meals.some(meal => meal.name.toLowerCase().includes(searchLower))
+      restaurant.meals.some((meal) => meal.name.toLowerCase().includes(searchLower))
     );
   });
 
@@ -84,58 +84,72 @@ for (let i = sortedRestaurants.length - 1; i > 0; i--) {
             </div>
           ) : (
             <div className="space-y-8">
-              {filteredRestaurants.map((restaurant) => (
-                <div
-                  key={restaurant.customId}
-                  data-aos="fade-up"
-                  className={`bg-white border border-gray-200 rounded-lg shadow-md ${!restaurant.isActive ? "opacity-50" : ""}`}
-                >
-                  <div className="flex items-center p-4">
-                    <img
-                      src={restaurant.imageUrl}
-                      alt={restaurant.name}
-                      width={80}
-                      height={80}
-                      className="object-cover w-20 h-20 rounded-full"
-                    />
-                    <div className="ml-4">
-                      <h2 className="text-xl font-semibold text-black">
-                        {restaurant.name}
-                      </h2>
-                      {!restaurant.isActive && (
-                        <div className="text-red-500 font-semibold">Currently Unavailable</div>
+              {filteredRestaurants.map((restaurant) => {
+                const shuffledMeals = [...restaurant.meals];
+                for (let i = shuffledMeals.length - 1; i > 0; i--) {
+                  const j = Math.floor(Math.random() * (i + 1));
+                  [shuffledMeals[i], shuffledMeals[j]] = [shuffledMeals[j], shuffledMeals[i]];
+                }
+
+                return (
+                  <div
+                    key={restaurant.customId}
+                    data-aos="fade-up"
+                    className={`bg-white border border-gray-200 rounded-lg shadow-md ${
+                      !restaurant.isActive ? "opacity-50" : ""
+                    }`}
+                  >
+                    <div className="flex items-center p-4">
+                      <img
+                        src={restaurant.imageUrl}
+                        alt={restaurant.name}
+                        width={80}
+                        height={80}
+                        className="object-cover w-20 h-20 rounded-full"
+                      />
+                      <div className="ml-4">
+                        <h2 className="text-xl font-semibold text-black">{restaurant.name}</h2>
+                        {!restaurant.isActive && (
+                          <div className="text-red-500 font-semibold">
+                            Currently Unavailable
+                          </div>
+                        )}
+                        <p className="text-gray-600">{restaurant.description}</p>
+                      </div>
+                    </div>
+                    <hr className="border-gray-300" />
+                    <div className="p-4">
+                      {shuffledMeals.length > 0 ? (
+                        <ul className="pl-5 text-black list-disc">
+                          {shuffledMeals.slice(0, 3).map((meal) => (
+                            <li key={meal.customId}>{meal.name}</li>
+                          ))}
+                          {shuffledMeals.length > 3 && (
+                            <li
+                              className="text-gray-500 cursor-pointer"
+                              onClick={() => handleRestaurantClick(restaurant)}
+                            >
+                              ...there's more
+                            </li>
+                          )}
+                        </ul>
+                      ) : (
+                        <div className="text-gray-500">
+                          No meals available for this restaurant.
+                        </div>
                       )}
-                      <p className="text-gray-600">{restaurant.description}</p>
+                      <button
+                        className={`w-full p-2 mt-4 text-white transition-colors duration-200 ${
+                          restaurant.isActive ? "bg-black hover:bg-gray-800" : "bg-gray-500"
+                        }`}
+                        onClick={() => handleRestaurantClick(restaurant)}
+                      >
+                        Check Restaurant
+                      </button>
                     </div>
                   </div>
-                  <hr className="border-gray-300" />
-                  <div className="p-4">
-                    {restaurant.meals.length > 0 ? (
-                      <ul className="pl-5 text-black list-disc">
-                        {restaurant.meals.slice(0, 3).map((meal) => (
-                          <li key={meal.customId}>{meal.name}</li>
-                        ))}
-                        {restaurant.meals.length > 3 && (
-  <li
-    className="text-gray-500 cursor-pointer"
-    onClick={() => handleRestaurantClick(restaurant)}
-  >
-    ...there's more
-  </li>
-)}
-                      </ul>
-                    ) : (
-                      <div className="text-gray-500">No meals available for this restaurant.</div>
-                    )}
-                    <button
-                      className={`w-full p-2 mt-4 text-white transition-colors duration-200 ${restaurant.isActive ? "bg-black hover:bg-gray-800" : "bg-gray-500"}`}
-                      onClick={() => handleRestaurantClick(restaurant)}
-                    >
-                      Check Restaurant
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
