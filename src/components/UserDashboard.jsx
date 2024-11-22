@@ -43,7 +43,11 @@ const CombinedPage = () => {
     const searchLower = searchQuery.toLowerCase();
     return (
       restaurant.name.toLowerCase().includes(searchLower) ||
-      restaurant.meals.some((meal) => meal.name.toLowerCase().includes(searchLower))
+      restaurant.meals.some(
+        (meal) =>
+          meal.tag !== "add-on" &&
+          meal.name.toLowerCase().includes(searchLower)
+      )
     );
   });
 
@@ -85,10 +89,13 @@ const CombinedPage = () => {
           ) : (
             <div className="space-y-8">
               {filteredRestaurants.map((restaurant) => {
-                const shuffledMeals = [...restaurant.meals];
-                for (let i = shuffledMeals.length - 1; i > 0; i--) {
+                const filteredMeals = restaurant.meals.filter(
+                  (meal) => meal.tag !== "add-on"
+                );
+
+                for (let i = filteredMeals.length - 1; i > 0; i--) {
                   const j = Math.floor(Math.random() * (i + 1));
-                  [shuffledMeals[i], shuffledMeals[j]] = [shuffledMeals[j], shuffledMeals[i]];
+                  [filteredMeals[i], filteredMeals[j]] = [filteredMeals[j], filteredMeals[i]];
                 }
 
                 return (
@@ -119,12 +126,12 @@ const CombinedPage = () => {
                     </div>
                     <hr className="border-gray-300" />
                     <div className="p-4">
-                      {shuffledMeals.length > 0 ? (
+                      {filteredMeals.length > 0 ? (
                         <ul className="pl-5 text-black list-disc">
-                          {shuffledMeals.slice(0, 3).map((meal) => (
+                          {filteredMeals.slice(0, 3).map((meal) => (
                             <li key={meal.customId}>{meal.name}</li>
                           ))}
-                          {shuffledMeals.length > 3 && (
+                          {filteredMeals.length > 3 && (
                             <li
                               className="text-gray-500 cursor-pointer"
                               onClick={() => handleRestaurantClick(restaurant)}
