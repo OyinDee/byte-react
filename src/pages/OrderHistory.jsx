@@ -21,7 +21,7 @@ const OrderHistory = () => {
     if (token && byteUser?.username) {
       try {
         const response = await axios.get(
-          `https://bytee-13c6d30f0e92.herokuapp.com/api/v1/users/orders/${byteUser.username}`,
+          `https://mongobyte.onrender.com/api/v1/users/orders/${byteUser.username}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -66,7 +66,7 @@ const OrderHistory = () => {
 
     try {
       await axios.post(
-        `https://bytee-13c6d30f0e92.herokuapp.com/api/v1/orders/${orderId}/status`,
+        `https://mongobyte.onrender.com/api/v1/orders/${orderId}/status`,
         { action: 'accept' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -91,7 +91,7 @@ const OrderHistory = () => {
 
     try {
       await axios.post(
-        `https://bytee-13c6d30f0e92.herokuapp.com/api/v1/orders/${orderId}/status`,
+        `https://mongobyte.onrender.com/api/v1/orders/${orderId}/status`,
         { action: 'cancel' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );

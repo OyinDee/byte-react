@@ -15,7 +15,7 @@ const CallbackPage = () => {
     if (reference) {
       try {
         const response = await axios.get(
-          `https://bytee-13c6d30f0e92.herokuapp.com/api/v1/pay/callback?reference=${reference}`
+          `https://mongobyte.onrender.com/api/v1/pay/callback?reference=${reference}`
         );
         setPaymentStatus(response.data.status);
         navigate("/user/profile");

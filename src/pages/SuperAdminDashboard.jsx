@@ -29,7 +29,7 @@ const SuperAdminDashboard = () => {
       setLoading(true); 
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("https://bytee-13c6d30f0e92.herokuapp.com/api/superadmin/allrestaurants", {
+        const response = await axios.get("https://mongobyte.onrender.com/api/superadmin/allrestaurants", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setRestaurants(response.data);
@@ -63,7 +63,7 @@ const SuperAdminDashboard = () => {
     if (!selectedImage) return "";
     try {
       const response = await axios.post(
-        "https://bytee-13c6d30f0e92.herokuapp.com/api/v1/users/upload",
+        "https://mongobyte.onrender.com/api/v1/users/upload",
         { image: selectedImage }
       );
       return response.data.url;
@@ -83,7 +83,7 @@ const SuperAdminDashboard = () => {
         imageUrl = await handleImageUpload();
       }
 
-      await axios.post("https://bytee-13c6d30f0e92.herokuapp.com/api/superadmin/restaurants", {
+      await axios.post("https://mongobyte.onrender.com/api/superadmin/restaurants", {
         ...newRestaurant,
         imageUrl,
       }, {
@@ -91,7 +91,7 @@ const SuperAdminDashboard = () => {
       });
 
       toast.success("Restaurant added successfully!");
-      const response = await axios.get("https://bytee-13c6d30f0e92.herokuapp.com/api/superadmin/allrestaurants", {
+      const response = await axios.get("https://mongobyte.onrender.com/api/superadmin/allrestaurants", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRestaurants(response.data);

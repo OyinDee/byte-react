@@ -21,7 +21,7 @@ const CombinedPage = () => {
     const fetchRestaurants = async () => {
       try {
         const response = await axios.get(
-          "https://bytee-13c6d30f0e92.herokuapp.com/api/v1/restaurants"
+          "https://mongobyte.onrender.com/api/v1/restaurants"
         );
         const sortedRestaurants = response.data.slice();
         for (let i = sortedRestaurants.length - 1; i > 0; i--) {

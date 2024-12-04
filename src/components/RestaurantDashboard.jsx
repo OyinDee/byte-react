@@ -25,7 +25,7 @@ const RestaurantDashboard = () => {
         const decodedToken = jwtDecode(token);
         const restaurantCustomId = decodedToken.restaurant.customId;
         const restaurantResponse = await axios.get(
-          `https://bytee-13c6d30f0e92.herokuapp.com/api/v1/restaurants/${restaurantCustomId}`,
+          `https://mongobyte.onrender.com/api/v1/restaurants/${restaurantCustomId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -59,7 +59,7 @@ const RestaurantDashboard = () => {
 
     try {
       const response = await axios.post(
-        "https://bytee-13c6d30f0e92.herokuapp.com/api/v1/restaurants/withdraw",
+        "https://mongobyte.onrender.com/api/v1/restaurants/withdraw",
         { restaurantName: restaurant.name, amount: parseFloat(restaurant.walletBalance) },
         {
           headers: {
@@ -83,7 +83,7 @@ const RestaurantDashboard = () => {
   const fetchOrders = async (restaurantId, token) => {
     try {
       const response = await axios.get(
-        `https://bytee-13c6d30f0e92.herokuapp.com/api/v1/orders/restaurant/${restaurantId}`,
+        `https://mongobyte.onrender.com/api/v1/orders/restaurant/${restaurantId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -103,7 +103,7 @@ const RestaurantDashboard = () => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.patch(
-        `https://bytee-13c6d30f0e92.herokuapp.com/api/v1/orders/${orderId}`,
+        `https://mongobyte.onrender.com/api/v1/orders/${orderId}`,
         { additionalFee: fee, requestDescription },
         {
           headers: {
@@ -131,7 +131,7 @@ const RestaurantDashboard = () => {
     const token = localStorage.getItem("token");
     try {
       await axios.patch(
-        `https://bytee-13c6d30f0e92.herokuapp.com/api/v1/restaurants/${restaurant.customId}/toggle-active`,
+        `https://mongobyte.onrender.com/api/v1/restaurants/${restaurant.customId}/toggle-active`,
         {},
         {
           headers: {
@@ -298,7 +298,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
       const token = localStorage.getItem("token");
       try {
         const response = await axios.patch(
-          `https://bytee-13c6d30f0e92.herokuapp.com/api/v1/orders/deliver/${order.customId}`,
+          `https://mongobyte.onrender.com/api/v1/orders/deliver/${order.customId}`,
           {},
           {
             headers: {
