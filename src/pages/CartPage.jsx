@@ -113,7 +113,7 @@ const orderDetails = {
 };
 
 try {
-  const response = await fetch("https://bytee-13c6d30f0e92.herokuapp.com/api/v1/orders/create", {
+  const response = await fetch("https://mongobyte.onrender.com/api/v1/orders/create", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

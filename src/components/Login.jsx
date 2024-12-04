@@ -43,7 +43,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://bytee-13c6d30f0e92.herokuapp.com/api/v1/auth/login', {
+      const response = await axios.post('https://mongobyte.onrender.com/api/v1/auth/login', {
         username: username.trim(),
         password: password.trim(),
       });
