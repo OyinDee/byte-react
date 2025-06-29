@@ -12,7 +12,10 @@ import Login from "./components/Login";
 import PrivateRoute from "./components/PrivateRoute";
 import UserDashboard from "./pages/UserDashboard";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
-import SuperAdminDashboard from "./pages/SuperAdminDashboard"; 
+import SuperAdminDashboard from "./pages/superadmin/Dashboard";
+import SuperAdminOrders from "./pages/superadmin/Orders";
+import SuperAdminRestaurants from "./pages/superadmin/Restaurants";
+import SuperAdminWithdrawals from "./pages/superadmin/Withdrawals";
 import SignUpSuccess from "./pages/SignupSuccess";
 import SignUp from "./components/Signup";
 import ResetPassword from "./pages/ForgotPassword";
@@ -70,8 +73,11 @@ function App() {
               <Route path="/restaurant/login" element={<AdminLogin />} />
               <Route path="/restaurant/signup" element={<PrivateRoute element={<RestaurantSignup />} allowedRoles={['superadmin']} />} />
               
-              {/* Admin Routes */}
-              <Route path="/superadmin/dashboard" element={<PrivateRoute element={<SuperAdminDashboard />} />} />
+              {/* SuperAdmin Routes */}
+              <Route path="/superadmin/dashboard" element={<PrivateRoute element={<SuperAdminDashboard />} allowedRoles={['superadmin']} />} />
+              <Route path="/superadmin/orders" element={<PrivateRoute element={<SuperAdminOrders />} allowedRoles={['superadmin']} />} />
+              <Route path="/superadmin/restaurants" element={<PrivateRoute element={<SuperAdminRestaurants />} allowedRoles={['superadmin']} />} />
+              <Route path="/superadmin/withdrawals" element={<PrivateRoute element={<SuperAdminWithdrawals />} allowedRoles={['superadmin']} />} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>

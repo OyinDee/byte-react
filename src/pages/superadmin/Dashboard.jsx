@@ -1,0 +1,684 @@
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { 
+  ChartBarIcon, 
+  UsersIcon, 
+  BuildingStorefrontIcon, 
+  ShoppingBagIcon,
+  BanknotesIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  ArrowTrendingUpIcon,
+  PresentationChartLineIcon,
+  ArrowPathIcon,
+  PlusCircleIcon
+} from "@heroicons/react/24/outline";
+import { Line, Doughnut, Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ArcElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+import LoadingPage from "../../components/Loader";
+import { toast } from "react-toastify";
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ArcElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
+
+const SuperAdminDashboard = () => {
+  const [dashboardData, setDashboardData] = useState({
+    stats: {
+      totalUsers: 0,
+      totalRestaurants: 0,
+      totalOrders: 0,
+      totalRevenue: 0,
+      pendingOrders: 0,
+      pendingWithdrawals: 0,
+      activeRestaurants: 0,
+      orderGrowth: 0,
+      userGrowth: 0,
+      revenueGrowth: 0
+    },
+    recentOrders: [],
+    recentUsers: [],
+    topRestaurants: [],
+    pendingWithdrawals: [],
+    chartData: {
+      sales: {
+        labels: [],
+        datasets: []
+      },
+      orders: {
+        labels: [],
+        datasets: []
+      },
+      users: {
+        labels: [],
+        datasets: []
+      },
+      restaurantPerformance: {
+        labels: [],
+        datasets: []
+      }
+    }
+  });
+  const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState("week");
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [universities, setUniversities] = useState([]);
+
+  useEffect(() => {
+    fetchDashboardData();
+    fetchUniversities();
+  }, [dateRange, refreshKey]);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `https://mongobyte.onrender.com/api/superadmin/dashboard?range=${dateRange}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      
+      setDashboardData(response.data);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      toast.error("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUniversities = async () => {
+    try {
+      const response = await axios.get("https://mongobyte.onrender.com/api/v1/universities");
+      setUniversities(response.data.data);
+    } catch (error) {
+      console.error("Error fetching universities:", error);
+    }
+  };
+
+  const handleRefresh = () => {
+    setRefreshKey(prevKey => prevKey + 1);
+  };
+
+  // Custom styles for the charts
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          font: {
+            family: "'Inter', sans-serif",
+            weight: 500
+          }
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleFont: {
+          family: "'Inter', sans-serif",
+          size: 14,
+          weight: 600
+        },
+        bodyFont: {
+          family: "'Inter', sans-serif",
+          size: 12
+        },
+        padding: 12,
+        cornerRadius: 8,
+        caretSize: 6
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+          drawBorder: false
+        },
+        ticks: {
+          font: {
+            family: "'Inter', sans-serif",
+          }
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          font: {
+            family: "'Inter', sans-serif",
+          }
+        }
+      }
+    }
+  };
+
+  if (loading) {
+    return <LoadingPage />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 pt-20 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Overview of platform metrics and activity
+            </p>
+          </div>
+          
+          <div className="flex gap-4 mt-4 md:mt-0">
+            <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-200">
+              <button
+                onClick={() => setDateRange("week")}
+                className={`px-3 py-2 text-sm font-medium rounded-l-lg ${
+                  dateRange === "week" 
+                    ? "bg-cheese text-crust"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Week
+              </button>
+              <button
+                onClick={() => setDateRange("month")}
+                className={`px-3 py-2 text-sm font-medium ${
+                  dateRange === "month" 
+                    ? "bg-cheese text-crust"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Month
+              </button>
+              <button
+                onClick={() => setDateRange("year")}
+                className={`px-3 py-2 text-sm font-medium rounded-r-lg ${
+                  dateRange === "year" 
+                    ? "bg-cheese text-crust"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Year
+              </button>
+            </div>
+            
+            <button 
+              onClick={handleRefresh} 
+              className="flex items-center gap-2 bg-cheese hover:bg-yellow-500 text-crust py-2 px-4 rounded-lg transition-colors shadow-md"
+            >
+              <ArrowPathIcon className="w-5 h-5" />
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        {/* Key Stats Section */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white p-4 rounded-xl shadow-md"
+          >
+            <div className="flex items-center justify-between">
+              <div className="rounded-full bg-blue-100 p-3">
+                <UsersIcon className="h-6 w-6 text-blue-600" />
+              </div>
+              {dashboardData.stats.userGrowth >= 0 ? (
+                <span className="text-green-600 text-sm flex items-center">
+                  <ArrowUpIcon className="h-3 w-3 mr-1" />
+                  {dashboardData.stats.userGrowth}%
+                </span>
+              ) : (
+                <span className="text-red-600 text-sm flex items-center">
+                  <ArrowDownIcon className="h-3 w-3 mr-1" />
+                  {Math.abs(dashboardData.stats.userGrowth)}%
+                </span>
+              )}
+            </div>
+            <div className="mt-3">
+              <div className="text-2xl font-bold text-gray-900">{dashboardData.stats.totalUsers}</div>
+              <div className="text-sm text-gray-500">Total Users</div>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className="bg-white p-4 rounded-xl shadow-md"
+          >
+            <div className="flex items-center justify-between">
+              <div className="rounded-full bg-orange-100 p-3">
+                <BuildingStorefrontIcon className="h-6 w-6 text-orange-600" />
+              </div>
+              <span className="text-sm text-blue-600 font-medium">
+                {dashboardData.stats.activeRestaurants}/{dashboardData.stats.totalRestaurants} active
+              </span>
+            </div>
+            <div className="mt-3">
+              <div className="text-2xl font-bold text-gray-900">{dashboardData.stats.totalRestaurants}</div>
+              <div className="text-sm text-gray-500">Restaurants</div>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="bg-white p-4 rounded-xl shadow-md"
+          >
+            <div className="flex items-center justify-between">
+              <div className="rounded-full bg-green-100 p-3">
+                <ShoppingBagIcon className="h-6 w-6 text-green-600" />
+              </div>
+              {dashboardData.stats.orderGrowth >= 0 ? (
+                <span className="text-green-600 text-sm flex items-center">
+                  <ArrowUpIcon className="h-3 w-3 mr-1" />
+                  {dashboardData.stats.orderGrowth}%
+                </span>
+              ) : (
+                <span className="text-red-600 text-sm flex items-center">
+                  <ArrowDownIcon className="h-3 w-3 mr-1" />
+                  {Math.abs(dashboardData.stats.orderGrowth)}%
+                </span>
+              )}
+            </div>
+            <div className="mt-3">
+              <div className="text-2xl font-bold text-gray-900">{dashboardData.stats.totalOrders}</div>
+              <div className="text-sm text-gray-500">Total Orders</div>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.3 }}
+            className="bg-white p-4 rounded-xl shadow-md"
+          >
+            <div className="flex items-center justify-between">
+              <div className="rounded-full bg-pepperoni/20 p-3">
+                <CurrencyDollarIcon className="h-6 w-6 text-pepperoni" />
+              </div>
+              {dashboardData.stats.revenueGrowth >= 0 ? (
+                <span className="text-green-600 text-sm flex items-center">
+                  <ArrowUpIcon className="h-3 w-3 mr-1" />
+                  {dashboardData.stats.revenueGrowth}%
+                </span>
+              ) : (
+                <span className="text-red-600 text-sm flex items-center">
+                  <ArrowDownIcon className="h-3 w-3 mr-1" />
+                  {Math.abs(dashboardData.stats.revenueGrowth)}%
+                </span>
+              )}
+            </div>
+            <div className="mt-3">
+              <div className="text-2xl font-bold text-gray-900">₦{dashboardData.stats.totalRevenue.toLocaleString()}</div>
+              <div className="text-sm text-gray-500">Total Revenue</div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Secondary Stats (Action Items) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+            className="bg-white p-4 rounded-xl shadow-md flex justify-between items-center"
+          >
+            <div className="flex items-center">
+              <div className="rounded-full bg-yellow-100 p-3 mr-4">
+                <ClockIcon className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div>
+                <div className="text-lg font-bold text-gray-900">{dashboardData.stats.pendingOrders}</div>
+                <div className="text-sm text-gray-500">Pending Orders</div>
+              </div>
+            </div>
+            <Link 
+              to="/superadmin/orders" 
+              className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-medium hover:bg-yellow-200 transition-colors"
+            >
+              View
+            </Link>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+            className="bg-white p-4 rounded-xl shadow-md flex justify-between items-center"
+          >
+            <div className="flex items-center">
+              <div className="rounded-full bg-blue-100 p-3 mr-4">
+                <BanknotesIcon className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <div className="text-lg font-bold text-gray-900">{dashboardData.stats.pendingWithdrawals}</div>
+                <div className="text-sm text-gray-500">Pending Withdrawals</div>
+              </div>
+            </div>
+            <Link 
+              to="/superadmin/withdrawals" 
+              className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors"
+            >
+              View
+            </Link>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.6 }}
+            className="bg-white p-4 rounded-xl shadow-md flex justify-between items-center"
+          >
+            <div className="flex items-center">
+              <div className="rounded-full bg-green-100 p-3 mr-4">
+                <PlusCircleIcon className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <div className="text-lg font-bold text-gray-900">Add Restaurant</div>
+                <div className="text-sm text-gray-500">Register new vendor</div>
+              </div>
+            </div>
+            <Link 
+              to="/restaurant/signup" 
+              className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors"
+            >
+              Add
+            </Link>
+          </motion.div>
+        </div>
+
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Revenue Chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+            className="bg-white p-6 rounded-xl shadow-md"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Revenue Overview</h3>
+                <p className="text-sm text-gray-500">Revenue trends over time</p>
+              </div>
+              <div className="bg-green-100 p-2 rounded-lg">
+                <ArrowTrendingUpIcon className="h-5 w-5 text-green-600" />
+              </div>
+            </div>
+            <div className="h-64">
+              <Line 
+                data={dashboardData.chartData.sales} 
+                options={chartOptions} 
+              />
+            </div>
+          </motion.div>
+          
+          {/* Orders Chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+            className="bg-white p-6 rounded-xl shadow-md"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Order Statistics</h3>
+                <p className="text-sm text-gray-500">Orders processed over time</p>
+              </div>
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <ShoppingBagIcon className="h-5 w-5 text-blue-600" />
+              </div>
+            </div>
+            <div className="h-64">
+              <Bar 
+                data={dashboardData.chartData.orders} 
+                options={chartOptions} 
+              />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* More Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* User Growth Chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.6 }}
+            className="bg-white p-6 rounded-xl shadow-md"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">User Growth</h3>
+                <p className="text-sm text-gray-500">New user registrations</p>
+              </div>
+              <div className="bg-purple-100 p-2 rounded-lg">
+                <UsersIcon className="h-5 w-5 text-purple-600" />
+              </div>
+            </div>
+            <div className="h-64">
+              <Line 
+                data={dashboardData.chartData.users} 
+                options={chartOptions} 
+              />
+            </div>
+          </motion.div>
+          
+          {/* Restaurant Performance Chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.7 }}
+            className="bg-white p-6 rounded-xl shadow-md"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Restaurant Performance</h3>
+                <p className="text-sm text-gray-500">Orders by restaurant</p>
+              </div>
+              <div className="bg-orange-100 p-2 rounded-lg">
+                <PresentationChartLineIcon className="h-5 w-5 text-orange-600" />
+              </div>
+            </div>
+            <div className="h-64">
+              <Doughnut 
+                data={dashboardData.chartData.restaurantPerformance} 
+                options={{
+                  ...chartOptions,
+                  maintainAspectRatio: false,
+                  cutout: '65%',
+                  plugins: {
+                    ...chartOptions.plugins,
+                    legend: {
+                      ...chartOptions.plugins.legend,
+                      position: 'right'
+                    }
+                  }
+                }} 
+              />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Tables Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Orders Table */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.8 }}
+            className="bg-white p-6 rounded-xl shadow-md"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-gray-900">Recent Orders</h3>
+              <Link 
+                to="/superadmin/orders" 
+                className="text-sm text-cheese hover:underline font-medium"
+              >
+                View All
+              </Link>
+            </div>
+            
+            {dashboardData.recentOrders.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No recent orders found
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Restaurant</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {dashboardData.recentOrders.map((order) => (
+                      <tr key={order._id} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">#{order._id.slice(-6)}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">{order.user?.username || "Unknown"}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">{order.restaurant?.name || "Unknown"}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">₦{order.totalAmount?.toLocaleString()}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {order.status === "delivered" && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <CheckCircleIcon className="mr-1 h-3 w-3" />
+                              Delivered
+                            </span>
+                          )}
+                          {order.status === "pending" && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              <ClockIcon className="mr-1 h-3 w-3" />
+                              Pending
+                            </span>
+                          )}
+                          {order.status === "processing" && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              <ClockIcon className="mr-1 h-3 w-3" />
+                              Processing
+                            </span>
+                          )}
+                          {order.status === "cancelled" && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              <ClockIcon className="mr-1 h-3 w-3" />
+                              Cancelled
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
+          
+          {/* Top Restaurants Table */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.9 }}
+            className="bg-white p-6 rounded-xl shadow-md"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-gray-900">Top Restaurants</h3>
+              <Link 
+                to="/superadmin/restaurants" 
+                className="text-sm text-cheese hover:underline font-medium"
+              >
+                View All
+              </Link>
+            </div>
+            
+            {dashboardData.topRestaurants.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No restaurant data available
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Restaurant</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">University</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {dashboardData.topRestaurants.map((restaurant) => (
+                      <tr key={restaurant._id} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-8 w-8 rounded-full overflow-hidden bg-gray-100">
+                              {restaurant.imageUrl ? (
+                                <img src={restaurant.imageUrl} alt="" className="h-8 w-8 object-cover" />
+                              ) : (
+                                <div className="h-8 w-8 flex items-center justify-center bg-gray-200">
+                                  <BuildingStorefrontIcon className="h-4 w-4 text-gray-500" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="ml-3">
+                              <div className="text-sm font-medium text-gray-900">{restaurant.name}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                          {universities.find(u => u._id === restaurant.university)?.name || "No university"}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{restaurant.orderCount || 0}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">₦{restaurant.revenue?.toLocaleString() || 0}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SuperAdminDashboard;
