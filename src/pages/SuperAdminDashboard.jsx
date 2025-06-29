@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-
-const Loader = () => (
-  <div className="flex justify-center items-center">
-    <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-cheese"></div>
-  </div>
-);
+import LoadingPage from "../components/Loader";
 
 const SuperAdminDashboard = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -118,7 +113,7 @@ const SuperAdminDashboard = () => {
   return (
     <div className="p-4 min-h-screen my-20">
       {loading ? (
-        <Loader /> 
+        <LoadingPage /> 
       ) : (
         <>
           <div className="mt-6">

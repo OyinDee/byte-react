@@ -3,6 +3,7 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { RingLoader } from "react-spinners";
 import { motion, AnimatePresence } from "framer-motion";
+import LoadingPage from "../components/Loader";
 import { 
   FaUser, 
   FaEdit, 
@@ -131,18 +132,7 @@ const Profile = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-crust to-crust/90">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center text-center"
-        >
-          <RingLoader color="#FCD34D" size={100} speedMultiplier={1.5} />
-          <p className="mt-6 text-cheese font-semibold text-lg">Loading your profile...</p>
-        </motion.div>
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (error) {

@@ -3,7 +3,7 @@ import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import Loading from "./Loader";
+import LoadingPage from "./Loader";
 import { 
   FaWallet, 
   FaExchangeAlt, 
@@ -143,7 +143,7 @@ const FundPage = () => {
   };
 
   if (!user) {
-    return <Loading />;
+    return <LoadingPage />;
   }
 
   return (

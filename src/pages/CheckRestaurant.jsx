@@ -4,7 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useCart } from "../context/cartContext";
-import Loader from '../components/Loader';
+import LoadingPage from '../components/Loader';
 
 const RestaurantPage = () => {
   const { id } = useParams();
@@ -45,7 +45,7 @@ const RestaurantPage = () => {
     return restaurant?.meals.filter((meal) => meal.tag === tag) || [];
   };
 
-  if (loading) return <Loader />;
+  if (loading) return <LoadingPage />;
 
   return (
     <div className="min-h-screen p-4 mb-20 bg-white">

@@ -115,13 +115,15 @@ export const CartProvider = ({ children }) => {
   const getItemCount = () => {
     return Array.from(cart.values())
       .flat()
-      .reduce((count, item) => count + item.quantity, 0);
+      .filter(item => item !== null && item !== undefined)
+      .reduce((count, item) => count + (item?.quantity || 0), 0);
   };
 
   const getTotalPrice = () => {
     return Array.from(cart.values())
       .flat()
-      .reduce((total, item) => total + item.meal.price * item.quantity, 0);
+      .filter(item => item !== null && item !== undefined && item?.meal?.price)
+      .reduce((total, item) => total + (item.meal.price * item.quantity), 0);
   };
 
   return (

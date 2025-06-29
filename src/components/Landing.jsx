@@ -804,7 +804,7 @@ const Landing = () => {
       </section>
       
       {/* Mobile Bottom Spacing */}
-      <div className="h-24 md:h-0"></div>
+      <div className="md:h-0"></div>
     </main>
   );
 };

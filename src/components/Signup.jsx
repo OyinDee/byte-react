@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import Loader from "./Loader"; 
+import LoadingPage from "./Loader"; 
 import { BRAND_NAME } from "../utils/brandAssets";
 
 const SignUp = () => {
@@ -113,7 +113,7 @@ const SignUp = () => {
         <div className="absolute inset-0 bg-black opacity-50"></div>
       </div>
 
-      {isLoading && <Loader />}
+      {isLoading && <LoadingPage />}
 
       <div
         className={`relative z-10 flex items-center justify-center min-h-screen ${
@@ -122,7 +122,7 @@ const SignUp = () => {
       >
         <form
           onSubmit={handleSubmit}
-          className="bg-white bg-opacity-40 backdrop-blur-xs p-8 rounded-lg shadow-lg w-full max-w-md sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl"
+          className="bg-white bg-opacity-40 backdrop-blur-sm p-8 rounded-lg shadow-lg w-full max-w-md sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl"
         >
           <h2 className="text-2xl font-bold mb-6 text-center text-accentwhite font-secondary">
             Sign Up for {BRAND_NAME}

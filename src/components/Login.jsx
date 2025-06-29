@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {jwtDecode} from 'jwt-decode';
-import Loader from './Loader'; 
+import LoadingPage from './Loader'; 
 import { Link } from 'react-router-dom';
 
 const Login = () => {
@@ -88,7 +88,7 @@ const Login = () => {
         <div className="absolute inset-0 bg-black opacity-50"></div>
       </div>
 
-      {isLoading && <Loader />}
+      {isLoading && <LoadingPage />}
 
       <div className={`relative z-10 flex items-center justify-center min-h-screen ${isLoading ? 'hidden' : ''}`}>
         <form
