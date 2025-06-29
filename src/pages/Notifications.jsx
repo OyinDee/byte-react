@@ -63,55 +63,117 @@ const Notifications = () => {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
+  const handleShowMore = () => {
+    setVisibleNotifications((prev) => prev + 10);
+  };
+
   return (
-    <div className="p-8 bg-white min-h-screen mb-20">
-      <h1 className="text-3xl font-bold mb-8 text-black">Notifications</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <h1 className="text-3xl md:text-4xl font-bold text-crust mb-2 flex items-center justify-center gap-3 font-secondary">
+            <FaBell className="text-pepperoni" />
+            Notifications
+          </h1>
+          <p className="text-gray-600 font-sans">Stay updated with your latest activities</p>
+        </motion.div>
 
-      <div className="space-y-4">
+        {/* Error State */}
         {error && (
-          <div className="bg-red-100 text-red-700 p-4 rounded">
-            {error}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl mb-6 flex items-center gap-3"
+          >
+            <FaExclamationTriangle className="text-red-500" />
+            <span className="font-sans">{error}</span>
+          </motion.div>
         )}
 
-        {notifications.length > 0 ? (
-          notifications.slice(0, visibleNotifications).map((notification) => (
-            <div
-              key={notification._id}
-              className="bg-white border border-gray-200 p-4 rounded-lg shadow hover:shadow-lg transition-shadow"
+        {/* Notifications List */}
+        <div className="space-y-4">
+          {notifications.length > 0 ? (
+            <AnimatePresence>
+              {notifications.slice(0, visibleNotifications).map((notification, index) => (
+                <motion.div
+                  key={notification._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 mt-1">
+                      {getNotificationIcon(notification.message)}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-lg font-semibold text-crust mb-2 font-sans leading-relaxed">
+                        {notification.message}
+                      </p>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <FaClock className="text-xs" />
+                        <span className="font-sans">{formatDate(notification.createdAt)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          ) : (
+            !loading && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-16"
+              >
+                <div className="mb-6">
+                  <FaBell className="text-6xl text-gray-300 mx-auto mb-4" />
+                  <h2 className="text-2xl font-semibold text-gray-600 mb-2">No notifications yet</h2>
+                  <p className="text-gray-500 font-sans">You'll see your notifications here when they arrive!</p>
+                </div>
+              </motion.div>
+            )
+          )}
+
+          {/* Loading State */}
+          {loading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-center py-12"
             >
-              <p className="text-lg font-semibold text-black">
-                {notification.message}
-              </p>
-              <p className="text-sm text-gray-500">
-                {new Date(notification.createdAt).toLocaleString()}
-              </p>
-            </div>
-          ))
-        ) : (
-          !loading && (
-            <div className="text-center py-8">
-              <p className="text-lg text-gray-500">No notifications available.</p>
-            </div>
-          )
-        )}
+              <div className="flex flex-col items-center">
+                <RingLoader color="#DC2626" size={60} speedMultiplier={1.5} />
+                <p className="mt-4 text-gray-600 font-sans">Loading notifications...</p>
+              </div>
+            </motion.div>
+          )}
 
-        {loading && (
-          <div className="flex justify-center mt-8">
-            <RingLoader color="#ff860d" size={60} speedMultiplier={1.5} />
-          </div>
-        )}
-
-        {visibleNotifications < notifications.length && !loading && (
-          <div className="flex justify-center mt-8">
-            <button
-              onClick={handleShowMore}
-              className="bg-black w-full text-white py-2 px-4 rounded-lg"
+          {/* Load More Button */}
+          {visibleNotifications < notifications.length && !loading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-center pt-6"
             >
-              Show More
-            </button>
-          </div>
-        )}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleShowMore}
+                className="bg-gradient-to-r from-pepperoni to-red-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+              >
+                <FaBell />
+                Show More Notifications
+              </motion.button>
+            </motion.div>
+          )}
+        </div>
       </div>
     </div>
   );
