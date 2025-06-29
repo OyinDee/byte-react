@@ -11,11 +11,11 @@ const PublicNavbar = () => {
     <>
       {/* Desktop Navigation */}
       <nav className="bg-crust shadow-lg fixed w-full top-0 z-50 hidden md:block">
-        <div className="w-full px-8 py-4">
-          <div className="flex justify-between items-center max-w-7xl mx-auto">
+        <div className="w-full px-2 md:px-4 lg:px-6 py-4">
+          <div className="flex justify-between items-center max-w-[95%] w-full mx-auto">
             <Link
               to="/"
-              className="flex items-center space-x-3 text-white hover:opacity-90 transition-opacity duration-300"
+              className="flex items-center space-x-2 text-white hover:opacity-90 transition-opacity duration-300"
             >
               <motion.img 
                 src={BRAND_LOGO} 
@@ -33,7 +33,7 @@ const PublicNavbar = () => {
               </div>
             </Link>
 
-            <div className="bg-crust/30 backdrop-blur-sm rounded-2xl p-2 flex items-center space-x-2 shadow-lg">
+            <div className="bg-crust/30 backdrop-blur-sm rounded-2xl p-1 flex items-center space-x-1 shadow-lg">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
