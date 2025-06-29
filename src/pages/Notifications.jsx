@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { RingLoader } from "react-spinners";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  FaBell, 
+  FaInfoCircle, 
+  FaCheckCircle, 
+  FaExclamationTriangle,
+  FaClock,
+  FaEnvelope
+} from "react-icons/fa";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -35,8 +44,23 @@ const Notifications = () => {
     fetchNotifications();
   }, []);
 
-  const handleShowMore = () => {
-    setVisibleNotifications((prev) => prev + 10);
+  const getNotificationIcon = (message) => {
+    if (message.toLowerCase().includes('order')) return <FaCheckCircle className="text-green-500" />;
+    if (message.toLowerCase().includes('payment')) return <FaExclamationTriangle className="text-yellow-500" />;
+    if (message.toLowerCase().includes('delivery')) return <FaInfoCircle className="text-blue-500" />;
+    return <FaEnvelope className="text-gray-500" />;
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return 'Today';
+    if (diffDays === 2) return 'Yesterday';
+    if (diffDays <= 7) return `${diffDays - 1} days ago`;
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
   return (

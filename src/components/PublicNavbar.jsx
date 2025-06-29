@@ -72,9 +72,9 @@ const PublicNavbar = () => {
       </nav>
 
       {/* Mobile Top Bar */}
-      <nav className="bg-crust shadow-lg fixed w-full top-0 z-40 flex md:hidden">
+      <nav className="bg-crust shadow-lg fixed w-full top-0 z-40 flex md:hidden ps-3">
         <div className="w-full px-4 py-4">
-          <div className="flex items-center justify-center">
+          <div className="flex items-center">
             <Link
               to="/"
               className="flex items-center space-x-2 text-white"
@@ -82,12 +82,12 @@ const PublicNavbar = () => {
               <img 
                 src={BRAND_LOGO} 
                 alt="Byte Logo" 
-                className="w-10 h-10"
+                className="w-9 h-9"
               />
               <div className="flex flex-col">
-                <span className="text-xl font-bold font-secondary">{BRAND_NAME}</span>
-                <span className="text-sm text-cheese flex items-center justify-center font-sans">
-                  <AcademicCapIcon className="w-4 h-4 mr-1" />
+                <span className="text-base font-bold font-secondary">{BRAND_NAME}</span>
+                <span className="text-xs text-cheese flex items-center justify-center font-sans">
+                  <AcademicCapIcon className="w-2 h-2 mr-1" />
                   Campus Delivery
                 </span>
               </div>

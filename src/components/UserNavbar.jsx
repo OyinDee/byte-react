@@ -179,15 +179,22 @@ const UserNavbar = () => {
       </nav>
 
       {/* Mobile Top Bar */}
-      <nav className="bg-crust shadow-lg fixed w-full top-0 z-40 flex md:hidden">
-        <div className="w-full px-4 py-3">
-          <div className="flex items-center justify-center">
-            <Link to="/user" className="flex items-center space-x-2 text-white">
-              <img src={BRAND_LOGO} alt="Byte Logo" className="w-8 h-8" />
+      <nav className="bg-crust shadow-lg fixed w-full top-0 z-40 flex md:hidden ps-3">
+        <div className="w-full px-4 py-4">
+          <div className="flex items-center">
+            <Link
+              to="/"
+              className="flex items-center space-x-2 text-white"
+            >
+              <img 
+                src={BRAND_LOGO} 
+                alt="Byte Logo" 
+                className="w-9 h-9"
+              />
               <div className="flex flex-col">
-                <span className="text-lg font-bold">{BRAND_NAME}</span>
+                <span className="text-base font-bold">{BRAND_NAME}</span>
                 <span className="text-xs text-cheese flex items-center">
-                  <AcademicCapIcon className="w-3 h-3 mr-1" />
+                  <AcademicCapIcon className="w-2 h-2 mr-1" />
                   Campus Delivery
                 </span>
               </div>
@@ -250,7 +257,7 @@ const UserNavbar = () => {
       </motion.nav>
       
       {/* Content padding to avoid navbar overlap */}
-      <div className="pt-16 pb-24 md:pt-20 md:pb-0"></div>
+      <div className="pt-12 pb-24 md:pt-20 md:pb-0"></div>
     </>
   );
 };

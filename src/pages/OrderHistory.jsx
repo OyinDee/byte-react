@@ -2,6 +2,20 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { RingLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  FaHistory, 
+  FaReceipt, 
+  FaCalendarAlt, 
+  FaClock, 
+  FaMoneyBillWave,
+  FaChevronDown,
+  FaChevronUp,
+  FaCheck,
+  FaTimes,
+  FaShoppingBag,
+  FaUtensils
+} from 'react-icons/fa';
 import 'react-toastify/dist/ReactToastify.css';
 
 const OrderHistory = () => {
@@ -126,85 +140,215 @@ const OrderHistory = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <RingLoader color="#ff860d" size={100} />
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-crust to-crust/90">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center text-center"
+        >
+          <RingLoader color="#FCD34D" size={100} speedMultiplier={1.5} />
+          <p className="mt-6 text-cheese font-semibold text-lg">Loading your order history...</p>
+        </motion.div>
       </div>
     );
   }
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Delivered': return 'text-green-600 bg-green-100';
+      case 'In Progress': return 'text-blue-600 bg-blue-100';
+      case 'Fee Requested': return 'text-orange-600 bg-orange-100';
+      case 'Cancelled': return 'text-red-600 bg-red-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
   return (
-    <div className="relative min-h-screen pt-5 pb-20 text-black bg-white">
-      <div className="w-full max-w-4xl p-8 mx-auto bg-white border border-gray-200 rounded-lg shadow-lg">
-        <h1 className="mb-6 text-3xl font-bold text-center text-black">Order History</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <h1 className="text-3xl md:text-4xl font-bold text-crust mb-2 flex items-center justify-center gap-3 font-secondary">
+            <FaHistory className="text-pepperoni" />
+            Order History
+          </h1>
+          <p className="text-gray-600 font-sans">Track all your delicious orders</p>
+        </motion.div>
+
         {orders.length === 0 ? (
-          <p className="text-center text-gray-500">No orders found.</p>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-16"
+          >
+            <div className="mb-6">
+              <FaShoppingBag className="text-6xl text-gray-300 mx-auto mb-4" />
+              <h2 className="text-2xl font-semibold text-gray-600 mb-2">No orders found</h2>
+              <p className="text-gray-500">You haven't placed any orders yet!</p>
+            </div>
+          </motion.div>
         ) : (
-          <ul className="space-y-4">
-            {orders.map((order) => (
-              <li key={order._id} className="p-4 bg-gray-100 border rounded-lg shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="mb-2 text-xl font-semibold">Order #{order.customId}</h2>
-                    <p className="text-lg">Fee: ₦{(order.fee)}</p>
-                    <p className="text-lg">Total: ₦{order.totalPrice}</p>
-                    <p className="text-lg">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
-                    <p className="text-lg">Status: {order.status}</p>
-                  </div>
-                  <div>
-                    <button
-                      className="text-black underline"
-                      onClick={() => handleExpandClick(order._id)}
-                    >
-                      {expandedOrders[order._id] ? 'Show Less' : 'Show More'}
-                    </button>
-                  </div>
-                </div>
-
-                {expandedOrders[order._id] && (
-                  <div className="mt-4">
-                    <h3 className="mb-2 text-lg font-semibold">Meal Details</h3>
-                    <ul className="pl-5 list-disc">
-                      {order.meals.map((mealDetail) => (
-                        <li key={mealDetail.meal._id}>
-                          <p>Meal: {mealDetail.meal.name}</p>
-                          <p>Price: ₦{mealDetail.meal.price}</p>
-                          <p>Quantity: {mealDetail.quantity}</p>
-                        </li>
-                      ))}
-                    </ul>
-
-                    {order.status === "Fee Requested" && (
-                      <div className="mt-4">
-                        <button
-                          className="w-full px-4 py-2 text-white bg-black rounded"
-                          onClick={() => handleAcceptFee(order.customId)}
-                          disabled={processingOrders[order.customId]} 
-                        >
-                          Accept Fee
-                        </button>
-                        <button
-                          className="w-full px-4 py-2 mt-2 text-white bg-cheese rounded"
-                          onClick={() => handleCancelOrder(order.customId)}
-                          disabled={processingOrders[order.customId]}
-                        >
-                          Cancel Order
-                        </button>
+          <div className="space-y-4">
+            <AnimatePresence>
+              {orders.map((order, index) => (
+                <motion.div
+                  key={order._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden"
+                >
+                  {/* Order Header */}
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-pepperoni/10 p-3 rounded-full">
+                          <FaReceipt className="text-pepperoni text-lg" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-crust">Order #{order.customId}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <FaCalendarAlt className="text-gray-400 text-sm" />
+                            <span className="text-sm text-gray-600 font-sans">
+                              {new Date(order.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    )}
+                      <div className="text-right">
+                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Order Summary */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                      <div className="bg-gray-50 rounded-xl p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <FaMoneyBillWave className="text-green-600 text-sm" />
+                          <span className="text-sm text-gray-600 font-sans">Total</span>
+                        </div>
+                        <span className="text-lg font-bold text-crust">₦{order.totalPrice}</span>
+                      </div>
+                      <div className="bg-gray-50 rounded-xl p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <FaClock className="text-blue-600 text-sm" />
+                          <span className="text-sm text-gray-600 font-sans">Fee</span>
+                        </div>
+                        <span className="text-lg font-bold text-crust">₦{order.fee}</span>
+                      </div>
+                      <div className="bg-gray-50 rounded-xl p-3 col-span-2 md:col-span-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <FaUtensils className="text-orange-600 text-sm" />
+                          <span className="text-sm text-gray-600 font-sans">Items</span>
+                        </div>
+                        <span className="text-lg font-bold text-crust">{order.meals.length}</span>
+                      </div>
+                    </div>
+
+                    {/* Expand Button */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleExpandClick(order._id)}
+                      className="w-full flex items-center justify-center gap-2 py-3 text-gray-600 hover:text-crust transition-colors duration-200 border-t border-gray-200"
+                    >
+                      <span className="font-semibold">
+                        {expandedOrders[order._id] ? 'Show Less' : 'Show Details'}
+                      </span>
+                      {expandedOrders[order._id] ? <FaChevronUp /> : <FaChevronDown />}
+                    </motion.button>
                   </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-        {hasMoreOrders && (
-          <div className="flex justify-center mt-6">
-            <button
-              className="px-6 py-2 text-white bg-black rounded"
-              onClick={handleLoadMore}
-            >
-              Show More
-            </button>
+
+                  {/* Expanded Details */}
+                  <AnimatePresence>
+                    {expandedOrders[order._id] && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="border-t border-gray-200 bg-gray-50"
+                      >
+                        <div className="p-6 space-y-4">
+                          <h4 className="font-bold text-crust mb-3 flex items-center gap-2">
+                            <FaUtensils className="text-orange-600" />
+                            Meal Details
+                          </h4>
+                          <div className="space-y-3">
+                            {order.meals.map((mealDetail, index) => (
+                              <div key={mealDetail.meal._id} className="bg-white rounded-xl p-4 border border-gray-200">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <h5 className="font-semibold text-crust">{mealDetail.meal.name}</h5>
+                                    <p className="text-sm text-gray-600 mt-1">Quantity: {mealDetail.quantity}</p>
+                                  </div>
+                                  <span className="font-bold text-pepperoni">₦{mealDetail.meal.price}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Action Buttons */}
+                          {order.status === "Fee Requested" && (
+                            <div className="flex gap-3 pt-4">
+                              <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => handleAcceptFee(order.customId)}
+                                disabled={processingOrders[order.customId]}
+                                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+                              >
+                                <FaCheck />
+                                Accept Fee
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => handleCancelOrder(order.customId)}
+                                disabled={processingOrders[order.customId]}
+                                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+                              >
+                                <FaTimes />
+                                Cancel Order
+                              </motion.button>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            {/* Load More Button */}
+            {hasMoreOrders && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex justify-center pt-6"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleLoadMore}
+                  className="bg-gradient-to-r from-pepperoni to-red-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  Load More Orders
+                </motion.button>
+              </motion.div>
+            )}
           </div>
         )}
       </div>
