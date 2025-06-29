@@ -20,7 +20,7 @@ import {
   FaMapMarkerAlt,
   FaPhoneAlt
 } from "react-icons/fa"; 
-import { BRAND_LOGO, BRAND_NAME, BRAND_COLORS, APP_IMAGES } from "../utils/brandAssets";
+import { BRAND_NAME, APP_IMAGES } from "../utils/brandAssets";
 
 // Skeleton Components
 const RestaurantCardSkeleton = () => (
@@ -107,7 +107,6 @@ const LazyImage = ({ src, alt, className, onError, fallbackSrc }) => {
 
 const Landing = () => {
   const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [testimonialsLoading, setTestimonialsLoading] = useState(true);

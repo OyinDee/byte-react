@@ -4,8 +4,8 @@ import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { motion } from "framer-motion";
-import { FaPlus, FaEdit, FaTrash, FaImage, FaToggleOn, FaToggleOff, FaTimes, FaUtensils } from "react-icons/fa";
-import { BRAND_NAME, getBrandAssets } from "../utils/brandAssets";
+import { FaPlus, FaEdit, FaTrash, FaImage, FaToggleOn, FaTimes, FaUtensils } from "react-icons/fa";
+import { getBrandAssets } from "../utils/brandAssets";
 
 const Loader = () => (
   <div className="flex items-center justify-center py-8">

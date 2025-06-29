@@ -3,11 +3,9 @@ import RestaurantNavbar from "./RestaurantNavbar";
 import UserNavbar from "./UserNavbar";
 import PublicNavbar from "./PublicNavbar";
 import SuperAdminNavbar from "./SuperAdminNav";
-import { useAuth } from "../context/authContext";
 import { useLocation } from "react-router-dom";
 
 const NavbarWrapper = () => {
-  const { auth } = useAuth();
   const location = useLocation();
   const pathname = location.pathname;
 

@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { PlusCircleIcon, UserIcon, AcademicCapIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -6,19 +6,6 @@ import { BRAND_LOGO, BRAND_NAME } from "../utils/brandAssets";
 
 const PublicNavbar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const getLinkClassName = (path) => {
-    return location.pathname === path
-      ? "text-cheese font-semibold"
-      : "hover:text-cheese transition-all duration-300";
-  };
-
-  const getMobileLinkClassName = (path) => {
-    return location.pathname === path
-      ? "bg-pepperoni text-white"
-      : "text-white hover:bg-pepperoni/10 transition-all duration-300";
-  };
 
   return (
     <>

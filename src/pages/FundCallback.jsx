@@ -1,12 +1,10 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { RingLoader } from "react-spinners";
 
 
 const CallbackPage = () => {
-  const [paymentStatus, setPaymentStatus] = useState("Not Checked");
-  const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const reference = searchParams.get("reference");
   const navigate = useNavigate();
@@ -14,15 +12,13 @@ const CallbackPage = () => {
   const verifyPayment = useCallback(async () => {
     if (reference) {
       try {
-        const response = await axios.get(
+        await axios.get(
           `https://mongobyte.onrender.com/api/v1/pay/callback?reference=${reference}`
         );
-        setPaymentStatus(response.data.status);
         navigate("/user/profile");
       } catch (error) {
-        setPaymentStatus("Error");
-      } finally {
-        setLoading(false);
+        // Handle error silently
+        console.error("Payment verification error:", error);
       }
     }
   }, [reference, navigate]);

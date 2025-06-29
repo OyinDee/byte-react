@@ -9,7 +9,6 @@ const FundPage = () => {
   const [amount, setAmount] = useState("");
   const [fee, setFee] = useState(0);
   const [total, setTotal] = useState(0);
-  const [bytes, setBytes] = useState(0);
   const [transferAmount, setTransferAmount] = useState("");
   const [recipientUsername, setRecipientUsername] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +17,6 @@ const FundPage = () => {
   const [user, setUser] = useState(null);
 
   const navigate = useNavigate();
-  const NAIRA_TO_BYTES_RATE = 1;
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -49,15 +47,12 @@ const FundPage = () => {
       setAmount("");
       setFee(0);
       setTotal(0);
-      setBytes(0);
     } else {
       const calculatedFee = inputAmount * 0.05;
       const calculatedTotal = inputAmount + calculatedFee;
-      const calculatedBytes = inputAmount * NAIRA_TO_BYTES_RATE;
       setAmount(inputAmount);
       setFee(calculatedFee);
       setTotal(calculatedTotal);
-      setBytes(calculatedBytes);
     }
   };
 

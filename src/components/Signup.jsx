@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { AcademicCapIcon, UserIcon, EnvelopeIcon, PhoneIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import Loader from "./Loader"; 
-import { BRAND_NAME, BRAND_LOGO } from "../utils/brandAssets";
+import { BRAND_NAME } from "../utils/brandAssets";
 
 const SignUp = () => {
   const [username, setUsername] = useState("");

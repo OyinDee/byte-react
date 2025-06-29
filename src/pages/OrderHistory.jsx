@@ -48,7 +48,7 @@ const OrderHistory = () => {
 
   useEffect(() => {
     fetchOrderHistory();
-  }, [page]);
+  }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExpandClick = (orderId) => {
     setExpandedOrders((prevState) => ({

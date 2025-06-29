@@ -12,7 +12,7 @@ const Footer = () => {
               Connecting hungry students with delicious food since 2023.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-300 hover:text-cheese transition-colors duration-200">
+              <a href="https://facebook.com/bytechows" className="text-gray-300 hover:text-cheese transition-colors duration-200">
                 <FaFacebook size={20} />
               </a>
               <a 
@@ -78,22 +78,22 @@ const Footer = () => {
             <h3 className="text-xl font-bold mb-4 text-cheese font-secondary">Legal</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200 font-sans">
+                <a href="/terms" className="text-gray-300 hover:text-white transition-colors duration-200 font-sans">
                   Terms of Service
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200 font-sans">
+                <a href="/privacy" className="text-gray-300 hover:text-white transition-colors duration-200 font-sans">
                   Privacy Policy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200 font-sans">
+                <a href="/cookies" className="text-gray-300 hover:text-white transition-colors duration-200 font-sans">
                   Cookies Policy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200 font-sans">
+                <a href="/refunds" className="text-gray-300 hover:text-white transition-colors duration-200 font-sans">
                   Refund Policy
                 </a>
               </li>
