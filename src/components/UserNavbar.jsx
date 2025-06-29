@@ -181,7 +181,7 @@ const UserNavbar = () => {
       {/* Mobile Top Bar */}
       <nav className="bg-crust shadow-lg fixed w-full top-0 z-40 flex md:hidden">
         <div className="w-full px-4 py-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-center">
             <Link to="/user" className="flex items-center space-x-2 text-white">
               <img src={BRAND_LOGO} alt="Byte Logo" className="w-8 h-8" />
               <div className="flex flex-col">
@@ -192,24 +192,6 @@ const UserNavbar = () => {
                 </span>
               </div>
             </Link>
-            
-            <div className="flex items-center space-x-3">
-              <Link to="/user/cart" className="relative">
-                <ShoppingCartIcon className="w-6 h-6 text-white" />
-                {itemCount > 0 && (
-                  <motion.span 
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 bg-pepperoni rounded-full text-white text-xs font-bold"
-                  >
-                    {itemCount}
-                  </motion.span>
-                )}
-              </Link>
-              <Link to="/user/notifs">
-                <BellIcon className="w-6 h-6 text-white" />
-              </Link>
-            </div>
           </div>
         </div>
       </nav>
@@ -268,7 +250,7 @@ const UserNavbar = () => {
       </motion.nav>
       
       {/* Content padding to avoid navbar overlap */}
-      <div className="pt-20 pb-20 md:pb-0"></div>
+      <div className="pt-16 pb-24 md:pt-20 md:pb-0"></div>
     </>
   );
 };

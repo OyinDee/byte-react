@@ -210,7 +210,7 @@ const Landing = () => {
   ];
 
   return (
-    <main className="bg-white text-black overflow-x-hidden max-w-full">
+    <main className="overflow-x-hidden max-w-full">
       {/* Hero Section - Full height starting from top */}
       <section className="relative h-screen overflow-hidden max-w-full carousel-container">
         <Slider {...carouselSettings} className="h-full w-full max-w-full carousel-section">
@@ -768,7 +768,7 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 pb-32 bg-gradient-to-r from-pepperoni to-crust">
+      <section className="py-20 pb-32 bg-gradient-to-r from-pepperoni to-crust mb-0">
         <div className="container mx-auto px-6 text-center">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white font-secondary" data-aos="fade-up">
