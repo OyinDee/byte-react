@@ -18,6 +18,7 @@ const SignUp = () => {
 
   // Sample universities - in a real app, this would come from an API
   const universities = [
+   "FUOYE", 
     "University of Lagos (UNILAG)",
     "University of Ibadan (UI)",
     "Obafemi Awolowo University (OAU)",
