@@ -12,22 +12,71 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(() => {
-    const storedCart = localStorage.getItem("cart");
-    return storedCart ? new Map(JSON.parse(storedCart)) : new Map();
+    try {
+      const storedCart = localStorage.getItem("cart");
+      if (!storedCart) return new Map();
+      
+      const parsedCart = JSON.parse(storedCart);
+      // Validate the parsed cart data
+      if (!Array.isArray(parsedCart)) return new Map();
+      
+      // Filter out any invalid entries
+      const validEntries = parsedCart.filter(entry => 
+        Array.isArray(entry) && 
+        entry.length === 2 && 
+        Array.isArray(entry[1]) &&
+        entry[1].every(item => item && item.meal && item.quantity)
+      );
+      
+      return new Map(validEntries);
+    } catch (error) {
+      console.error('Error loading cart from localStorage:', error);
+      return new Map();
+    }
   });
 
   // Sync cart state with localStorage whenever cart changes
   useEffect(() => {
-    if (cart.size > 0) {
-      localStorage.setItem("cart", JSON.stringify(Array.from(cart.entries())));
-    } else {
-      localStorage.removeItem("cart"); // Clear localStorage when cart is empty
+    try {
+      if (cart.size > 0) {
+        const validEntries = Array.from(cart.entries()).map(([restaurantId, items]) => [
+          restaurantId,
+          items.filter(item => item && item.meal && item.quantity)
+        ]).filter(([_, items]) => items.length > 0);
+        
+        if (validEntries.length > 0) {
+          localStorage.setItem("cart", JSON.stringify(validEntries));
+        } else {
+          localStorage.removeItem("cart");
+        }
+      } else {
+        localStorage.removeItem("cart");
+      }
+    } catch (error) {
+      console.error('Error saving cart to localStorage:', error);
     }
   }, [cart]);
 
   const syncCartFromLocalStorage = () => {
-    const storedCart = localStorage.getItem("cart");
-    return storedCart ? new Map(JSON.parse(storedCart)) : new Map();
+    try {
+      const storedCart = localStorage.getItem("cart");
+      if (!storedCart) return new Map();
+      
+      const parsedCart = JSON.parse(storedCart);
+      if (!Array.isArray(parsedCart)) return new Map();
+      
+      const validEntries = parsedCart.filter(entry => 
+        Array.isArray(entry) && 
+        entry.length === 2 && 
+        Array.isArray(entry[1]) &&
+        entry[1].every(item => item && item.meal && item.quantity)
+      );
+      
+      return new Map(validEntries);
+    } catch (error) {
+      console.error('Error syncing cart from localStorage:', error);
+      return new Map();
+    }
   };
 
   const addToCart = (meal, quantity) => {
@@ -108,22 +157,28 @@ export const CartProvider = ({ children }) => {
   };
 
   const clearCart = () => {
-    setCart(new Map());
-    localStorage.removeItem("cart"); // Clear localStorage when cart is cleared
+    localStorage.removeItem("cart");
+    setCart(prevCart => {
+      const newCart = new Map();
+      return newCart;
+    });
   };
 
   const getItemCount = () => {
     return Array.from(cart.values())
       .flat()
-      .filter(item => item !== null && item !== undefined)
-      .reduce((count, item) => count + (item?.quantity || 0), 0);
+      .filter((item) => item && item.meal && typeof item.quantity === "number")
+      .reduce((count, item) => count + item.quantity, 0);
   };
 
   const getTotalPrice = () => {
     return Array.from(cart.values())
       .flat()
-      .filter(item => item !== null && item !== undefined && item?.meal?.price)
-      .reduce((total, item) => total + (item.meal.price * item.quantity), 0);
+      .filter(
+        (item) =>
+          item && item.meal && item.meal.price && typeof item.quantity === "number"
+      )
+      .reduce((total, item) => total + item.meal.price * item.quantity, 0);
   };
 
   return (

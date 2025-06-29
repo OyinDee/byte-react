@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { FaTrashAlt, FaShoppingBag, FaMapMarkerAlt, FaStickyNote } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import { jwtDecode } from 'jwt-decode';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from "../context/cartContext";
 
 const CartPage = () => {
-  const [cart, setCart] = useState(new Map());
+  const { cart, removeItem, clearCart } = useCart();
   const [user, setUser] = useState(null);
   const [note, setNote] = useState('');
   const [fee, setFee] = useState(1000);
@@ -17,59 +18,39 @@ const CartPage = () => {
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
-      const storedUser = jwtDecode(storedToken);
-      setUser(storedUser.user);
-    } else {
-      toast.error("You need to log in to access the cart.");
-      navigate("/login");
-    }
-
-    const storedCart = localStorage.getItem("cart");
-    if (storedCart) {
       try {
-        const parsedCart = new Map(JSON.parse(storedCart));
-        setCart(parsedCart);
+        const storedUser = jwtDecode(storedToken);
+        setUser(storedUser.user);
       } catch (error) {
-        setCart(new Map());
+        navigate("/login");
       }
+    } else {
+      navigate("/login");
     }
   }, [navigate]);
 
-  const handleRemoveItem = (restaurantId, mealId) => {
-    setCart(prevCart => {
-      const newCart = new Map(prevCart);
-      const items = newCart.get(restaurantId) || [];
-      const updatedItems = items.filter(item => item.meal.customId !== mealId);
+  const handleRemoveItem = useCallback((restaurantId, mealId) => {
+    removeItem(mealId);
+    toast.success("Item removed from cart!");
+  }, [removeItem]);
 
-      if (updatedItems.length > 0) {
-        newCart.set(restaurantId, updatedItems);
-      } else {
-        newCart.delete(restaurantId);
-      }
+  const handleClearCart = useCallback((restaurantId) => {
+    clearCart();
+    toast.success("Cart cleared successfully!");
+  }, [clearCart]);
 
-      localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
-      toast.success("Item removed from cart!");
-      return newCart;
-    });
-  };
+  const totalAmountPerRestaurant = useCallback((items = [], fee = 0) => {
+    if (!Array.isArray(items)) return parseFloat(fee || 0);
+    
+    return items
+      .filter(item => item && item.meal && typeof item.quantity === 'number' && typeof item.meal.price === 'number')
+      .reduce(
+        (sum, item) => sum + (item.meal.price * item.quantity),
+        0
+      ) + parseFloat(fee || 0);
+  }, []);
 
-  const handleClearCart = (restaurantId) => {
-    setCart(prevCart => {
-      const newCart = new Map(prevCart);
-      newCart.delete(restaurantId);
-      localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
-      toast.success("Cart cleared successfully!");
-      return newCart;
-    });
-  };
-
-  const totalAmountPerRestaurant = (items, fee) =>
-    items.reduce(
-      (sum, item) => sum + (item.meal?.price ?? 0) * (item.quantity ?? 0),
-      0
-    ) + parseFloat(fee || 0);
-
-  const handleCheckout = async (restaurantId) => {
+  const handleCheckout = useCallback(async (restaurantId) => {
     if (!user) {
       toast.error("You need to log in first.");
       return;
@@ -97,63 +78,59 @@ const CartPage = () => {
       setIsCheckoutLoading(false);
       return;
     }
-toast.info("In the kitchen... Wait a minute!");
-const orderDetails = {
-  restaurantCustomId: restaurantId,
-  meals: itemsForRestaurant.map(({ meal, quantity }) => ({
-    mealId: meal.customId,
-    quantity,
-  })),
-  totalPrice: totalAmount,
-  location: user.location,
-  phoneNumber: user.phoneNumber,
-  user: user._id,
-  note,
-  nearestLandmark: user.nearestLandmark || "",
-  fee: parseFloat(fee) || 1000,
-};
 
-try {
-  const response = await fetch("https://mongobyte.onrender.com/api/v1/orders/create", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(orderDetails),
-  });
+    const loadingToast = toast.loading("Processing your order...");
+    
+    const orderDetails = {
+      restaurantCustomId: restaurantId,
+      meals: itemsForRestaurant.map(({ meal, quantity }) => ({
+        mealId: meal.customId,
+        quantity,
+      })),
+      totalPrice: totalAmount,
+      location: user.location,
+      phoneNumber: user.phoneNumber,
+      user: user._id,
+      note,
+      nearestLandmark: user.nearestLandmark || "",
+      fee: parseFloat(fee) || 1000,
+    };
 
-  const responseData = await response.json();
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch("https://mongobyte.onrender.com/api/v1/orders/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(orderDetails),
+      });
 
-  if (!response.ok) {
-    toast.dismiss();
-    const errorMessage = responseData.message || "Failed to place the order.";
-    throw new Error(errorMessage);
-  }
+      const responseData = await response.json();
 
-  setCart(prevCart => {
-    const newCart = new Map(prevCart);
-    newCart.delete(restaurantId);
-    localStorage.setItem("cart", JSON.stringify(Array.from(newCart.entries())));
-    return newCart;
-  });
-  toast.dismiss();
-  toast.success("Order placed successfully!");
-  toast.info("Cart has been cleared too...");
-  setNote('');
-  
-  setTimeout(() => {
-    window.location.reload();
-  }, 5000);
+      if (!response.ok) {
+        throw new Error(responseData.message || "Failed to place the order.");
+      }
 
-} catch (error) {
-  toast.error(error.message || "Something went wrong.");
-} finally {
-  setIsCheckoutLoading(false);
-  }
-  };
+      clearCart();
+      setNote('');
+      
+      toast.dismiss(loadingToast);
+      toast.success("Order placed successfully!");
+
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error(error.message || "Something went wrong.");
+    } finally {
+      setIsCheckoutLoading(false);
+    }
+  }, [cart, clearCart, fee, note, totalAmountPerRestaurant, user]);
+
+  if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4 pt-16 md:pt-24 pb-24 md:pb-6">
       <ToastContainer />
       <div className="max-w-4xl mx-auto">
         {/* Header */}
@@ -224,46 +201,50 @@ try {
                 {/* Cart Items */}
                 <div className="p-6 space-y-4">
                   <AnimatePresence>
-                    {Array.isArray(items) && items.map(({ meal, quantity }) => (
-                      <motion.div
-                        key={meal.customId}
-                        layout
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-all duration-300"
-                      >
-                        {/* Meal Image */}
-                        {meal.imageUrl && (
-                          <div className="relative w-20 h-20 rounded-xl overflow-hidden shadow-md">
-                            <img 
-                              src={meal.imageUrl} 
-                              alt={meal.name} 
-                              className="w-full h-full object-cover" 
-                            />
-                          </div>
-                        )}
+                    {Array.isArray(items) && items
+                      .filter(item => item && item.meal && item.quantity)
+                      .map(({ meal, quantity }) => (
+                        meal && meal.customId ? (
+                          <motion.div
+                            key={meal.customId}
+                            layout
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-all duration-300"
+                          >
+                            {/* Meal Image */}
+                            {meal.imageUrl && (
+                              <div className="relative w-20 h-20 rounded-xl overflow-hidden shadow-md">
+                                <img 
+                                  src={meal.imageUrl} 
+                                  alt={meal.name} 
+                                  className="w-full h-full object-cover" 
+                                />
+                              </div>
+                            )}
 
-                        {/* Meal Details */}
-                        <div className="flex-1">
-                          <h3 className="text-lg font-bold text-crust">{meal.name}</h3>
-                          <p className="text-sm text-gray-600 mb-2">
-                            Quantity: {quantity} {meal.per || "meal"}(s)
-                          </p>
-                          <p className="text-xl font-bold text-pepperoni">₦{(meal.price * quantity).toFixed(2)}</p>
-                        </div>
+                            {/* Meal Details */}
+                            <div className="flex-1">
+                              <h3 className="text-lg font-bold text-crust">{meal.name}</h3>
+                              <p className="text-sm text-gray-600 mb-2">
+                                Quantity: {quantity} {meal.per || "meal"}(s)
+                              </p>
+                              <p className="text-xl font-bold text-pepperoni">₦{(meal.price * quantity).toFixed(2)}</p>
+                            </div>
 
-                        {/* Remove Button */}
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleRemoveItem(restaurantId, meal.customId)}
-                          className="bg-red-100 hover:bg-red-200 text-red-600 p-3 rounded-xl transition-all duration-300"
-                        >
-                          <FaTrashAlt />
-                        </motion.button>
-                      </motion.div>
-                    ))}
+                            {/* Remove Button */}
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => handleRemoveItem(restaurantId, meal.customId)}
+                              className="bg-red-100 hover:bg-red-200 text-red-600 p-3 rounded-xl transition-all duration-300"
+                            >
+                              <FaTrashAlt />
+                            </motion.button>
+                          </motion.div>
+                        ) : null
+                      ))}
                   </AnimatePresence>
                 </div>
 

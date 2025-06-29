@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { RingLoader } from "react-spinners";
+import LoadingPage from "../components/Loader";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FaBell, 
@@ -68,7 +68,7 @@ const Notifications = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4 pt-16 md:pt-24 pb-24 md:pb-6">
       <div className="max-w-4xl mx-auto">
         
         {/* Header */}
@@ -142,18 +142,7 @@ const Notifications = () => {
           )}
 
           {/* Loading State */}
-          {loading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex justify-center py-12"
-            >
-              <div className="flex flex-col items-center">
-                <RingLoader color="#DC2626" size={60} speedMultiplier={1.5} />
-                <p className="mt-4 text-gray-600 font-sans">Loading notifications...</p>
-              </div>
-            </motion.div>
-          )}
+          {loading && <LoadingPage />}
 
           {/* Load More Button */}
           {visibleNotifications < notifications.length && !loading && (

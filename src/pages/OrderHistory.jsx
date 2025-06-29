@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { RingLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingPage from '../components/Loader';
@@ -154,7 +153,7 @@ const OrderHistory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4 pt-16 md:pt-24 pb-24 md:pb-6">
       <div className="max-w-4xl mx-auto">
         
         {/* Header */}

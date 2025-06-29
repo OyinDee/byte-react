@@ -6,7 +6,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import { motion } from "framer-motion";
 import { FaPlus, FaEdit, FaTrash, FaImage, FaToggleOn, FaTimes, FaUtensils } from "react-icons/fa";
 import { getBrandAssets } from "../utils/brandAssets";
-import LoadingPage from "../components/Loader";
 
 const InlineLoader = () => (
   <div className="flex items-center justify-center py-8">

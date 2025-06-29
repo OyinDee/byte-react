@@ -147,7 +147,7 @@ const FundPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4 pt-16 md:pt-24 pb-24 md:pb-6">
       <ToastContainer />
       <div className="max-w-2xl mx-auto">
         

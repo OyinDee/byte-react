@@ -257,7 +257,7 @@ const UserNavbar = () => {
       </motion.nav>
       
       {/* Content padding to avoid navbar overlap */}
-      <div className="pt-12 pb-24 md:pt-20 md:pb-0"></div>
+      <div className="pt-12 md:pt-16"></div>
     </>
   );
 };
