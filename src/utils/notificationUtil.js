@@ -52,9 +52,6 @@ export const subscribeUserToPush = async () => {
     // In a real application, you would send the subscription to your server
     console.log('User subscribed:', subscription);
     
-    // Mock sending to server
-    // await sendSubscriptionToServer(subscription);
-    
     return subscription;
   } catch (error) {
     console.error('Error subscribing to push notifications:', error);
@@ -102,14 +99,6 @@ function urlBase64ToUint8Array(base64String) {
   
   return outputArray;
 }
-
-// Mock function for saving subscription to server
-// In a real app, this would send an API request to your backend
-const sendSubscriptionToServer = async (subscription) => {
-  // This would be an API call in a real application
-  console.log('Sending subscription to server:', subscription);
-  return true;
-};
 
 // Function to display a local notification (for testing)
 export const showLocalNotification = async (title, options) => {
