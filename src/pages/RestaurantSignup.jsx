@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import LoadingPage from "./Loader"; 
-import { BRAND_NAME } from "../utils/brandAssets";
-import { useUniversities } from "../context/universitiesContext";
 import { toast } from "react-toastify";
+import LoadingPage from "../components/Loader";
+import { useUniversities } from "../context/universitiesContext";
+import { BRAND_NAME } from "../utils/brandAssets";
 
-const SignUp = () => {
-  const [username, setUsername] = useState("");
+const RestaurantSignup = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [email, setEmail] = useState("");
   const [phoneCode, setPhoneCode] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [description, setDescription] = useState("");
   const [universityId, setUniversityId] = useState("");
   const [otherUniversity, setOtherUniversity] = useState(false);
   const [errors, setErrors] = useState([]);
@@ -23,8 +24,8 @@ const SignUp = () => {
   const validateForm = () => {
     const newErrors = [];
 
-    if (!username.trim()) {
-      newErrors.push("Username is required.");
+    if (!name.trim()) {
+      newErrors.push("Restaurant name is required.");
     }
     if (!email.trim()) {
       newErrors.push("Email is required.");
@@ -42,6 +43,9 @@ const SignUp = () => {
     }
     if (!phoneNumber.trim() || phoneNumber.length !== 10) {
       newErrors.push("Phone number must be 10 digits long.");
+    }
+    if (!description.trim()) {
+      newErrors.push("Restaurant description is required.");
     }
     if (!otherUniversity && !universityId) {
       newErrors.push("Please select your university.");
@@ -69,14 +73,17 @@ const SignUp = () => {
     try {
       const fullPhoneNumber = `${phoneCode}${phoneNumber}`;
 
-      await axios.post("https://mongobyte.onrender.com/api/v1/auth/register", {
-        username: username.trim(),
+      await axios.post("https://mongobyte.onrender.com/api/v1/restaurants/register", {
+        name: name.trim(),
         email: email.trim(),
         password,
         phoneNumber: fullPhoneNumber,
-        university: universityId, // Send the university ID instead of name
+        description: description.trim(),
+        university: universityId, // Send the university ID
+        isActive: false // Restaurants start as inactive until approved
       });
-      navigate("/signupsuccess");
+      navigate("/restaurant/login");
+      toast.success("Registration successful! Please wait for admin approval.");
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const { response } = error;
@@ -100,26 +107,26 @@ const SignUp = () => {
     <div className="relative min-h-screen bg-olive">
       <div className="absolute inset-0">
         <img
-          src="/Images/burger.jpg" 
-          alt="Burger Background"
+          src="/Images/1.jpg" 
+          alt="Restaurant Background"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black opacity-50"></div>
+        <div className="absolute inset-0 bg-black opacity-60"></div>
       </div>
 
       {isLoading && <LoadingPage />}
 
       <div
-        className={`relative z-10 flex items-center justify-center min-h-screen ${
+        className={`relative z-10 flex items-center justify-center min-h-screen py-12 ${
           isLoading ? "hidden" : ""
         }`}
       >
         <form
           onSubmit={handleSubmit}
-          className="bg-white bg-opacity-40 backdrop-blur-sm p-8 rounded-lg shadow-lg w-full max-w-md sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl"
+          className="bg-white bg-opacity-40 backdrop-blur-sm p-8 rounded-lg shadow-lg w-full max-w-md mx-4"
         >
           <h2 className="text-2xl font-bold mb-6 text-center text-accentwhite font-secondary">
-            Sign Up for {BRAND_NAME}
+            Register Your Restaurant with {BRAND_NAME}
           </h2>
 
           {errors.length > 0 && (
@@ -137,22 +144,21 @@ const SignUp = () => {
           <div className="mb-4">
             <input
               type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full text-black p-2 border border-gray-300 rounded mt-1 font-sans"
-              placeholder="Enter your username..."
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full text-black p-3 border border-gray-300 rounded-lg font-sans"
+              placeholder="Restaurant Name"
               required
             />
           </div>
+
           <div className="mb-4">
             <input
               type="email"
-              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full text-black p-2 border border-gray-300 rounded mt-1 font-sans"
-              placeholder="Enter your email address..."
+              className="w-full text-black p-3 border border-gray-300 rounded-lg font-sans"
+              placeholder="Email Address"
               required
             />
           </div>
@@ -160,34 +166,42 @@ const SignUp = () => {
           <div className="flex mb-4">
             <input
               type="text"
-              id="phoneCode"
               value={phoneCode}
               onChange={(e) => setPhoneCode(e.target.value)}
-              className="w-1/3 p-2 border text-black border-gray-300 rounded-l mt-1 font-sans"
+              className="w-1/3 p-3 border text-black border-gray-300 rounded-l-lg font-sans"
               placeholder="+234"
               required
             />
             <input
               type="text"
-              id="phoneNumber"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              className="w-2/3 p-2 border text-black border-gray-300 rounded-r mt-1 font-sans"
+              className="w-2/3 p-3 border text-black border-gray-300 rounded-r-lg font-sans"
               placeholder="80XXXXXXXX"
               required
             />
           </div>
 
           <div className="mb-4">
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full text-black p-3 border border-gray-300 rounded-lg font-sans"
+              placeholder="Restaurant Description"
+              rows={3}
+              required
+            />
+          </div>
+
+          <div className="mb-4">
             <select
-              id="university"
               value={universityId}
               onChange={(e) => {
                 const value = e.target.value;
                 setUniversityId(value);
                 setOtherUniversity(value === "other");
               }}
-              className="w-full p-2 border text-black border-gray-300 rounded mt-1 font-sans"
+              className="w-full p-3 border text-black border-gray-300 rounded-lg font-sans"
               required
               disabled={universitiesLoading}
             >
@@ -216,39 +230,39 @@ const SignUp = () => {
           <div className="mb-4">
             <input
               type="password"
-              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 text-black border border-gray-300 rounded mt-1 font-sans"
-              placeholder="Enter your password"
+              className="w-full p-3 text-black border border-gray-300 rounded-lg font-sans"
+              placeholder="Password"
               required
             />
           </div>
+
           <div className="mb-6">
             <input
               type="password"
-              id="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full p-2 text-black border border-gray-300 rounded mt-1 font-sans"
-              placeholder="Confirm your password"
+              className="w-full p-3 text-black border border-gray-300 rounded-lg font-sans"
+              placeholder="Confirm Password"
               required
             />
           </div>
+
           <button
             type="submit"
-            className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition font-sans"
+            className="w-full bg-black text-white p-3 rounded-lg hover:bg-gray-800 transition font-sans"
           >
-            Sign Up
+            Register Restaurant
           </button>
 
           <div className="mt-4 text-center">
-            <p className="text-accentwhite font-sans">Already have an account?</p>
+            <p className="text-accentwhite font-sans">Already registered?</p>
             <a
-              href="/login"
+              href="/restaurant/login"
               className="text-blue-400 hover:text-blue-600 font-semibold mt-2 inline-block font-sans"
             >
-              Log In Here!
+              Login Here
             </a>
           </div>
         </form>
@@ -257,4 +271,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default RestaurantSignup;

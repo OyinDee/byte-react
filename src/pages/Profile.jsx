@@ -18,8 +18,11 @@ import {
   FaTimes,
   FaUpload,
   FaUser,
-  FaCrown
+  FaCrown,
+  FaUniversity,
+  FaExchangeAlt
 } from "react-icons/fa";
+import { useUniversities } from "../context/universitiesContext";
 import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
@@ -28,12 +31,14 @@ const Profile = () => {
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
   const [nearestLandmark, setNearestLandmark] = useState("");
+  const [selectedUniversity, setSelectedUniversity] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [updateLoading, setUpdateLoading] = useState(false); 
   const [error, setError] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { universities, loading: universitiesLoading } = useUniversities();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -53,6 +58,7 @@ const Profile = () => {
           setBio(decodedToken.user.bio || "");
           setLocation(decodedToken.user.location || "");
           setNearestLandmark(decodedToken.user.nearestLandmark || "");
+          setSelectedUniversity(decodedToken.user.university || "");
           setLoading(false);
         } catch (error) {
           setError("Failed to load user data. Please try again later.");
@@ -109,7 +115,13 @@ const Profile = () => {
 
       const data = await axios.put(
         "https://mongobyte.onrender.com/api/v1/users/updateProfile",
-        { imageUrl, bio, location, nearestLandmark },
+        { 
+          imageUrl, 
+          bio, 
+          location, 
+          nearestLandmark, 
+          university: selectedUniversity 
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       localStorage.setItem('token', data.data.token)
@@ -119,6 +131,7 @@ const Profile = () => {
         bio,
         location,
         nearestLandmark,
+        university: selectedUniversity,
       }));
       setIsModalOpen(false);
       setUpdateLoading(false);
@@ -263,6 +276,14 @@ const Profile = () => {
                     <FaPhone className="text-cheese text-sm" />
                     <span className="text-sm font-medium">{user?.phoneNumber}</span>
                   </div>
+                  <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full text-white">
+                    <FaUniversity className="text-cheese text-sm" />
+                    <span className="text-sm font-medium">
+                      {user?.university 
+                        ? universities.find(uni => uni._id === user.university)?.name || "University"
+                        : "No University Selected"}
+                    </span>
+                  </div>
                 </motion.div>
               </div>
             </div>
@@ -291,6 +312,22 @@ const Profile = () => {
             <p className="text-sm text-gray-600 font-secondary font-bold">ORDERS</p>
           </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ y: -5 }}
+            className="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-crust"
+          >
+            <div className="text-2xl font-bold text-crust mb-1 flex items-center">
+              <FaUniversity className="mr-2 text-pepperoni" />
+              <span className="truncate max-w-[120px]">
+                {user?.university 
+                  ? universities.find(uni => uni._id === user.university)?.name.split(' ')[0] || "University" 
+                  : "None"}
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 font-secondary font-bold">UNIVERSITY</p>
+          </motion.div>
         </div>
 
         {/* Delivery Information */}
@@ -336,6 +373,61 @@ const Profile = () => {
                 </p>
               )}
             </motion.div>
+          </div>
+        </motion.div>
+
+        {/* University Information */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-3xl p-8 mb-8 shadow-xl"
+        >
+          <h3 className="text-2xl font-bold text-crust mb-6 text-center flex items-center justify-center gap-3">
+            <FaUniversity className="text-pepperoni" />
+            University Information
+          </h3>
+          <div className="flex flex-col items-center text-center">
+            {user?.university ? (
+              <>
+                <div className="bg-orange-50 rounded-full w-24 h-24 flex items-center justify-center mb-4 shadow-md">
+                  <FaUniversity className="text-4xl text-pepperoni" />
+                </div>
+                <h4 className="text-xl font-bold text-crust mb-2">
+                  {universities.find(uni => uni._id === user.university)?.name || "University"}
+                </h4>
+                <p className="text-gray-600 mb-6">
+                  You'll see restaurants available at your university
+                </p>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={openModal}
+                  className="flex items-center gap-2 bg-cheese text-crust px-6 py-3 rounded-xl font-semibold shadow-md hover:bg-yellow-400 transition-colors"
+                >
+                  <FaExchangeAlt />
+                  Change University
+                </motion.button>
+              </>
+            ) : (
+              <>
+                <div className="bg-orange-50 rounded-full w-24 h-24 flex items-center justify-center mb-4 shadow-md">
+                  <FaUniversity className="text-4xl text-gray-400" />
+                </div>
+                <h4 className="text-xl font-bold text-crust mb-2">No University Selected</h4>
+                <p className="text-gray-600 mb-6">
+                  Setting your university helps us show you relevant restaurants
+                </p>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={openModal}
+                  className="flex items-center gap-2 bg-pepperoni text-white px-6 py-3 rounded-xl font-semibold shadow-md hover:bg-red-700 transition-colors"
+                >
+                  <FaUniversity />
+                  Set University
+                </motion.button>
+              </>
+            )}
           </div>
         </motion.div>
 
@@ -487,6 +579,29 @@ const Profile = () => {
                     className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent hover:border-cheese transition-colors"
                     placeholder="Nearby landmark..."
                   />
+                </div>
+
+                {/* University */}
+                <div>
+                  <label className="block text-sm font-semibold text-crust mb-2 flex items-center gap-2">
+                    <FaUniversity className="text-pepperoni" />
+                    University
+                  </label>
+                  <select
+                    value={selectedUniversity}
+                    onChange={(e) => setSelectedUniversity(e.target.value)}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent hover:border-cheese transition-colors"
+                  >
+                    <option value="">Select your university</option>
+                    {universities.map((university) => (
+                      <option key={university._id} value={university._id}>
+                        {university.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Changing your university will filter restaurants available to you
+                  </div>
                 </div>
 
                 {/* Action Buttons */}

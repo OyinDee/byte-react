@@ -38,16 +38,27 @@ const CombinedPage = () => {
 
     const fetchRestaurants = async () => {
       try {
-        const response = await axios.get(
-          "https://mongobyte.onrender.com/api/v1/restaurants"
-        );
-        const sortedRestaurants = response.data.slice();
+        const userObj = byteUser ? JSON.parse(byteUser) : null;
+        const universityId = userObj?.university;
+        
+        // If user has a university, filter restaurants by it
+        const url = universityId 
+          ? `https://mongobyte.onrender.com/api/v1/restaurants?university=${universityId}`
+          : "https://mongobyte.onrender.com/api/v1/restaurants";
+          
+        const response = await axios.get(url);
+        const restaurantsData = response.data.data || response.data;
+        
+        // Randomize order for variety
+        const sortedRestaurants = [...restaurantsData];
         for (let i = sortedRestaurants.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [sortedRestaurants[i], sortedRestaurants[j]] = [sortedRestaurants[j], sortedRestaurants[i]];
         }
+        
         setRestaurants(sortedRestaurants);
-      } catch {
+      } catch (error) {
+        console.error("Error fetching restaurants:", error);
         setError("Error fetching restaurants. Please try again.");
       } finally {
         setLoading(false);

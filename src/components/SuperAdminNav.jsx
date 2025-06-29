@@ -7,6 +7,7 @@ import {
   BuildingStorefrontIcon,
   CurrencyDollarIcon,
   ArrowRightOnRectangleIcon,
+  PlusCircleIcon,
 } from "@heroicons/react/24/outline";
 
 const SuperAdminNavbar = () => {
@@ -66,6 +67,17 @@ const SuperAdminNavbar = () => {
                 </li>
                 <li>
                   <Link
+                    to="/restaurant/signup"
+                    className={`flex flex-col items-center ${getLinkClassName(
+                      "/restaurant/signup"
+                    )}`}
+                  >
+                    <PlusCircleIcon className="h-5 w-5 mb-1" />
+                    <span className="text-xs">Add Restaurant</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     to="/superadmin/withdrawals"
                     className={`flex flex-col items-center ${getLinkClassName(
                       "/superadmin/withdrawals"
@@ -111,6 +123,14 @@ const SuperAdminNavbar = () => {
             )}`}
           >
             Restaurants
+          </Link>
+          <Link
+            to="/restaurant/signup"
+            className={`text-lg font-semibold ${getLinkClassName(
+              "/restaurant/signup"
+            )}`}
+          >
+            Add Restaurant
           </Link>
           <Link
             to="/superadmin/withdrawals"

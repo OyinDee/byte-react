@@ -87,6 +87,16 @@ const AdminLogin = () => {
               {loading ? 'Logging in...' : 'Login'}
             </button>
           </div>
+          
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-600">Don't have a restaurant account?</p>
+            <a
+              href="/restaurant/signup"
+              className="mt-2 inline-block text-sm font-medium text-black hover:underline"
+            >
+              Register your restaurant
+            </a>
+          </div>
 
         </form>
       </div>

@@ -13,9 +13,15 @@ export function AuthProvider({ children }) {
       try {
         const decodedToken = jwtDecode(token);
         setAuth(decodedToken);
+        
+        // Store user in localStorage for easier access
+        if (decodedToken.user) {
+          localStorage.setItem("byteUser", JSON.stringify(decodedToken.user));
+        }
       } catch (error) {
         console.error("Invalid token:", error);
         localStorage.removeItem("token");
+        localStorage.removeItem("byteUser");
         setAuth(null);
       }
     } else {

@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from "react-route
 import { AuthProvider } from "./context/authContext";
 import { CartProvider } from "./context/cartContext";
 import { NotificationProvider } from "./context/notificationContext";
+import { UniversitiesProvider } from "./context/universitiesContext";
 import NavbarWrapper from "./components/NavbarWrapper";
 import Home from "./pages/Home";
 import Login from "./components/Login";
@@ -21,6 +22,7 @@ import CallbackPage from "./pages/FundCallback";
 import CartPage from "./pages/CartPage";
 import RestaurantPage from "./pages/CheckRestaurant";
 import Notifications from "./pages/Notifications";
+import RestaurantSignup from "./pages/RestaurantSignup";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import MealsPage from "./pages/MealsPage";
@@ -38,12 +40,13 @@ function ScrollToTop() {
 function App() {
   return (
     <AuthProvider>
-      <NotificationProvider>
-        <CartProvider>
-          <Router>
-            <ScrollToTop />
-            <NavbarWrapper />
-            <Routes>
+      <UniversitiesProvider>
+        <NotificationProvider>
+          <CartProvider>
+            <Router>
+              <ScrollToTop />
+              <NavbarWrapper />
+              <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/login" element={<Login />} />
@@ -65,6 +68,7 @@ function App() {
               <Route path="/restaurant/notifications" element={<PrivateRoute element={<AdminNotifs />} />} />
               <Route path="/restaurant/menu" element={<PrivateRoute element={<MealsPage />} />} />
               <Route path="/restaurant/login" element={<AdminLogin />} />
+              <Route path="/restaurant/signup" element={<PrivateRoute element={<RestaurantSignup />} allowedRoles={['superadmin']} />} />
               
               {/* Admin Routes */}
               <Route path="/superadmin/dashboard" element={<PrivateRoute element={<SuperAdminDashboard />} />} />
@@ -86,7 +90,8 @@ function App() {
           </Router>
         </CartProvider>
       </NotificationProvider>
-    </AuthProvider>
+    </UniversitiesProvider>
+  </AuthProvider>
   );
 }
 
