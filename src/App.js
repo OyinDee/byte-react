@@ -3,10 +3,11 @@ import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/authContext";
+import { CartProvider } from "./context/cartContext";
+import { NotificationProvider } from "./context/notificationContext";
 import NavbarWrapper from "./components/NavbarWrapper";
 import Home from "./pages/Home";
 import Login from "./components/Login";
-import { CartProvider } from "./context/cartContext";
 import PrivateRoute from "./components/PrivateRoute";
 import UserDashboard from "./pages/UserDashboard";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
@@ -24,6 +25,7 @@ import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import MealsPage from "./pages/MealsPage";
 import OrderHistory from './pages/OrderHistory';
+import AdminNotifs from "./pages/AdminNotifs";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -36,34 +38,54 @@ function ScrollToTop() {
 function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <Router>
-          <ScrollToTop />
-          <NavbarWrapper />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signupsuccess" element={<SignUpSuccess />} />
-            <Route path="/forgot-password" element={<ResetPassword />} />
-            <Route path="/user" element={<PrivateRoute element={<UserDashboard />} />} />
-            <Route path="/user/notifs" element={<PrivateRoute element={<Notifications />} />} />
-            <Route path="/user/profile" element={<PrivateRoute element={<Profile />} />} />
-            <Route path="/user/cart" element={<PrivateRoute element={<CartPage />} />} />
-            <Route path="/user/fund/callback" element={<PrivateRoute element={<CallbackPage />} />} />
-            <Route path="/user/fund" element={<PrivateRoute element={<Fund />} />} />
-            <Route path="/user/orderhistory" element={<PrivateRoute element={<OrderHistory />} />} />
-            <Route path="/user/checkrestaurant/:id" element={<RestaurantPage />} />
-            <Route path="/restaurant/dashboard" element={<PrivateRoute element={<RestaurantDashboard />} />} />
-            <Route path="/restaurant/notifications" element={<PrivateRoute element={<Notifications />} />} />
-            <Route path="/restaurant/menu" element={<PrivateRoute element={<MealsPage />} />} />
-            <Route path="/restaurant/login" element={<AdminLogin />} />
-            <Route path="/superadmin/dashboard" element={<PrivateRoute element={<SuperAdminDashboard />} />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <ToastContainer />
-        </Router>
-      </CartProvider>
+      <NotificationProvider>
+        <CartProvider>
+          <Router>
+            <ScrollToTop />
+            <NavbarWrapper />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signupsuccess" element={<SignUpSuccess />} />
+              <Route path="/forgot-password" element={<ResetPassword />} />
+              
+              {/* User Routes */}
+              <Route path="/user" element={<PrivateRoute element={<UserDashboard />} />} />
+              <Route path="/user/notifs" element={<PrivateRoute element={<Notifications />} />} />
+              <Route path="/user/profile" element={<PrivateRoute element={<Profile />} />} />
+              <Route path="/user/cart" element={<PrivateRoute element={<CartPage />} />} />
+              <Route path="/user/fund/callback" element={<PrivateRoute element={<CallbackPage />} />} />
+              <Route path="/user/fund" element={<PrivateRoute element={<Fund />} />} />
+              <Route path="/user/orderhistory" element={<PrivateRoute element={<OrderHistory />} />} />
+              <Route path="/user/checkrestaurant/:id" element={<RestaurantPage />} />
+              
+              {/* Restaurant Routes */}
+              <Route path="/restaurant/dashboard" element={<PrivateRoute element={<RestaurantDashboard />} />} />
+              <Route path="/restaurant/notifications" element={<PrivateRoute element={<AdminNotifs />} />} />
+              <Route path="/restaurant/menu" element={<PrivateRoute element={<MealsPage />} />} />
+              <Route path="/restaurant/login" element={<AdminLogin />} />
+              
+              {/* Admin Routes */}
+              <Route path="/superadmin/dashboard" element={<PrivateRoute element={<SuperAdminDashboard />} />} />
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <ToastContainer 
+              position="top-right"
+              autoClose={5000}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="light"
+            />
+          </Router>
+        </CartProvider>
+      </NotificationProvider>
     </AuthProvider>
   );
 }

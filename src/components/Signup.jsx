@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { AcademicCapIcon, UserIcon, EnvelopeIcon, PhoneIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import Loader from "./Loader"; 
+import { BRAND_NAME, BRAND_LOGO } from "../utils/brandAssets";
 
 const SignUp = () => {
   const [username, setUsername] = useState("");
@@ -10,9 +13,25 @@ const SignUp = () => {
   const [email, setEmail] = useState("");
   const [phoneCode, setPhoneCode] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [university, setUniversity] = useState("");
   const [errors, setErrors] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Sample universities - in a real app, this would come from an API
+  const universities = [
+    "University of Lagos (UNILAG)",
+    "University of Ibadan (UI)",
+    "Obafemi Awolowo University (OAU)",
+    "Ahmadu Bello University (ABU)",
+    "University of Nigeria, Nsukka (UNN)",
+    "Lagos State University (LASU)",
+    "Covenant University",
+    "Babcock University",
+    "Redeemer's University",
+    "American University of Nigeria (AUN)",
+    "Other"
+  ];
 
   const validateForm = () => {
     const newErrors = [];
@@ -37,6 +56,9 @@ const SignUp = () => {
     if (!phoneNumber.trim() || phoneNumber.length !== 10) {
       newErrors.push("Phone number must be 10 digits long.");
     }
+    if (!university.trim()) {
+      newErrors.push("Please select your university.");
+    }
 
     return newErrors;
   };
@@ -60,6 +82,7 @@ const SignUp = () => {
         email: email.trim(),
         password,
         phoneNumber: fullPhoneNumber,
+        university: university.trim(),
       });
       navigate("/signupsuccess");
     } catch (error) {
@@ -103,8 +126,8 @@ const SignUp = () => {
           onSubmit={handleSubmit}
           className="bg-white bg-opacity-40 backdrop-blur-xs p-8 rounded-lg shadow-lg w-full max-w-md sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl"
         >
-          <h2 className="text-2xl font-bold mb-6 text-center text-accentwhite">
-            Sign Up for Byte!
+          <h2 className="text-2xl font-bold mb-6 text-center text-accentwhite font-secondary">
+            Sign Up for {BRAND_NAME}
           </h2>
 
           {errors.length > 0 && (
@@ -125,7 +148,7 @@ const SignUp = () => {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full text-black p-2 border border-gray-300 rounded mt-1"
+              className="w-full text-black p-2 border border-gray-300 rounded mt-1 font-sans"
               placeholder="Enter your username..."
               required
             />
@@ -136,7 +159,7 @@ const SignUp = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full text-black p-2 border border-gray-300 rounded mt-1"
+              className="w-full text-black p-2 border border-gray-300 rounded mt-1 font-sans"
               placeholder="Enter your email address..."
               required
             />
@@ -148,7 +171,7 @@ const SignUp = () => {
               id="phoneCode"
               value={phoneCode}
               onChange={(e) => setPhoneCode(e.target.value)}
-              className="w-1/3 p-2 border text-black border-gray-300 rounded-l mt-1"
+              className="w-1/3 p-2 border text-black border-gray-300 rounded-l mt-1 font-sans"
               placeholder="+234"
               required
             />
@@ -157,10 +180,25 @@ const SignUp = () => {
               id="phoneNumber"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              className="w-2/3 p-2 border text-black border-gray-300 rounded-r mt-1"
+              className="w-2/3 p-2 border text-black border-gray-300 rounded-r mt-1 font-sans"
               placeholder="80XXXXXXXX"
               required
             />
+          </div>
+
+          <div className="mb-4">
+            <select
+              id="university"
+              value={university}
+              onChange={(e) => setUniversity(e.target.value)}
+              className="w-full p-2 border text-black border-gray-300 rounded mt-1 font-sans"
+              required
+            >
+              <option value="">Select your university...</option>
+              {universities.map((uni, index) => (
+                <option key={index} value={uni}>{uni}</option>
+              ))}
+            </select>
           </div>
 
           <div className="mb-4">
@@ -169,7 +207,7 @@ const SignUp = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 text-black border border-gray-300 rounded mt-1"
+              className="w-full p-2 text-black border border-gray-300 rounded mt-1 font-sans"
               placeholder="Enter your password"
               required
             />
@@ -180,23 +218,23 @@ const SignUp = () => {
               id="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full p-2 text-black border border-gray-300 rounded mt-1"
+              className="w-full p-2 text-black border border-gray-300 rounded mt-1 font-sans"
               placeholder="Confirm your password"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition"
+            className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition font-sans"
           >
             Sign Up
           </button>
 
           <div className="mt-4 text-center">
-            <p className="text-accentwhite">Already have an account?</p>
+            <p className="text-accentwhite font-sans">Already have an account?</p>
             <a
               href="/login"
-              className="text-blue-400 hover:text-blue-600 font-semibold mt-2 inline-block"
+              className="text-blue-400 hover:text-blue-600 font-semibold mt-2 inline-block font-sans"
             >
               Log In Here!
             </a>

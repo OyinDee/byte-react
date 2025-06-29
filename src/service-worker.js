@@ -11,7 +11,7 @@ import { clientsClaim } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate } from 'workbox-strategies';
+import { StaleWhileRevalidate, CacheFirst } from 'workbox-strategies';
 
 clientsClaim();
 
@@ -46,17 +46,61 @@ registerRoute(
   createHandlerBoundToURL(process.env.PUBLIC_URL + '/index.html')
 );
 
-// An example runtime caching route for requests that aren't handled by the
-// precache, in this case same-origin .png requests like those from in public/
+// Cache image files with a Cache First strategy
 registerRoute(
   // Add in any other file extensions or routing criteria as needed.
-  ({ url }) => url.origin === self.location.origin && url.pathname.endsWith('.png'), // Customize this strategy as needed, e.g., by changing to CacheFirst.
-  new StaleWhileRevalidate({
+  ({ request, url }) => {
+    return (
+      url.origin === self.location.origin &&
+      (url.pathname.endsWith('.png') || 
+       url.pathname.endsWith('.jpg') || 
+       url.pathname.endsWith('.jpeg') || 
+       url.pathname.endsWith('.svg') || 
+       url.pathname.endsWith('.gif'))
+    );
+  },
+  new CacheFirst({
     cacheName: 'images',
     plugins: [
-      // Ensure that once this runtime cache reaches a maximum size the
-      // least-recently used images are removed.
-      new ExpirationPlugin({ maxEntries: 50 }),
+      new ExpirationPlugin({
+        maxEntries: 60,
+        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+      }),
+    ],
+  })
+);
+
+// Cache CSS and JavaScript files with a Stale While Revalidate strategy
+registerRoute(
+  ({ request, url }) => {
+    return (
+      url.origin === self.location.origin &&
+      (url.pathname.endsWith('.js') || url.pathname.endsWith('.css'))
+    );
+  },
+  new StaleWhileRevalidate({
+    cacheName: 'static-resources',
+  })
+);
+
+// Cache the Google Fonts stylesheets with a stale-while-revalidate approach.
+registerRoute(
+  ({ url }) => url.origin === 'https://fonts.googleapis.com',
+  new StaleWhileRevalidate({
+    cacheName: 'google-fonts-stylesheets',
+  })
+);
+
+// Cache the underlying font files with a cache-first strategy for 1 year.
+registerRoute(
+  ({ url }) => url.origin === 'https://fonts.gstatic.com',
+  new CacheFirst({
+    cacheName: 'google-fonts-webfonts',
+    plugins: [
+      new ExpirationPlugin({
+        maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+        maxEntries: 30,
+      }),
     ],
   })
 );
@@ -69,4 +113,116 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Any other custom service worker logic can go here.
+// Handle push notifications
+self.addEventListener('push', (event) => {
+  const data = event.data.json();
+  const options = {
+    body: data.body,
+    icon: '/icons/pizza.png',
+    badge: '/favicon.ico',
+    vibrate: [100, 50, 100],
+    data: {
+      url: data.url || '/',
+      dateOfArrival: Date.now(),
+      primaryKey: 1
+    },
+    actions: [
+      {
+        action: 'view',
+        title: 'View Order',
+      },
+      {
+        action: 'close',
+        title: 'Close',
+      },
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// Handle notification click events
+self.addEventListener('notificationclick', (event) => {
+  const notification = event.notification;
+  const action = event.action;
+  const url = notification.data.url;
+
+  event.notification.close();
+
+  if (action === 'close') {
+    return;
+  }
+
+  // Open the target URL (either the view action or the default behavior)
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      // If a window is already open, focus it
+      for (const client of clientList) {
+        if (client.url === url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Otherwise open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
+  );
+});
+
+// Background sync for failed API requests (like placing orders when offline)
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-orders') {
+    event.waitUntil(syncOrders());
+  }
+});
+
+// Function to sync pending orders when online
+async function syncOrders() {
+  try {
+    // Get pending orders from IndexedDB
+    const pendingRequests = await getPendingRequests();
+    
+    // Try to send each request
+    const promises = pendingRequests.map(async (request) => {
+      try {
+        // Send the request
+        const response = await fetch(request.url, {
+          method: request.method,
+          headers: request.headers,
+          body: request.body
+        });
+        
+        if (response.ok) {
+          // If successful, remove from pending queue
+          await removePendingRequest(request.id);
+          
+          // Show notification that order was successfully sent
+          self.registration.showNotification('Order Synced', {
+            body: 'Your order has been successfully submitted!',
+            icon: '/icons/pizza.png'
+          });
+        }
+      } catch (error) {
+        console.error('Failed to sync request:', error);
+      }
+    });
+    
+    await Promise.all(promises);
+  } catch (error) {
+    console.error('Error during sync:', error);
+  }
+}
+
+// Mock function to get pending requests (in a real app, this would use IndexedDB)
+async function getPendingRequests() {
+  // This would be implemented with IndexedDB in a real app
+  return [];
+}
+
+// Mock function to remove pending request (in a real app, this would use IndexedDB)
+async function removePendingRequest(id) {
+  // This would be implemented with IndexedDB in a real app
+}

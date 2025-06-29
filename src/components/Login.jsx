@@ -95,7 +95,7 @@ const Login = () => {
           onSubmit={handleSubmit}
           className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-lg shadow-lg w-full max-w-md"
         >
-          <h2 className="text-2xl font-bold mb-6 text-center text-accentwhite">Login to Byte!</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center text-accentwhite font-secondary">Login to Byte!</h2>
 
           {errors.length > 0 && (
             <div className="mb-6 p-4 bg-crust text-accentwhite rounded-lg">
@@ -113,7 +113,7 @@ const Login = () => {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-2 border text-black border-gray-300 rounded mt-1"
+              className="w-full p-2 border text-black border-gray-300 rounded mt-1 font-sans"
               placeholder="Enter your username..."
               required
             />
@@ -124,21 +124,21 @@ const Login = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border text-black border-gray-300 rounded mt-1"
+              className="w-full p-2 border text-black border-gray-300 rounded mt-1 font-sans"
               placeholder="Enter your password"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-crust text-accentwhite py-2 rounded-lg hover:bg-olive transition"
+            className="w-full bg-crust text-accentwhite py-2 rounded-lg hover:bg-olive transition font-sans"
           >
             Byte IN!
           </button>
 
           <div className="mt-4 text-center">
             <Link to="/forgot-password">
-              <span className="text-pepperoni hover:text-red-600 font-semibold mt-2 inline-block">
+              <span className="text-pepperoni hover:text-red-600 font-semibold mt-2 inline-block font-sans">
                 Forgot Password?
               </span>
             </Link>

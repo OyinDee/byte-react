@@ -3,10 +3,13 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import { motion } from "framer-motion";
+import { FaPlus, FaEdit, FaTrash, FaImage, FaToggleOn, FaToggleOff, FaTimes, FaUtensils } from "react-icons/fa";
+import { BRAND_NAME, getBrandAssets } from "../utils/brandAssets";
 
 const Loader = () => (
-  <div className="flex items-center justify-center">
-    <div className="inline-block w-8 h-8 text-black border-4 rounded-full spinner-border animate-spin"></div>
+  <div className="flex items-center justify-center py-8">
+    <div className="w-8 h-8 border-4 border-pepperoni border-t-transparent rounded-full animate-spin"></div>
   </div>
 );
 
@@ -26,6 +29,7 @@ const MealsPage = () => {
   const [loadingMeals, setLoadingMeals] = useState(false); 
   const [isEditing, setIsEditing] = useState(false);
   const [editingMealId, setEditingMealId] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const handleDelete = async (customId) => {
     if (window.confirm("Delete meal?")) {
@@ -187,132 +191,332 @@ const MealsPage = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 pb-20 text-black bg-white"> 
-      <div className="max-w-xl pb-20 mx-auto">
-        <h2 className="mb-4 text-xl font-semibold"> {isEditing ? "Update Meal" : "Add New Meal"}</h2>
-        <form onSubmit={handleFormSubmit} className="p-4 rounded-lg">
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleInputChange}
-            required
-            className="w-full p-2 mb-2 text-black bg-white border rounded" 
-            placeholder="Name"
-          />
-          <input
-            type="text"
-            name="description"
-            value={form.description}
-            onChange={handleInputChange}
-            className="w-full p-2 mb-2 text-black bg-white border rounded"
-            placeholder="Description"
-          />
-          <select
-            name="tag"
-            value={form.tag}
-            onChange={handleInputChange}
-            className="w-full p-2 mb-2 text-black bg-white border rounded"
-          >
-            <option value="combo">Combo</option>
-            <option value="add-on">Add-On</option>
-            <option value="regular">Regular</option>
-          </select>
-          <input
-            type="number"
-            name="price"
-            value={form.price}
-            onChange={handleInputChange}
-            required
-            className="w-full p-2 mb-2 text-black bg-white border rounded"
-            placeholder="Price (NGN)"
-          />
-          <input
-            type="text"
-            name="per"
-            value={form.per}
-            onChange={handleInputChange}
-            className="w-full p-2 mb-2 text-black bg-white border rounded"
-            placeholder="Per (e.g., slice, unit)"
-          />
-          <small className="block mb-2 text-gray-500">
-            slice, 5 pieces, unit, pack, spoon, scoop, cup
-          </small>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-crust mb-2">
+            Manage Your <span className="text-pepperoni">Menu</span>
+          </h1>
+          <p className="text-gray-600">Add, edit, and manage your restaurant's delicious offerings</p>
+        </div>
 
-          <select
-            name="availability"
-            value={form.availability ? "true" : "false"}
-            onChange={(e) =>
-              setForm((prev) => ({
-                ...prev,
-                availability: e.target.value === "true",
-              }))
-            }
-            className="w-full p-2 mb-2 text-black bg-white border rounded"
+        {/* Add New Meal Button */}
+        <div className="mb-8 text-center">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="inline-flex items-center px-6 py-3 bg-pepperoni text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            <option value="true">Available</option>
-            <option value="false">Not Available</option>
-          </select>
+            <FaPlus className="mr-2" />
+            {showAddForm ? "Cancel" : "Add New Meal"}
+          </motion.button>
+        </div>
 
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="w-full p-2 mb-2 text-black bg-white border rounded"
-          />
-          {selectedImage && <img src={selectedImage} alt="Selected Meal" className="w-full mb-4" />}
-          {!selectedImage && form.imageUrl && <img src={form.imageUrl} alt="Meal" className="w-full mb-4" />}
-          
-          <button
-            type="submit"
-            className="w-full p-2 text-white bg-black rounded"
-            disabled={isLoading}
+        {/* Add/Edit Form */}
+        {(showAddForm || isEditing) && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-2xl mx-auto mb-12"
           >
-            {isLoading ? "Saving..." : isEditing ? "Update Meal" : "Add Meal"}
-          </button>
-        </form>
-      </div>
+            <div className="bg-white rounded-2xl shadow-card p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-crust">
+                  {isEditing ? "Update Meal" : "Add New Meal"}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setIsEditing(false);
+                    setForm({
+                      name: "",
+                      description: "",
+                      tag: "regular",
+                      price: "",
+                      per: "",
+                      imageUrl: "",
+                      availability: true,
+                    });
+                    setSelectedImage(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <FaTimes size={20} />
+                </button>
+              </div>
 
-      <div className="mt-8">
-        <h2 className="mb-4 text-xl font-semibold">My Meals</h2>
-        {loadingMeals ? <Loader /> : (
-          <ul className="space-y-4">
-            {meals.map((meal) => (
-              <li key={meal.customId} className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between">
+              <form onSubmit={handleFormSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-lg font-bold">{meal.name}</h3>
-                    <p>{meal.description}</p>
-                    <p>Price: ₦{meal.price} per {meal.per||"..."} </p>
-                    <p>Tag: {meal.tag}</p>
-                    <p>Availability: {meal.availability ? "Available" : "Not Available"}</p>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Meal Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={form.name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pepperoni focus:border-transparent transition-all duration-300"
+                      placeholder="Enter meal name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Price (NGN) *
+                    </label>
+                    <input
+                      type="number"
+                      name="price"
+                      value={form.price}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pepperoni focus:border-transparent transition-all duration-300"
+                      placeholder="0"
+                    />
                   </div>
                 </div>
-                <img src={meal.imageUrl || selectedImage} alt={meal.name} className="w-full mt-4" />
-                  <div className="flex justify-center my-2">
-                    <button
-                      className={`bg-black py-1 px-4 text-${meal.availability ? "red-500":"white"} mr-2`}
-                      onClick={() => toggleAvailability(meal)}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    value={form.description}
+                    onChange={handleInputChange}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pepperoni focus:border-transparent transition-all duration-300"
+                    placeholder="Describe your meal..."
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Category
+                    </label>
+                    <select
+                      name="tag"
+                      value={form.tag}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pepperoni focus:border-transparent transition-all duration-300"
                     >
-                      {meal.availability ? "Mark as Unavailable" : "Mark as Available"}
-                    </button>
-                    <button
-                      className="px-4 py-2 mr-2 text-white bg-black"
-                      onClick={() => handleEdit(meal)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="px-4 py-2 mr-2 text-red-500 bg-black"
-                      onClick={() => handleDelete(meal.customId)}
-                    >
-                      Delete
-                    </button>
+                      <option value="regular">Regular</option>
+                      <option value="combo">Combo</option>
+                      <option value="add-on">Add-On</option>
+                    </select>
                   </div>
-              </li>
-            ))}
-          </ul>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Unit
+                    </label>
+                    <input
+                      type="text"
+                      name="per"
+                      value={form.per}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pepperoni focus:border-transparent transition-all duration-300"
+                      placeholder="slice, unit, pack"
+                    />
+                    <small className="text-gray-500 text-xs mt-1 block">
+                      e.g., slice, 5 pieces, unit, pack, spoon, scoop, cup
+                    </small>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Availability
+                    </label>
+                    <select
+                      name="availability"
+                      value={form.availability ? "true" : "false"}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          availability: e.target.value === "true",
+                        }))
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pepperoni focus:border-transparent transition-all duration-300"
+                    >
+                      <option value="true">Available</option>
+                      <option value="false">Not Available</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Meal Image
+                  </label>
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-pepperoni transition-colors duration-300">
+                    <div className="space-y-1 text-center">
+                      <FaImage className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-600">
+                        <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-pepperoni hover:text-pepperoni/80">
+                          <span>Upload a file</span>
+                          <input
+                            id="file-upload"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="sr-only"
+                          />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                    </div>
+                  </div>
+                  
+                  {(selectedImage || form.imageUrl) && (
+                    <div className="mt-4">
+                      <img 
+                        src={selectedImage || form.imageUrl} 
+                        alt="Meal preview" 
+                        className="w-full h-48 object-cover rounded-xl"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <motion.button
+                  type="submit"
+                  disabled={isLoading}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 bg-pepperoni text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Saving...
+                    </div>
+                  ) : (
+                    isEditing ? "Update Meal" : "Add Meal"
+                  )}
+                </motion.button>
+              </form>
+            </div>
+          </motion.div>
         )}
+
+        {/* Meals List */}
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-crust">
+              Your Menu <span className="text-pepperoni">({meals.length} items)</span>
+            </h2>
+          </div>
+
+          {loadingMeals ? (
+            <div className="flex justify-center py-12">
+              <Loader />
+            </div>
+          ) : meals.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12"
+            >
+              <FaUtensils className="mx-auto text-gray-300 text-6xl mb-4" />
+              <h3 className="text-xl font-medium text-gray-600 mb-2">No meals yet</h3>
+              <p className="text-gray-500">Add your first meal to get started!</p>
+            </motion.div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {meals.map((meal, index) => (
+                <motion.div
+                  key={meal.customId}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="relative">
+                    <img 
+                      src={meal.imageUrl || getBrandAssets().fallbackMealImage} 
+                      alt={meal.name}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute top-3 right-3">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        meal.availability 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {meal.availability ? 'Available' : 'Unavailable'}
+                      </span>
+                    </div>
+                    <div className="absolute top-3 left-3">
+                      <span className="px-3 py-1 bg-cheese text-crust text-xs font-medium rounded-full">
+                        {meal.tag}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-6">
+                    <div className="mb-4">
+                      <h3 className="text-xl font-bold text-crust mb-2">{meal.name}</h3>
+                      <p className="text-gray-600 text-sm line-clamp-2">
+                        {meal.description || "No description provided"}
+                      </p>
+                    </div>
+
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <span className="text-2xl font-bold text-pepperoni">
+                          ₦{Number(meal.price).toLocaleString()}
+                        </span>
+                        {meal.per && (
+                          <span className="text-gray-500 text-sm ml-1">per {meal.per}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => toggleAvailability(meal)}
+                        className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+                          meal.availability 
+                            ? 'bg-red-50 text-red-600 hover:bg-red-100' 
+                            : 'bg-green-50 text-green-600 hover:bg-green-100'
+                        }`}
+                      >
+                        <FaToggleOn className="inline mr-1" />
+                        {meal.availability ? 'Disable' : 'Enable'}
+                      </motion.button>
+
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleEdit(meal)}
+                        className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all duration-300"
+                      >
+                        <FaEdit />
+                      </motion.button>
+
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleDelete(meal.customId)}
+                        className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all duration-300"
+                      >
+                        <FaTrash />
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
