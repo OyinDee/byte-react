@@ -26,9 +26,9 @@ const NotificationsPage = () => {
 
       <div className="space-y-4">
         {notifications.length > 0 ? (
-          notifications.map((notification) => (
+          notifications.map((notification, idx) => (
             <div
-              key={notification.id}
+              key={notification._id || notification.id || idx}
               className="bg-gray-100 p-4 rounded-lg shadow-lg hover:shadow-xl transition-shadow"
             >
               <p className="text-lg font-semibold text-black">

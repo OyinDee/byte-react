@@ -179,6 +179,7 @@ const RestaurantDashboard = () => {
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
       setOrders(sortedOrders);
+      console.log(response)
     } catch (error) {
       toast.error("Error fetching orders.");
     }
@@ -512,7 +513,7 @@ const RestaurantDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 pt-20 pb-12">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 pt-20 pb-20">
       <ToastContainer />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
@@ -897,7 +898,7 @@ const RestaurantDashboard = () => {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {status.charAt(0).toUpperCase() + status.slice(1)} ({orders.filter(order => order.status === status).length})
+                    {status.charAt(0).toUpperCase() + status.slice(1)} ({orders.filter(order => (order.status || '').toLowerCase() === status).length})
                   </button>
                 ))}
               </div>
@@ -906,26 +907,26 @@ const RestaurantDashboard = () => {
             {/* Orders List */}
             <div className="space-y-4">
               {orders
-                .filter((order) => order.status === activeTab)
+                .filter((order) => (order.status || '').toLowerCase() === activeTab)
                 .slice(0, visibleOrdersCount)
                 .map((order) => (
                   <OrderCard
                     key={order._id}
                     order={order}
-                    isPending={order.status === 'pending'}
-                    isConfirmed={order.status === 'confirmed'}
+                    isPending={(order.status || '').toLowerCase() === 'pending'}
+                    isConfirmed={(order.status || '').toLowerCase() === 'confirmed'}
                     updateOrderStatus={updateOrderStatus}
                   />
                 ))}
 
-              {orders.filter((order) => order.status === activeTab).length === 0 && (
+              {orders.filter((order) => (order.status || '').toLowerCase() === activeTab).length === 0 && (
                 <div className="text-center py-12 bg-white rounded-xl">
                   <ShoppingBagIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">No {activeTab.toLowerCase()} orders found</p>
                 </div>
               )}
 
-              {orders.filter((order) => order.status === activeTab).length > visibleOrdersCount && (
+              {orders.filter((order) => (order.status || '').toLowerCase() === activeTab).length > visibleOrdersCount && (
                 <button
                   className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 p-3 rounded-lg transition-colors"
                   onClick={handleShowMore}
