@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { FaTrashAlt, FaShoppingBag, FaMapMarkerAlt, FaStickyNote } from "react-icons/fa";
+import { FaTrashAlt, FaShoppingBag, FaMapMarkerAlt, FaStickyNote, FaWallet, FaCreditCard } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import { jwtDecode } from 'jwt-decode';
@@ -13,6 +13,8 @@ const CartPage = () => {
   const [note, setNote] = useState('');
   const [fee, setFee] = useState(1000);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [currentCheckoutData, setCurrentCheckoutData] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,41 +62,54 @@ const CartPage = () => {
       return;
     }
 
-    setIsCheckoutLoading(true);
     const itemsForRestaurant = cart.get(restaurantId) || [];
 
     if (itemsForRestaurant.length === 0) {
       toast.error("No items to checkout.");
-      setIsCheckoutLoading(false);
       return;
     }
 
     const totalAmount = totalAmountPerRestaurant(itemsForRestaurant, fee);
+    
+    // Store checkout data for payment modal
+    setCurrentCheckoutData({
+      restaurantId,
+      itemsForRestaurant,
+      totalAmount,
+      orderDetails: {
+        restaurantCustomId: restaurantId,
+        meals: itemsForRestaurant.map(({ meal, quantity }) => ({
+          mealId: meal.customId,
+          quantity,
+        })),
+        totalPrice: totalAmount,
+        location: user.location,
+        phoneNumber: user.phoneNumber,
+        user: user._id,
+        note,
+        nearestLandmark: user.nearestLandmark || "",
+        fee: parseFloat(fee) || 1000,
+      }
+    });
+
+    // Show payment method selection
+    setShowPaymentModal(true);
+  }, [cart, fee, note, totalAmountPerRestaurant, user]);
+
+  const processWalletPayment = useCallback(async () => {
+    if (!currentCheckoutData) return;
+
+    const { totalAmount, orderDetails } = currentCheckoutData;
     const byteUser = JSON.parse(localStorage.getItem("byteUser"));
     const userBalance = byteUser?.byteBalance || 0;
 
-    if (userBalance < (totalAmount - parseFloat(fee))) {
-      toast.error("Insufficient balance. Fund your account and try again!");
-      setIsCheckoutLoading(false);
+    if (userBalance < totalAmount) {
+      toast.error("Insufficient balance. Please add funds to your wallet or pay with card!");
       return;
     }
 
+    setIsCheckoutLoading(true);
     const loadingToast = toast.loading("Processing your order...");
-    
-    const orderDetails = {
-      restaurantCustomId: restaurantId,
-      meals: itemsForRestaurant.map(({ meal, quantity }) => ({
-        mealId: meal.customId,
-        quantity,
-      })),
-      totalPrice: totalAmount,
-      location: user.location,
-      phoneNumber: user.phoneNumber,
-      user: user._id,
-      note,
-      nearestLandmark: user.nearestLandmark || "",
-      fee: parseFloat(fee) || 1000,
-    };
 
     try {
       const token = localStorage.getItem('token');
@@ -104,7 +119,7 @@ const CartPage = () => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify(orderDetails),
+        body: JSON.stringify({ ...orderDetails, paymentMethod: 'wallet' }),
       });
 
       const responseData = await response.json();
@@ -115,6 +130,8 @@ const CartPage = () => {
 
       clearCart();
       setNote('');
+      setShowPaymentModal(false);
+      setCurrentCheckoutData(null);
       
       toast.dismiss(loadingToast);
       toast.success("Order placed successfully!");
@@ -125,7 +142,91 @@ const CartPage = () => {
     } finally {
       setIsCheckoutLoading(false);
     }
-  }, [cart, clearCart, fee, note, totalAmountPerRestaurant, user]);
+  }, [currentCheckoutData, clearCart, setNote]);
+
+  const processCardPayment = useCallback(async () => {
+    if (!currentCheckoutData) return;
+
+    const { totalAmount, orderDetails } = currentCheckoutData;
+    
+    setIsCheckoutLoading(true);
+    const loadingToast = toast.loading("Redirecting to payment...");
+
+    try {
+      // Initialize Paystack payment
+      const paystackKey = "pk_test_4b8fb38e6c1bf4a0e5c92eb74f11b71f78cfac28"; // Your Paystack public key
+      
+      const handler = window.PaystackPop.setup({
+        key: paystackKey,
+        email: user.email,
+        amount: totalAmount * 100, // Paystack expects amount in kobo (multiply by 100)
+        currency: 'NGN',
+        ref: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        metadata: {
+          custom_fields: [
+            {
+              display_name: "Order Type",
+              variable_name: "order_type",
+              value: "food_delivery"
+            },
+            {
+              display_name: "Restaurant ID",
+              variable_name: "restaurant_id", 
+              value: orderDetails.restaurantCustomId
+            }
+          ]
+        },
+        callback: async function(response) {
+          // Payment successful, now create the order
+          try {
+            const token = localStorage.getItem('token');
+            const orderResponse = await fetch("https://mongobyte.onrender.com/api/v1/orders/create", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify({ 
+                ...orderDetails, 
+                paymentMethod: 'card',
+                paymentReference: response.reference 
+              }),
+            });
+
+            const orderData = await orderResponse.json();
+
+            if (!orderResponse.ok) {
+              throw new Error(orderData.message || "Failed to place the order.");
+            }
+
+            clearCart();
+            setNote('');
+            setShowPaymentModal(false);
+            setCurrentCheckoutData(null);
+            
+            toast.dismiss(loadingToast);
+            toast.success("Payment successful! Order placed successfully!");
+
+          } catch (error) {
+            toast.dismiss(loadingToast);
+            toast.error(error.message || "Order creation failed after payment.");
+          }
+        },
+        onClose: function() {
+          toast.dismiss(loadingToast);
+          toast.info("Payment cancelled");
+        }
+      });
+
+      handler.openIframe();
+
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error("Payment initialization failed. Please try again.");
+    } finally {
+      setIsCheckoutLoading(false);
+    }
+  }, [currentCheckoutData, user, clearCart, setNote]);
 
   if (!user) return null;
 
@@ -335,6 +436,99 @@ const CartPage = () => {
           </div>
         )}
       </div>
+
+      {/* Payment Method Modal */}
+      <AnimatePresence>
+        {showPaymentModal && currentCheckoutData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
+            >
+              <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6 text-white">
+                <h2 className="text-2xl font-bold">Choose Payment Method</h2>
+                <p className="text-white/90 text-sm">
+                  Total: ₦{currentCheckoutData.totalAmount.toFixed(2)}
+                </p>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                {/* Wallet Payment Option */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={processWalletPayment}
+                  disabled={isCheckoutLoading}
+                  className="w-full p-4 border-2 border-orange-200 rounded-xl hover:border-orange-400 hover:bg-orange-50 transition-all flex items-center gap-4"
+                >
+                  <div className="bg-orange-100 p-3 rounded-full">
+                    <FaWallet className="text-orange-600 text-xl" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h3 className="font-bold text-gray-800">Pay from Wallet</h3>
+                    <p className="text-sm text-gray-600">
+                      Balance: ₦{JSON.parse(localStorage.getItem("byteUser") || '{}')?.byteBalance || 0}
+                    </p>
+                  </div>
+                  {JSON.parse(localStorage.getItem("byteUser") || '{}')?.byteBalance >= currentCheckoutData.totalAmount ? (
+                    <div className="text-green-500 font-semibold">✓ Available</div>
+                  ) : (
+                    <div className="text-red-500 font-semibold text-xs">Insufficient</div>
+                  )}
+                </motion.button>
+
+                {/* Card Payment Option */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={processCardPayment}
+                  disabled={isCheckoutLoading}
+                  className="w-full p-4 border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all flex items-center gap-4"
+                >
+                  <div className="bg-blue-100 p-3 rounded-full">
+                    <FaCreditCard className="text-blue-600 text-xl" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h3 className="font-bold text-gray-800">Pay with Card</h3>
+                    <p className="text-sm text-gray-600">Secure payment via Paystack</p>
+                  </div>
+                  <div className="text-blue-500 font-semibold">→</div>
+                </motion.button>
+
+                {/* Cancel Button */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setShowPaymentModal(false);
+                    setCurrentCheckoutData(null);
+                  }}
+                  disabled={isCheckoutLoading}
+                  className="w-full p-3 text-gray-600 hover:text-gray-800 hover:bg-gray-100 font-semibold transition-all rounded-xl"
+                >
+                  Cancel
+                </motion.button>
+              </div>
+
+              {isCheckoutLoading && (
+                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">Processing...</p>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

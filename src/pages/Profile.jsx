@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { jwtDecode } from "jwt-decode";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingPage from "../components/Loader";
 import { 
@@ -73,9 +72,10 @@ const Profile = () => {
           // Handle university as object or string
           setSelectedUniversity(
             typeof response.data.user.university === 'object' 
-              ? response.data.user.university?._id || ""
-              : response.data.user.university || ""
+            ? response.data.user.university?._id || ""
+            : response.data.user.university || ""
           );
+          console.log(response)
           setLoading(false);
         } catch (error) {
           console.error('Profile fetch error:', error);
@@ -150,7 +150,7 @@ const Profile = () => {
       };
 
       // Use regular axios for profile update
-      const response = await axios.put(
+      await axios.put(
         "https://mongobyte.onrender.com/api/v1/users/updateProfile",
         profileData,
         {
@@ -343,7 +343,7 @@ const Profile = () => {
             whileHover={{ y: -5 }}
             className="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-pepperoni"
           >
-            <div className="text-2xl font-bold text-crust mb-1">{user?.orderHistory?.length || 0}</div>
+            <div className="text-2xl font-bold text-crust mb-1">{user?.orderItems || 0}</div>
             <p className="text-sm text-gray-600 font-secondary font-bold">ORDERS</p>
           </motion.div>
 

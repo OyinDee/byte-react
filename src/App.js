@@ -96,7 +96,6 @@ function App() {
             </CartProvider>
           </NotificationProvider>
         </UniversitiesProvider>
-      </SecurityProvider>
     </AuthProvider>
   );
 }
