@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { motion } from "framer-motion";
-import { format, subDays, subMonths, startOfMonth, endOfMonth, parseISO } from "date-fns";
+import { format, subDays, subMonths } from "date-fns";
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -23,22 +23,22 @@ import {
   ShoppingBagIcon,
   CurrencyDollarIcon,
   UsersIcon,
-  TruckIcon,
   ArrowUpIcon,
   ArrowDownIcon,
   ClockIcon,
   CheckCircleIcon,
-  XCircleIcon,
   DocumentArrowDownIcon,
   ChartBarIcon,
-  CalendarIcon,
-  ArrowPathIcon,
   EyeIcon,
-  PencilIcon,
-  BuildingStorefrontIcon,
   BanknotesIcon,
-  PresentationChartLineIcon
+  PresentationChartLineIcon,
+  StarIcon,
+  ChatBubbleLeftRightIcon,
+  HeartIcon,
+  ExclamationTriangleIcon,
+  FlagIcon
 } from "@heroicons/react/24/outline";
+import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import LoadingPage from "./Loader";
 
 // Register ChartJS components
@@ -61,8 +61,27 @@ const RestaurantDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState("week");
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [visibleOrdersCount, setVisibleOrdersCount] = useState(10);
+  const [testimonials, setTestimonials] = useState([]);
+  const [ratings, setRatings] = useState([]);
+  const [ratingStats, setRatingStats] = useState({
+    averageRating: 0,
+    totalRatings: 0,
+    ratingsBreakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+    categoryAverages: {
+      foodQuality: 0,
+      deliverySpeed: 0,
+      customerService: 0,
+      valueForMoney: 0,
+      packaging: 0
+    }
+  });
+  const [testimonialStats, setTestimonialStats] = useState({
+    total: 0,
+    pending: 0,
+    approved: 0,
+    featured: 0
+  });
   const [dashboardStats, setDashboardStats] = useState({
     totalOrders: 0,
     totalRevenue: 0,
@@ -111,7 +130,9 @@ const RestaurantDashboard = () => {
         // Fetch orders and stats
         await Promise.all([
           fetchOrders(restaurantCustomId, token),
-          fetchDashboardStats(restaurantCustomId, token)
+          fetchDashboardStats(restaurantCustomId, token),
+          fetchTestimonials(restaurantCustomId, token),
+          fetchRatings(restaurantCustomId, token)
         ]);
       } catch (error) {
         toast.error(
@@ -123,25 +144,9 @@ const RestaurantDashboard = () => {
     };
 
     fetchRestaurantAndOrders();
-  }, [dateRange]);
+  }, [dateRange, fetchDashboardStats]);
 
-  const fetchDashboardStats = async (restaurantId, token) => {
-    try {
-      const response = await axios.get(
-        `https://mongobyte.onrender.com/api/v1/restaurants/${restaurantId}/stats?range=${dateRange}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setDashboardStats(response.data);
-    } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
-      // Generate mock data for demonstration
-      generateMockStats();
-    }
-  };
-
-  const generateMockStats = () => {
+  const generateMockStats = useCallback(() => {
     const mockOrders = orders || [];
     const totalOrders = mockOrders.length;
     const totalRevenue = mockOrders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
@@ -155,11 +160,11 @@ const RestaurantDashboard = () => {
     for (let i = 11; i >= 0; i--) {
       const date = subMonths(new Date(), i);
       monthlyLabels.push(format(date, 'MMM yyyy'));
-      monthlyRevenue.push(Math.random() * 100000 + 50000);
+      monthlyRevenue.push(Math.random() * 50000 + 10000);
       monthlyOrders.push(Math.floor(Math.random() * 100) + 20);
     }
 
-    // Generate mock daily data for current month
+    // Generate mock daily data for the last 30 days
     const dailyLabels = [];
     const dailyRevenue = [];
     const dailyOrders = [];
@@ -198,7 +203,22 @@ const RestaurantDashboard = () => {
         orders: dailyOrders
       }
     });
-  };
+  }, [orders]);
+
+  const fetchDashboardStats = useCallback(async (restaurantId, token) => {
+    try {
+      const response = await axios.get(
+        `https://mongobyte.onrender.com/api/v1/restaurants/${restaurantId}/stats?range=${dateRange}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setDashboardStats(response.data);
+    } catch (error) {
+      // Generate mock data for demonstration
+      generateMockStats();
+    }
+  }, [dateRange, generateMockStats]);
 
   const handleWithdrawal = async () => {
     toast.info("Processing withdrawal request...");
@@ -250,88 +270,138 @@ const RestaurantDashboard = () => {
     }
   };
 
-  const exportToCSV = (data, filename) => {
-    if (!data || data.length === 0) {
-      toast.error("No data to export");
-      return;
-    }
-
-    const headers = Object.keys(data[0]).join(',');
-    const csvData = data.map(row => 
-      Object.values(row).map(val => 
-        typeof val === 'string' && val.includes(',') ? `"${val}"` : val
-      ).join(',')
-    ).join('\n');
-    
-    const csv = `${headers}\n${csvData}`;
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success(`${filename} downloaded successfully!`);
-  };
-
-  const exportOrders = () => {
-    const exportData = orders.map(order => ({
-      'Order ID': order.customId,
-      'Customer': order.user?.name || 'Unknown',
-      'Phone': order.phoneNumber,
-      'Location': order.location,
-      'Status': order.status,
-      'Total Amount': order.totalPrice,
-      'Order Date': format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm'),
-      'Meals': order.meals?.map(m => `${m.meal.name} (${m.quantity})`).join('; ') || ''
-    }));
-    
-    exportToCSV(exportData, `orders_${format(new Date(), 'yyyy-MM-dd')}.csv`);
-  };
-
-  const exportMonthlyReport = () => {
-    const monthlyReport = dashboardStats.monthlyData.labels.map((label, index) => ({
-      'Month': label,
-      'Revenue': dashboardStats.monthlyData.revenue[index],
-      'Orders': dashboardStats.monthlyData.orders[index],
-      'Avg Order Value': dashboardStats.monthlyData.revenue[index] / dashboardStats.monthlyData.orders[index]
-    }));
-    
-    exportToCSV(monthlyReport, `monthly_report_${format(new Date(), 'yyyy-MM-dd')}.csv`);
-  };
-
-  const exportDailyReport = () => {
-    const dailyReport = dashboardStats.dailyData.labels.map((label, index) => ({
-      'Date': label,
-      'Revenue': dashboardStats.dailyData.revenue[index],
-      'Orders': dashboardStats.dailyData.orders[index],
-      'Avg Order Value': dashboardStats.dailyData.revenue[index] / dashboardStats.dailyData.orders[index]
-    }));
-    
-    exportToCSV(dailyReport, `daily_report_${format(selectedMonth, 'yyyy-MM')}.csv`);
-  };
-
-  const updateOrderStatus = async (orderId, requestDescription, fee) => {
-    const token = localStorage.getItem("token");
+  const fetchTestimonials = async (restaurantId, token) => {
     try {
-      const response = await axios.patch(
-        `https://mongobyte.onrender.com/api/v1/orders/${orderId}`,
-        { additionalFee: fee, requestDescription },
+      const response = await axios.get(
+        `https://mongobyte.onrender.com/api/v1/testimonials?restaurant=${restaurantId}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-      toast.success(response.data.message);
-      fetchOrders(restaurant.customId, token);
+      setTestimonials(response.data.testimonials || []);
+      
+      // Calculate testimonial stats
+      const total = response.data.testimonials?.length || 0;
+      const pending = response.data.testimonials?.filter(t => !t.isApproved).length || 0;
+      const approved = response.data.testimonials?.filter(t => t.isApproved).length || 0;
+      const featured = response.data.testimonials?.filter(t => t.isFeatured).length || 0;
+      
+      setTestimonialStats({ total, pending, approved, featured });
     } catch (error) {
-      fetchOrders(restaurant.customId, token);
-      toast.error(
-        error.response?.data?.message || "Error updating order status."
+      setTestimonials([]);
+    }
+  };
+
+  const fetchRatings = async (restaurantId, token) => {
+    try {
+      const response = await axios.get(
+        `https://mongobyte.onrender.com/api/v1/ratings/restaurant/${restaurantId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
+      setRatings(response.data.ratings || []);
+      
+      // Calculate rating stats
+      const ratings = response.data.ratings || [];
+      const totalRatings = ratings.length;
+      
+      if (totalRatings > 0) {
+        const averageRating = ratings.reduce((sum, r) => sum + r.overallRating, 0) / totalRatings;
+        
+        // Calculate ratings breakdown
+        const ratingsBreakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        ratings.forEach(r => {
+          ratingsBreakdown[r.overallRating] = (ratingsBreakdown[r.overallRating] || 0) + 1;
+        });
+        
+        // Calculate category averages
+        const categoryAverages = {
+          foodQuality: ratings.reduce((sum, r) => sum + (r.foodQuality || 0), 0) / totalRatings,
+          deliverySpeed: ratings.reduce((sum, r) => sum + (r.deliverySpeed || 0), 0) / totalRatings,
+          customerService: ratings.reduce((sum, r) => sum + (r.customerService || 0), 0) / totalRatings,
+          valueForMoney: ratings.reduce((sum, r) => sum + (r.valueForMoney || 0), 0) / totalRatings,
+          packaging: ratings.reduce((sum, r) => sum + (r.packaging || 0), 0) / totalRatings
+        };
+        
+        setRatingStats({
+          averageRating: Math.round(averageRating * 10) / 10,
+          totalRatings,
+          ratingsBreakdown,
+          categoryAverages
+        });
+      }
+    } catch (error) {
+      setRatings([]);
+    }
+  };
+
+  const approveTestimonial = async (testimonialId) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.put(
+        `https://mongobyte.onrender.com/api/v1/testimonials/${testimonialId}/approve`,
+        { isApproved: true },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Testimonial approved successfully!");
+      fetchTestimonials(restaurant.customId, token);
+    } catch (error) {
+      toast.error("Error approving testimonial");
+    }
+  };
+
+  const setFeaturedTestimonial = async (testimonialId, isFeatured) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.put(
+        `https://mongobyte.onrender.com/api/v1/testimonials/${testimonialId}/featured`,
+        { isFeatured },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success(`Testimonial ${isFeatured ? 'featured' : 'unfeatured'} successfully!`);
+      fetchTestimonials(restaurant.customId, token);
+    } catch (error) {
+      toast.error("Error updating testimonial");
+    }
+  };
+
+  const deleteTestimonial = async (testimonialId) => {
+    const token = localStorage.getItem("token");
+    if (!window.confirm("Are you sure you want to delete this testimonial?")) return;
+    
+    try {
+      await axios.delete(
+        `https://mongobyte.onrender.com/api/v1/testimonials/${testimonialId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Testimonial deleted successfully!");
+      fetchTestimonials(restaurant.customId, token);
+    } catch (error) {
+      toast.error("Error deleting testimonial");
+    }
+  };
+
+  const moderateRating = async (ratingId, isHidden) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.put(
+        `https://mongobyte.onrender.com/api/v1/ratings/${ratingId}/moderate`,
+        { isHidden, adminNotes: `${isHidden ? 'Hidden' : 'Shown'} by restaurant admin` },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success(`Rating ${isHidden ? 'hidden' : 'shown'} successfully!`);
+      fetchRatings(restaurant.customId, token);
+    } catch (error) {
+      toast.error("Error moderating rating");
     }
   };
 
@@ -357,6 +427,160 @@ const RestaurantDashboard = () => {
       toast.error(
         error.response?.data?.message || "Error toggling status."
       );
+    }
+  };
+
+  const updateOrderStatus = async (orderId, newStatus) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.patch(
+        `https://mongobyte.onrender.com/api/v1/orders/${orderId}/status`,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // Update local state
+      setOrders(prev => 
+        prev.map(order => 
+          order._id === orderId 
+            ? { ...order, status: newStatus }
+            : order
+        )
+      );
+      
+      toast.success(`Order status updated to ${newStatus}`);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Error updating order status."
+      );
+    }
+  };
+
+  const exportOrders = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get(
+        `https://mongobyte.onrender.com/api/v1/orders/restaurant/${restaurant.customId}/export`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // Create CSV content
+      const csvContent = [
+        ['Order ID', 'Customer', 'Date', 'Status', 'Total', 'Items'].join(','),
+        ...response.data.map(order => [
+          order._id,
+          order.customerName || 'Unknown',
+          format(new Date(order.createdAt), 'yyyy-MM-dd'),
+          order.status,
+          `₦${order.totalAmount}`,
+          order.items.map(item => `${item.name} (${item.quantity})`).join('; ')
+        ].join(','))
+      ].join('\n');
+      
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `orders-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Orders exported successfully');
+    } catch (error) {
+      toast.error('Error exporting orders');
+    }
+  };
+
+  const exportMonthlyReport = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const startDate = format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd');
+      const endDate = format(new Date(), 'yyyy-MM-dd');
+      
+      const response = await axios.get(
+        `https://mongobyte.onrender.com/api/v1/orders/restaurant/${restaurant.customId}/report`,
+        {
+          params: { startDate, endDate },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // Create CSV content for monthly report
+      const csvContent = [
+        ['Date', 'Total Orders', 'Revenue', 'Completed Orders', 'Cancelled Orders'].join(','),
+        ...response.data.map(day => [
+          day.date,
+          day.totalOrders,
+          `₦${day.revenue}`,
+          day.completedOrders,
+          day.cancelledOrders
+        ].join(','))
+      ].join('\n');
+      
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `monthly-report-${format(new Date(), 'yyyy-MM')}.csv`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Monthly report exported successfully');
+    } catch (error) {
+      toast.error('Error exporting monthly report');
+    }
+  };
+
+  const exportDailyReport = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      
+      const response = await axios.get(
+        `https://mongobyte.onrender.com/api/v1/orders/restaurant/${restaurant.customId}/daily-report`,
+        {
+          params: { date: today },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // Create CSV content for daily report
+      const csvContent = [
+        ['Hour', 'Orders', 'Revenue', 'Popular Items'].join(','),
+        ...response.data.map(hour => [
+          `${hour.hour}:00`,
+          hour.orders,
+          `₦${hour.revenue}`,
+          hour.popularItems.join('; ')
+        ].join(','))
+      ].join('\n');
+      
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `daily-report-${today}.csv`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Daily report exported successfully');
+    } catch (error) {
+      toast.error('Error exporting daily report');
     }
   };
 
@@ -465,6 +689,24 @@ const RestaurantDashboard = () => {
                     <span>📞 {restaurant.contactNumber}</span>
                     <span>✉️ {restaurant.email}</span>
                   </div>
+                  {/* Rating Display */}
+                  <div className="flex items-center mt-2">
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <StarIconSolid
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < Math.floor(ratingStats.averageRating)
+                              ? 'text-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="ml-2 text-sm text-gray-600">
+                      {ratingStats.averageRating.toFixed(1)} ({ratingStats.totalRatings} reviews)
+                    </span>
+                  </div>
                 </div>
               </div>
               
@@ -517,6 +759,8 @@ const RestaurantDashboard = () => {
           {[
             { id: 'dashboard', label: 'Dashboard', icon: ChartBarIcon },
             { id: 'orders', label: 'Orders', icon: ShoppingBagIcon },
+            { id: 'testimonials', label: 'Testimonials', icon: ChatBubbleLeftRightIcon },
+            { id: 'ratings', label: 'Ratings', icon: StarIcon },
             { id: 'reports', label: 'Reports', icon: PresentationChartLineIcon },
           ].map((tab) => (
             <button
@@ -538,7 +782,7 @@ const RestaurantDashboard = () => {
         {activeTab === 'dashboard' && (
           <div className="space-y-8">
             {/* Key Metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -627,10 +871,46 @@ const RestaurantDashboard = () => {
                   <div className="text-sm text-gray-500">Avg Order Value</div>
                 </div>
               </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-white p-6 rounded-xl shadow-md"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="rounded-full bg-yellow-100 p-3">
+                    <StarIcon className="h-6 w-6 text-yellow-600" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="text-2xl font-bold text-gray-900">{ratingStats.averageRating.toFixed(1)}</div>
+                  <div className="text-sm text-gray-500">Average Rating</div>
+                  <div className="text-xs text-gray-400">({ratingStats.totalRatings} reviews)</div>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-white p-6 rounded-xl shadow-md"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="rounded-full bg-pink-100 p-3">
+                    <ChatBubbleLeftRightIcon className="h-6 w-6 text-pink-600" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="text-2xl font-bold text-gray-900">{testimonialStats.total}</div>
+                  <div className="text-sm text-gray-500">Testimonials</div>
+                  <div className="text-xs text-gray-400">{testimonialStats.pending} pending</div>
+                </div>
+              </motion.div>
             </div>
 
             {/* Action Items */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -681,6 +961,52 @@ const RestaurantDashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
+                className="bg-white p-4 rounded-xl shadow-md flex justify-between items-center"
+              >
+                <div className="flex items-center">
+                  <div className="rounded-full bg-pink-100 p-3 mr-4">
+                    <ChatBubbleLeftRightIcon className="h-6 w-6 text-pink-600" />
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">{testimonialStats.pending}</div>
+                    <div className="text-sm text-gray-500">Pending Testimonials</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setActiveTab('testimonials')}
+                  className="px-3 py-1 bg-pink-100 text-pink-800 rounded-lg text-sm font-medium hover:bg-pink-200 transition-colors"
+                >
+                  Review
+                </button>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                className="bg-white p-4 rounded-xl shadow-md flex justify-between items-center"
+              >
+                <div className="flex items-center">
+                  <div className="rounded-full bg-yellow-100 p-3 mr-4">
+                    <StarIcon className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">{ratingStats.averageRating.toFixed(1)}</div>
+                    <div className="text-sm text-gray-500">Average Rating</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setActiveTab('ratings')}
+                  className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-medium hover:bg-yellow-200 transition-colors"
+                >
+                  View
+                </button>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
                 className="bg-white p-4 rounded-xl shadow-md flex justify-between items-center"
               >
                 <div className="flex items-center">
@@ -952,8 +1278,442 @@ const RestaurantDashboard = () => {
             </div>
           </div>
         )}
+
+        {/* Testimonials Tab */}
+        {activeTab === 'testimonials' && (
+          <div className="space-y-6">
+            {/* Testimonial Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-white p-6 rounded-xl shadow-md">
+                <div className="flex items-center">
+                  <div className="rounded-full bg-blue-100 p-3 mr-4">
+                    <ChatBubbleLeftRightIcon className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-900">{testimonialStats.total}</div>
+                    <div className="text-sm text-gray-500">Total Testimonials</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white p-6 rounded-xl shadow-md">
+                <div className="flex items-center">
+                  <div className="rounded-full bg-yellow-100 p-3 mr-4">
+                    <ClockIcon className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-900">{testimonialStats.pending}</div>
+                    <div className="text-sm text-gray-500">Pending Approval</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white p-6 rounded-xl shadow-md">
+                <div className="flex items-center">
+                  <div className="rounded-full bg-green-100 p-3 mr-4">
+                    <CheckCircleIcon className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-900">{testimonialStats.approved}</div>
+                    <div className="text-sm text-gray-500">Approved</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white p-6 rounded-xl shadow-md">
+                <div className="flex items-center">
+                  <div className="rounded-full bg-purple-100 p-3 mr-4">
+                    <StarIcon className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-900">{testimonialStats.featured}</div>
+                    <div className="text-sm text-gray-500">Featured</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonials List */}
+            <div className="space-y-4">
+              {testimonials.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-xl">
+                  <ChatBubbleLeftRightIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No testimonials found</p>
+                </div>
+              ) : (
+                testimonials.map((testimonial) => (
+                  <TestimonialCard
+                    key={testimonial._id}
+                    testimonial={testimonial}
+                    onApprove={approveTestimonial}
+                    onFeature={setFeaturedTestimonial}
+                    onDelete={deleteTestimonial}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Ratings Tab */}
+        {activeTab === 'ratings' && (
+          <div className="space-y-6">
+            {/* Rating Overview */}
+            <div className="bg-white p-6 rounded-xl shadow-md">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Rating Overview</h3>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Overall Rating */}
+                <div className="text-center">
+                  <div className="text-6xl font-bold text-yellow-500 mb-2">
+                    {ratingStats.averageRating.toFixed(1)}
+                  </div>
+                  <div className="flex justify-center mb-2">
+                    {[...Array(5)].map((_, i) => (
+                      <StarIconSolid
+                        key={i}
+                        className={`h-8 w-8 ${
+                          i < Math.floor(ratingStats.averageRating)
+                            ? 'text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-gray-600">Based on {ratingStats.totalRatings} reviews</p>
+                </div>
+
+                {/* Rating Breakdown */}
+                <div className="space-y-3">
+                  {[5, 4, 3, 2, 1].map((star) => (
+                    <div key={star} className="flex items-center">
+                      <span className="text-sm w-4">{star}</span>
+                      <StarIconSolid className="h-4 w-4 text-yellow-400 ml-1 mr-3" />
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-yellow-400 h-2 rounded-full"
+                          style={{
+                            width: `${
+                              ratingStats.totalRatings > 0
+                                ? (ratingStats.ratingsBreakdown[star] / ratingStats.totalRatings) * 100
+                                : 0
+                            }%`
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-gray-600 ml-3 w-8">
+                        {ratingStats.ratingsBreakdown[star] || 0}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category Averages */}
+              <div className="mt-8">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Category Ratings</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  {Object.entries(ratingStats.categoryAverages).map(([category, average]) => (
+                    <div key={category} className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-2xl font-bold text-gray-900">{average.toFixed(1)}</div>
+                      <div className="text-sm text-gray-600 capitalize">
+                        {category.replace(/([A-Z])/g, ' $1').trim()}
+                      </div>
+                      <div className="flex justify-center mt-1">
+                        {[...Array(5)].map((_, i) => (
+                          <StarIconSolid
+                            key={i}
+                            className={`h-3 w-3 ${
+                              i < Math.floor(average) ? 'text-yellow-400' : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Ratings List */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-gray-900">Customer Reviews</h3>
+              {ratings.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-xl">
+                  <StarIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No ratings found</p>
+                </div>
+              ) : (
+                ratings.map((rating) => (
+                  <RatingCard
+                    key={rating._id}
+                    rating={rating}
+                    onModerate={moderateRating}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
+  );
+};
+
+// Testimonial Card Component
+const TestimonialCard = ({ testimonial, onApprove, onFeature, onDelete }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white rounded-xl shadow-md p-6"
+    >
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+            <span className="text-lg font-semibold text-gray-600">
+              {testimonial.user?.name?.charAt(0) || 'U'}
+            </span>
+          </div>
+          <div>
+            <h4 className="font-semibold text-gray-900">
+              {testimonial.user?.name || 'Anonymous User'}
+            </h4>
+            <p className="text-sm text-gray-500">
+              {format(new Date(testimonial.createdAt), 'PPp')}
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <div className="flex">
+            {[...Array(5)].map((_, i) => (
+              <StarIconSolid
+                key={i}
+                className={`h-4 w-4 ${
+                  i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+          <div className="flex items-center space-x-1">
+            {testimonial.isFeatured && (
+              <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                Featured
+              </span>
+            )}
+            {testimonial.isApproved ? (
+              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                Approved
+              </span>
+            ) : (
+              <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                Pending
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <p className="text-gray-700 mb-4">{testimonial.review}</p>
+
+      {testimonial.tags && testimonial.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {testimonial.tags.map((tag, index) => (
+            <span
+              key={index}
+              className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="flex justify-between items-center pt-4 border-t">
+        <div className="flex items-center space-x-4">
+          <button className="flex items-center space-x-1 text-gray-500 hover:text-red-500">
+            <HeartIcon className="h-4 w-4" />
+            <span className="text-sm">{testimonial.likes?.length || 0}</span>
+          </button>
+          <button className="flex items-center space-x-1 text-gray-500 hover:text-blue-500">
+            <FlagIcon className="h-4 w-4" />
+            <span className="text-sm">Report</span>
+          </button>
+        </div>
+
+        <div className="flex space-x-2">
+          {!testimonial.isApproved && (
+            <button
+              onClick={() => onApprove(testimonial._id)}
+              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+            >
+              Approve
+            </button>
+          )}
+          <button
+            onClick={() => onFeature(testimonial._id, !testimonial.isFeatured)}
+            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+              testimonial.isFeatured
+                ? 'bg-purple-100 text-purple-800 hover:bg-purple-200'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {testimonial.isFeatured ? 'Unfeature' : 'Feature'}
+          </button>
+          <button
+            onClick={() => onDelete(testimonial._id)}
+            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Rating Card Component
+const RatingCard = ({ rating, onModerate }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`bg-white rounded-xl shadow-md p-6 ${rating.isHidden ? 'opacity-50' : ''}`}
+    >
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+            <span className="text-lg font-semibold text-gray-600">
+              {rating.user?.name?.charAt(0) || 'U'}
+            </span>
+          </div>
+          <div>
+            <h4 className="font-semibold text-gray-900">
+              {rating.isAnonymous ? 'Anonymous User' : (rating.user?.name || 'User')}
+            </h4>
+            <p className="text-sm text-gray-500">
+              {format(new Date(rating.createdAt), 'PPp')}
+            </p>
+            {rating.isVerifiedPurchase && (
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                Verified Purchase
+              </span>
+            )}
+          </div>
+        </div>
+        
+        <div className="text-right">
+          <div className="flex items-center">
+            <StarIconSolid className="h-5 w-5 text-yellow-400 mr-1" />
+            <span className="font-semibold">{rating.overallRating}</span>
+          </div>
+          {rating.isHidden && (
+            <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium mt-1">
+              Hidden
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Category Ratings */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Food Quality</div>
+          <div className="flex justify-center">
+            {[...Array(5)].map((_, i) => (
+              <StarIconSolid
+                key={i}
+                className={`h-3 w-3 ${
+                  i < rating.foodQuality ? 'text-yellow-400' : 'text-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Delivery</div>
+          <div className="flex justify-center">
+            {[...Array(5)].map((_, i) => (
+              <StarIconSolid
+                key={i}
+                className={`h-3 w-3 ${
+                  i < rating.deliverySpeed ? 'text-yellow-400' : 'text-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Service</div>
+          <div className="flex justify-center">
+            {[...Array(5)].map((_, i) => (
+              <StarIconSolid
+                key={i}
+                className={`h-3 w-3 ${
+                  i < rating.customerService ? 'text-yellow-400' : 'text-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Value</div>
+          <div className="flex justify-center">
+            {[...Array(5)].map((_, i) => (
+              <StarIconSolid
+                key={i}
+                className={`h-3 w-3 ${
+                  i < rating.valueForMoney ? 'text-yellow-400' : 'text-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Packaging</div>
+          <div className="flex justify-center">
+            {[...Array(5)].map((_, i) => (
+              <StarIconSolid
+                key={i}
+                className={`h-3 w-3 ${
+                  i < rating.packaging ? 'text-yellow-400' : 'text-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {rating.reviewText && (
+        <p className="text-gray-700 mb-4">{rating.reviewText}</p>
+      )}
+
+      <div className="flex justify-between items-center pt-4 border-t">
+        <div className="flex items-center space-x-4">
+          <button className="flex items-center space-x-1 text-gray-500 hover:text-green-500">
+            <span className="text-sm">👍 {rating.helpfulVotes?.length || 0} helpful</span>
+          </button>
+          <button className="flex items-center space-x-1 text-gray-500 hover:text-red-500">
+            <ExclamationTriangleIcon className="h-4 w-4" />
+            <span className="text-sm">Report</span>
+          </button>
+        </div>
+
+        <div className="flex space-x-2">
+          <button
+            onClick={() => onModerate(rating._id, !rating.isHidden)}
+            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+              rating.isHidden
+                ? 'bg-green-500 hover:bg-green-600 text-white'
+                : 'bg-red-500 hover:bg-red-600 text-white'
+            }`}
+          >
+            {rating.isHidden ? 'Show' : 'Hide'}
+          </button>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
@@ -1065,56 +1825,44 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
               </div>
             </div>
 
-            {order.note && (
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Special Instructions:</h4>
-                <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">{order.note}</p>
-              </div>
-            )}
-
-            {order.nearestLandmark && (
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Nearest Landmark:</h4>
-                <p className="text-gray-700">{order.nearestLandmark}</p>
-              </div>
-            )}
-
-            {isPending && (
-              <div className="space-y-3">
-                <input
-                  type="number"
-                  placeholder="Additional fee (optional)"
-                  value={fees}
-                  onChange={(e) => setFees(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
-                />
-                <textarea
-                  placeholder="Request description (optional)"
-                  value={requestDescription}
-                  onChange={(e) => setRequestDescription(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
-                  rows="3"
-                />
+            {/* Action Buttons */}
+            <div className="flex space-x-3">
+              {isPending && (
+                <div className="flex-1 space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Request description..."
+                    value={requestDescription}
+                    onChange={(e) => setRequestDescription(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Delivery fee..."
+                    value={fees}
+                    onChange={(e) => setFees(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                  />
+                  <button
+                    onClick={onRequest}
+                    disabled={!fees || isRequesting}
+                    className="w-full bg-pepperoni text-white py-3 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                  >
+                    {isRequesting ? 'Requesting...' : 'Request Fee'}
+                  </button>
+                </div>
+              )}
+              
+              {isConfirmed && (
                 <button
-                  onClick={onRequest}
-                  disabled={isRequesting}
-                  className="w-full bg-cheese hover:bg-yellow-500 text-crust py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  onClick={markAsDelivered}
+                  disabled={isDelivering}
+                  className="flex-1 bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
                 >
-                  {isRequesting ? "Processing..." : "Confirm Order"}
+                  {isDelivering ? 'Marking as Delivered...' : 'Mark as Delivered'}
                 </button>
-              </div>
-            )}
-
-            {isConfirmed && (
-              <button
-                onClick={markAsDelivered}
-                disabled={isDelivering}
-                className="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
-              >
-                <TruckIcon className="h-5 w-5" />
-                <span>{isDelivering ? "Processing..." : "Mark as Delivered"}</span>
-              </button>
-            )}
+              )}
+            </div>
           </motion.div>
         )}
       </div>

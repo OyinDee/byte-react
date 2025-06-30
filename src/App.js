@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/authContext";
 import { CartProvider } from "./context/cartContext";
 import { NotificationProvider } from "./context/notificationContext";
 import { UniversitiesProvider } from "./context/universitiesContext";
+import { SecurityProvider } from "./context/securityContext";
 import NavbarWrapper from "./components/NavbarWrapper";
 import Home from "./pages/Home";
 import Login from "./components/Login";
@@ -43,13 +44,14 @@ function ScrollToTop() {
 function App() {
   return (
     <AuthProvider>
-      <UniversitiesProvider>
-        <NotificationProvider>
-          <CartProvider>
-            <Router>
-              <ScrollToTop />
-              <NavbarWrapper />
-              <Routes>
+      <SecurityProvider>
+        <UniversitiesProvider>
+          <NotificationProvider>
+            <CartProvider>
+              <Router>
+                <ScrollToTop />
+                <NavbarWrapper />
+                <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/login" element={<Login />} />
@@ -92,12 +94,12 @@ function App() {
               draggable
               pauseOnHover
               theme="light"
-            />
-          </Router>
-        </CartProvider>
-      </NotificationProvider>
-    </UniversitiesProvider>
-  </AuthProvider>
+            />              </Router>
+            </CartProvider>
+          </NotificationProvider>
+        </UniversitiesProvider>
+      </SecurityProvider>
+    </AuthProvider>
   );
 }
 

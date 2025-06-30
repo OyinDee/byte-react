@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { RingLoader } from "react-spinners";
+import LoadingPage from "../components/Loader";
 
 const ResetPassword = () => {
   const [email, setEmail] = useState("");
@@ -127,13 +127,7 @@ const ResetPassword = () => {
         <div className="absolute inset-0 bg-black opacity-50"></div>
       </div>
       {isLoading && (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-black text-accentwhite">
-          <RingLoader
-            color="#ff860d" 
-            size={100}
-            speedMultiplier={1.5}
-          />
-        </div>
+        <LoadingPage />
       )}{" "}
       <div
         className={`relative z-10 flex items-center justify-center min-h-screen ${

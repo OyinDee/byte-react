@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
-import { RingLoader } from "react-spinners";
+import LoadingPage from "./Loader";
 
 const PrivateRoute = ({ element, allowedRoles = [] }) => {
   const { auth, loading } = useAuth();
@@ -28,14 +28,7 @@ const PrivateRoute = ({ element, allowedRoles = [] }) => {
   }, [loading, auth, allowedRoles]);
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-black">
-        <RingLoader color="#ff860d" size={100} speedMultiplier={1.5} />
-        <p className="text-gray-300 mt-2">
-          Please wait a moment while we prepare your meal.
-        </p>
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (redirect) {

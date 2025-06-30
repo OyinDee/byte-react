@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { RingLoader } from "react-spinners";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingPage from "../components/Loader";
+import SecurityAlerts from "../components/SecurityAlerts";
+import SecurityTips from "../components/SecurityTips";
 import { 
   FaEdit, 
   FaMapMarkerAlt, 
@@ -20,10 +20,14 @@ import {
   FaUser,
   FaCrown,
   FaUniversity,
-  FaExchangeAlt
+  FaExchangeAlt,
+  FaShieldAlt,
+  FaExclamationTriangle
 } from "react-icons/fa";
 import { useUniversities } from "../context/universitiesContext";
 import { useNavigate } from 'react-router-dom';
+import { useSecurity } from "../context/securityContext";
+import { secureAPIService } from "../utils/secureAPI";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -37,20 +41,24 @@ const Profile = () => {
   const [updateLoading, setUpdateLoading] = useState(false); 
   const [error, setError] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [securityWarning, setSecurityWarning] = useState(null);
+  const [showSecurityTips, setShowSecurityTips] = useState(false);
   const navigate = useNavigate();
-  const { universities, loading: universitiesLoading } = useUniversities();
+  const { universities } = useUniversities();
+  const { 
+    riskScore, 
+    isBlocked, 
+    addSecurityAlert, 
+    validateImageUpload
+  } = useSecurity();
 
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          const response = await axios.get(
-            "https://mongobyte.onrender.com/api/v1/users/getProfile",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+          // Use secure API service
+          const response = await secureAPIService.getProfile();
           const decodedToken = jwtDecode(response.data.token);
           localStorage.setItem("token", response.data.token);
           localStorage.setItem("byteUser", JSON.stringify(decodedToken.user));
@@ -60,7 +68,16 @@ const Profile = () => {
           setNearestLandmark(decodedToken.user.nearestLandmark || "");
           setSelectedUniversity(decodedToken.user.university || "");
           setLoading(false);
+          console.log(decodedToken)
         } catch (error) {
+          console.error('Profile fetch error:', error);
+          
+          // Check if it's a security-related error
+          if (error.message.includes('wait') || error.message.includes('many')) {
+            setSecurityWarning(error.message);
+            addSecurityAlert('suspicious', error.message);
+          }
+          
           setError("Failed to load user data. Please try again later.");
           setLoading(false);
         }
@@ -70,7 +87,7 @@ const Profile = () => {
       }
     };
     fetchUser();
-  }, []);
+  }, [addSecurityAlert]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -81,6 +98,15 @@ const Profile = () => {
   const handleImageChange = (event) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
+      
+      // Validate image with fraud protection
+      const validation = validateImageUpload(file);
+      if (!validation.valid) {
+        addSecurityAlert('suspicious', validation.reason);
+        setSecurityWarning(validation.reason);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setSelectedImage(reader.result);
@@ -92,13 +118,15 @@ const Profile = () => {
   const handleImageUpload = async () => {
     if (!selectedImage) return;
     try {
-      const response = await axios.post(
-        "https://mongobyte.onrender.com/api/v1/users/upload",
-        { image: selectedImage }
-      );
+      // Use secure API service for image upload
+      const response = await secureAPIService.uploadImage(selectedImage);
       return response.data.url;
     } catch (error) {
-      console.error("Error uploading image:", error);
+      // Handle security-related errors
+      if (error.message.includes('wait') || error.message.includes('many')) {
+        addSecurityAlert('suspicious', error.message);
+        setSecurityWarning(error.message);
+      }
       throw error;
     }
   };
@@ -106,40 +134,54 @@ const Profile = () => {
   const updateUserProfile = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    setUpdateLoading(true); 
+    
+    // Check if user is blocked due to high risk
+    if (isBlocked) {
+      addSecurityAlert('blocked', 'Profile updates are temporarily disabled due to security concerns.');
+      return;
+    }
+
+    setUpdateLoading(true);
+    setSecurityWarning(null);
+    
     try {
       let imageUrl = user?.imageUrl;
       if (selectedImage) {
         imageUrl = await handleImageUpload();
       }
 
-      const data = await axios.put(
-        "https://mongobyte.onrender.com/api/v1/users/updateProfile",
-        { 
-          imageUrl, 
-          bio, 
-          location, 
-          nearestLandmark, 
-          university: selectedUniversity 
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      localStorage.setItem('token', data.data.token)
+      const profileData = { 
+        imageUrl, 
+        bio, 
+        location, 
+        nearestLandmark, 
+        university: selectedUniversity 
+      };
+
+      // Use secure API service with fraud protection
+      const data = await secureAPIService.updateProfile(profileData, user);
+      
+      localStorage.setItem('token', data.data.token);
       setUser((prevUser) => ({
         ...prevUser,
-        imageUrl,
-        bio,
-        location,
-        nearestLandmark,
-        university: selectedUniversity,
+        ...profileData,
       }));
       setIsModalOpen(false);
       setUpdateLoading(false);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
+      
     } catch (error) {
-      console.error("Error updating user profile:", error);
-      setUpdateLoading(false); 
+      console.error('Profile update error:', error);
+      setUpdateLoading(false);
+      
+      // Handle security-related errors
+      if (error.message.includes('wait') || error.message.includes('many') || error.message.includes('suspicious')) {
+        setSecurityWarning(error.message);
+        addSecurityAlert('suspicious', error.message);
+      } else {
+        setError('Failed to update profile. Please try again.');
+      }
     }
   };
 
@@ -181,6 +223,35 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 py-6 px-4 pt-20 md:pt-24 pb-24 md:pb-6">
+      {/* Security Alerts */}
+      <SecurityAlerts />
+      
+      {/* Security Warning Banner */}
+      <AnimatePresence>
+        {securityWarning && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-16 left-4 right-4 z-40 bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 shadow-lg"
+          >
+            <div className="flex items-center gap-3">
+              <FaExclamationTriangle className="text-yellow-600 text-xl" />
+              <div className="flex-1">
+                <h4 className="font-semibold text-yellow-800">Security Notice</h4>
+                <p className="text-yellow-700 text-sm">{securityWarning}</p>
+              </div>
+              <button
+                onClick={() => setSecurityWarning(null)}
+                className="text-yellow-600 hover:text-yellow-800"
+              >
+                <FaTimes />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Success Notification */}
       <AnimatePresence>
         {showSuccess && (
@@ -328,6 +399,32 @@ const Profile = () => {
             </div>
             <p className="text-sm text-gray-600 font-secondary font-bold">UNIVERSITY</p>
           </motion.div>
+
+          {/* Security Status */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ y: -5 }}
+            className={`bg-white rounded-2xl p-6 shadow-xl border-l-4 ${
+              riskScore < 20 ? 'border-green-500' : 
+              riskScore < 50 ? 'border-yellow-500' : 'border-red-500'
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <FaShieldAlt className={`text-xl ${
+                riskScore < 20 ? 'text-green-500' : 
+                riskScore < 50 ? 'text-yellow-500' : 'text-red-500'
+              }`} />
+              <span className={`text-sm font-bold ${
+                riskScore < 20 ? 'text-green-700' : 
+                riskScore < 50 ? 'text-yellow-700' : 'text-red-700'
+              }`}>
+                {riskScore < 20 ? 'SECURE' : 
+                 riskScore < 50 ? 'CAUTION' : 'HIGH RISK'}
+              </span>
+            </div>
+            <p className="text-xs text-gray-600 font-secondary font-bold">SECURITY STATUS</p>
+          </motion.div>
         </div>
 
         {/* Delivery Information */}
@@ -470,6 +567,16 @@ const Profile = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => setShowSecurityTips(true)}
+            className="flex-1 bg-green-500 text-white font-semibold py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-3 text-lg hover:bg-green-600 transition-all"
+          >
+            <FaShieldAlt />
+            Security Tips
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleLogout}
             className="flex-1 bg-gray-200 text-gray-800 font-semibold py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-3 text-lg hover:bg-gray-300 transition-all"
           >
@@ -607,9 +714,7 @@ const Profile = () => {
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-4">
                   {updateLoading ? (
-                    <div className="flex-1 flex justify-center py-4">
-                      <RingLoader color="#FCD34D" size={40} />
-                    </div>
+                    <LoadingPage />
                   ) : (
                     <>
                       <motion.button
@@ -638,6 +743,12 @@ const Profile = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Security Tips Modal */}
+      <SecurityTips 
+        isOpen={showSecurityTips} 
+        onClose={() => setShowSecurityTips(false)} 
+      />
     </div>
   );
 };

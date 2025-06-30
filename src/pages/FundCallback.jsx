@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
-import { RingLoader } from "react-spinners";
+import LoadingPage from "../components/Loader";
 
 
 const CallbackPage = () => {
@@ -18,7 +18,6 @@ const CallbackPage = () => {
         navigate("/user/profile");
       } catch (error) {
         // Handle error silently
-        console.error("Payment verification error:", error);
       }
     }
   }, [reference, navigate]);
@@ -30,15 +29,7 @@ const CallbackPage = () => {
   }, [reference, verifyPayment]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black">
-      <div className="z-10 flex flex-col items-center text-center">
-        <RingLoader
-          color="#ff860d" 
-          size={100}
-          speedMultiplier={1.5}
-        />
-        </div>
-    </div>
+    <LoadingPage />
   );
 };
 

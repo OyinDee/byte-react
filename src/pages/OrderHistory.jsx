@@ -41,7 +41,6 @@ const OrderHistory = () => {
 
         const sortedOrders = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         const paginatedOrders = sortedOrders.slice(0, page * ordersPerPage);
-        console.log(sortedOrders);
         if (isLoadMore) {
           setOrders((prevOrders) => [...prevOrders, ...paginatedOrders.slice(prevOrders.length)]);
         } else {
