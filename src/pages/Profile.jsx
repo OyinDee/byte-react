@@ -134,42 +134,73 @@ const Profile = () => {
     if (!token) return;
 
     setUpdateLoading(true);
-    
+
     try {
-      let imageUrl = user?.imageUrl;
+      // Only include fields that have changed
+      const updatedFields = {};
+
+      // Profile image
       if (selectedImage) {
-        imageUrl = await handleImageUpload();
+        const imageUrl = await handleImageUpload();
+        if (imageUrl && imageUrl !== user?.imageUrl) {
+          updatedFields.imageUrl = imageUrl;
+        }
       }
 
-      const profileData = { 
-        imageUrl, 
-        bio, 
-        location, 
-        nearestLandmark, 
-        university: selectedUniversity 
-      };
+      // Bio
+      if (bio !== (user?.bio || "")) {
+        updatedFields.bio = bio;
+      }
+
+      // Location
+      if (location !== (user?.location || "")) {
+        updatedFields.location = location;
+      }
+
+      // Nearest Landmark
+      if (nearestLandmark !== (user?.nearestLandmark || "")) {
+        updatedFields.nearestLandmark = nearestLandmark;
+      }
+
+      // University (handle both string and object cases)
+      let currentUniversityId = "";
+      if (typeof user?.university === "object" && user?.university?._id) {
+        currentUniversityId = user.university._id;
+      } else if (typeof user?.university === "string") {
+        currentUniversityId = user.university;
+      }
+      if (selectedUniversity !== (currentUniversityId || "")) {
+        updatedFields.university = selectedUniversity;
+      }
+
+      // If nothing changed, do nothing
+      if (Object.keys(updatedFields).length === 0) {
+        setIsModalOpen(false);
+        setUpdateLoading(false);
+        return;
+      }
 
       // Use regular axios for profile update
       await axios.put(
         "https://mongobyte.onrender.com/api/v1/users/updateProfile",
-        profileData,
+        updatedFields,
         {
-          headers: { 
+          headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json" 
+            "Content-Type": "application/json"
           },
         }
       );
-      
+
       setUser((prevUser) => ({
         ...prevUser,
-        ...profileData,
+        ...updatedFields,
       }));
       setIsModalOpen(false);
       setUpdateLoading(false);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-      
+
     } catch (error) {
       console.error('Profile update error:', error);
       setError("Failed to update profile. Please try again.");
