@@ -13,7 +13,7 @@ const CallbackPage = () => {
     if (reference) {
       try {
         await axios.get(
-          `https://mongobyte.onrender.com/api/v1/pay/callback?reference=${reference}`
+          `https://mongobyte.vercel.app/api/v1/pay/callback?reference=${reference}`
         );
         navigate("/user/profile");
       } catch (error) {

@@ -113,7 +113,7 @@ const CartPage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch("https://mongobyte.onrender.com/api/v1/orders/create", {
+      const response = await fetch("https://mongobyte.vercel.app/api/v1/orders/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -180,7 +180,7 @@ const CartPage = () => {
           // Payment successful, now create the order
           try {
             const token = localStorage.getItem('token');
-            const orderResponse = await fetch("https://mongobyte.onrender.com/api/v1/orders/create", {
+            const orderResponse = await fetch("https://mongobyte.vercel.app/api/v1/orders/create", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

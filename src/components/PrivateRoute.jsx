@@ -17,7 +17,7 @@ const PrivateRoute = ({ element, allowedRoles = [] }) => {
       ) {
         // If specific roles are required and user doesn't have permission
         setRedirect(auth.restaurant ? "/restaurant/dashboard" : "/user");
-      } else if (auth.user && auth.user.role === "superadmin" && (window.location.pathname.startsWith("/restaurant") || window.location.pathname.startsWith("/user"))) {
+      } else if (auth.user && auth.user.superAdmin && (window.location.pathname.startsWith("/restaurant") || window.location.pathname.startsWith("/user"))) {
         setRedirect("/superadmin/dashboard");
       } else if (auth.user && window.location.pathname.startsWith("/restaurant") && !window.location.pathname.includes("/restaurant/signup")) {
         setRedirect("/user");

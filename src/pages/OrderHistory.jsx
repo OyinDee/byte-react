@@ -35,7 +35,7 @@ const OrderHistory = () => {
     if (token && byteUser?.username) {
       try {
         const response = await axios.get(
-          `https://mongobyte.onrender.com/api/v1/users/orders/${byteUser.username}`,
+          `https://mongobyte.vercel.app/api/v1/users/orders/${byteUser.username}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -79,7 +79,7 @@ const OrderHistory = () => {
 
     try {
       await axios.post(
-        `https://mongobyte.onrender.com/api/v1/orders/${orderId}/status`,
+        `https://mongobyte.vercel.app/api/v1/orders/${orderId}/status`,
         { action: 'accept' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -104,7 +104,7 @@ const OrderHistory = () => {
 
     try {
       await axios.post(
-        `https://mongobyte.onrender.com/api/v1/orders/${orderId}/status`,
+        `https://mongobyte.vercel.app/api/v1/orders/${orderId}/status`,
         { action: 'cancel' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );

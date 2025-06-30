@@ -24,7 +24,7 @@ const Notifications = () => {
       setLoading(true);
       setError(null);
 
-      const response = await axios.get(`https://mongobyte.onrender.com/api/v1/users/notifications`, {
+      const response = await axios.get(`https://mongobyte.vercel.app/api/v1/users/notifications`, {
         headers: {
           Authorization: `Bearer ${token}`,
         }

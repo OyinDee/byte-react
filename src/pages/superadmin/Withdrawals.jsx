@@ -41,7 +41,7 @@ const Withdrawals = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "https://mongobyte.onrender.com/api/superadmin/withdrawals",
+        "https://mongobyte.vercel.app/api/superadmin/withdrawals",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -71,7 +71,7 @@ const Withdrawals = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `https://mongobyte.onrender.com/api/superadmin/withdrawals/${withdrawalId}`,
+        `https://mongobyte.vercel.app/api/superadmin/withdrawals/${withdrawalId}`,
         { status },
         {
           headers: { Authorization: `Bearer ${token}` },

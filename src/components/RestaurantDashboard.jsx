@@ -120,7 +120,7 @@ const RestaurantDashboard = () => {
         
         // Fetch restaurant data
         const restaurantResponse = await axios.get(
-          `https://mongobyte.onrender.com/api/v1/restaurants/${restaurantCustomId}`,
+          `https://mongobyte.vercel.app/api/v1/restaurants/${restaurantCustomId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -208,7 +208,7 @@ const RestaurantDashboard = () => {
   const fetchDashboardStats = useCallback(async (restaurantId, token) => {
     try {
       const response = await axios.get(
-        `https://mongobyte.onrender.com/api/v1/restaurants/${restaurantId}/stats?range=${dateRange}`,
+        `https://mongobyte.vercel.app/api/v1/restaurants/${restaurantId}/stats?range=${dateRange}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -231,7 +231,7 @@ const RestaurantDashboard = () => {
 
     try {
       const response = await axios.post(
-        "https://mongobyte.onrender.com/api/v1/restaurants/withdraw",
+        "https://mongobyte.vercel.app/api/v1/restaurants/withdraw",
         { 
           restaurantName: restaurant.name, 
           amount: parseFloat(restaurant.walletBalance) 
@@ -254,7 +254,7 @@ const RestaurantDashboard = () => {
   const fetchOrders = async (restaurantId, token) => {
     try {
       const response = await axios.get(
-        `https://mongobyte.onrender.com/api/v1/orders/restaurant/${restaurantId}`,
+        `https://mongobyte.vercel.app/api/v1/orders/restaurant/${restaurantId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -273,7 +273,7 @@ const RestaurantDashboard = () => {
   const fetchTestimonials = async (restaurantId, token) => {
     try {
       const response = await axios.get(
-        `https://mongobyte.onrender.com/api/v1/testimonials?restaurant=${restaurantId}`,
+        `https://mongobyte.vercel.app/api/v1/testimonials?restaurant=${restaurantId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -295,7 +295,7 @@ const RestaurantDashboard = () => {
   const fetchRatings = async (restaurantId, token) => {
     try {
       const response = await axios.get(
-        `https://mongobyte.onrender.com/api/v1/ratings/restaurant/${restaurantId}`,
+        `https://mongobyte.vercel.app/api/v1/ratings/restaurant/${restaurantId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -340,7 +340,7 @@ const RestaurantDashboard = () => {
     const token = localStorage.getItem("token");
     try {
       await axios.put(
-        `https://mongobyte.onrender.com/api/v1/testimonials/${testimonialId}/approve`,
+        `https://mongobyte.vercel.app/api/v1/testimonials/${testimonialId}/approve`,
         { isApproved: true },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -357,7 +357,7 @@ const RestaurantDashboard = () => {
     const token = localStorage.getItem("token");
     try {
       await axios.put(
-        `https://mongobyte.onrender.com/api/v1/testimonials/${testimonialId}/featured`,
+        `https://mongobyte.vercel.app/api/v1/testimonials/${testimonialId}/featured`,
         { isFeatured },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -376,7 +376,7 @@ const RestaurantDashboard = () => {
     
     try {
       await axios.delete(
-        `https://mongobyte.onrender.com/api/v1/testimonials/${testimonialId}`,
+        `https://mongobyte.vercel.app/api/v1/testimonials/${testimonialId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -392,7 +392,7 @@ const RestaurantDashboard = () => {
     const token = localStorage.getItem("token");
     try {
       await axios.put(
-        `https://mongobyte.onrender.com/api/v1/ratings/${ratingId}/moderate`,
+        `https://mongobyte.vercel.app/api/v1/ratings/${ratingId}/moderate`,
         { isHidden, adminNotes: `${isHidden ? 'Hidden' : 'Shown'} by restaurant admin` },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -413,7 +413,7 @@ const RestaurantDashboard = () => {
     const token = localStorage.getItem("token");
     try {
       await axios.patch(
-        `https://mongobyte.onrender.com/api/v1/restaurants/${restaurant.customId}/toggle-active`,
+        `https://mongobyte.vercel.app/api/v1/restaurants/${restaurant.customId}/toggle-active`,
         {},
         {
           headers: {
@@ -434,7 +434,7 @@ const RestaurantDashboard = () => {
     const token = localStorage.getItem("token");
     try {
       await axios.patch(
-        `https://mongobyte.onrender.com/api/v1/orders/${orderId}/status`,
+        `https://mongobyte.vercel.app/api/v1/orders/${orderId}/status`,
         { status: newStatus },
         {
           headers: {
@@ -464,7 +464,7 @@ const RestaurantDashboard = () => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.get(
-        `https://mongobyte.onrender.com/api/v1/orders/restaurant/${restaurant.customId}/export`,
+        `https://mongobyte.vercel.app/api/v1/orders/restaurant/${restaurant.customId}/export`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -507,7 +507,7 @@ const RestaurantDashboard = () => {
       const endDate = format(new Date(), 'yyyy-MM-dd');
       
       const response = await axios.get(
-        `https://mongobyte.onrender.com/api/v1/orders/restaurant/${restaurant.customId}/report`,
+        `https://mongobyte.vercel.app/api/v1/orders/restaurant/${restaurant.customId}/report`,
         {
           params: { startDate, endDate },
           headers: {
@@ -549,7 +549,7 @@ const RestaurantDashboard = () => {
       const today = format(new Date(), 'yyyy-MM-dd');
       
       const response = await axios.get(
-        `https://mongobyte.onrender.com/api/v1/orders/restaurant/${restaurant.customId}/daily-report`,
+        `https://mongobyte.vercel.app/api/v1/orders/restaurant/${restaurant.customId}/daily-report`,
         {
           params: { date: today },
           headers: {
@@ -1739,7 +1739,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
       const token = localStorage.getItem("token");
       try {
         const response = await axios.patch(
-          `https://mongobyte.onrender.com/api/v1/orders/deliver/${order.customId}`,
+          `https://mongobyte.vercel.app/api/v1/orders/deliver/${order.customId}`,
           {},
           {
             headers: {

@@ -39,7 +39,7 @@ const Orders = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "https://mongobyte.onrender.com/api/superadmin/orders",
+        "https://mongobyte.vercel.app/api/superadmin/orders",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -70,7 +70,7 @@ const Orders = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `https://mongobyte.onrender.com/api/superadmin/orders/${orderId}`,
+        `https://mongobyte.vercel.app/api/superadmin/orders/${orderId}`,
         { status },
         {
           headers: { Authorization: `Bearer ${token}` },

@@ -60,7 +60,7 @@ const Profile = () => {
         try {
           // Use regular axios API call
           const response = await axios.get(
-            "https://mongobyte.onrender.com/api/v1/users/getProfile",
+            "https://mongobyte.vercel.app/api/v1/users/getProfile",
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -113,7 +113,7 @@ const Profile = () => {
     try {
       // Use regular axios for image upload
       const response = await axios.post(
-        "https://mongobyte.onrender.com/api/v1/users/upload",
+        "https://mongobyte.vercel.app/api/v1/users/upload",
         { image: selectedImage },
         {
           headers: { 
@@ -151,7 +151,7 @@ const Profile = () => {
       };
 
       await axios.put(
-        "https://mongobyte.onrender.com/api/v1/users/updateProfile",
+        "https://mongobyte.vercel.app/api/v1/users/updateProfile",
         profileData,
         {
           headers: {

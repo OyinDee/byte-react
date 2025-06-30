@@ -54,7 +54,7 @@ const Restaurants = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "https://mongobyte.onrender.com/api/superadmin/allrestaurants",
+        "https://mongobyte.vercel.app/api/superadmin/allrestaurants",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -81,7 +81,7 @@ const Restaurants = () => {
 
   const fetchUniversities = async () => {
     try {
-      const response = await axios.get("https://mongobyte.onrender.com/api/v1/universities");
+      const response = await axios.get("https://mongobyte.vercel.app/api/v1/universities");
       setUniversities(response.data.data);
     } catch (error) {
       console.error("Error fetching universities:", error);
@@ -123,7 +123,7 @@ const Restaurants = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `https://mongobyte.onrender.com/api/superadmin/restaurants/${selectedRestaurant._id}`,
+        `https://mongobyte.vercel.app/api/superadmin/restaurants/${selectedRestaurant._id}`,
         editedRestaurant,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -162,7 +162,7 @@ const Restaurants = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `https://mongobyte.onrender.com/api/superadmin/restaurants/${selectedRestaurant._id}`,
+        `https://mongobyte.vercel.app/api/superadmin/restaurants/${selectedRestaurant._id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

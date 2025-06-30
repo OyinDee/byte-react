@@ -101,7 +101,7 @@ const SuperAdminDashboard = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `https://mongobyte.onrender.com/api/superadmin/dashboard?range=${dateRange}`,
+        `https://mongobyte.vercel.app/api/superadmin/dashboard?range=${dateRange}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -118,7 +118,7 @@ const SuperAdminDashboard = () => {
 
   const fetchUniversities = async () => {
     try {
-      const response = await axios.get("https://mongobyte.onrender.com/api/v1/universities");
+      const response = await axios.get("https://mongobyte.vercel.app/api/v1/universities");
       setUniversities(response.data.data);
     } catch (error) {
       console.error("Error fetching universities:", error);

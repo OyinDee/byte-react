@@ -43,8 +43,8 @@ const CombinedPage = () => {
         
         // If user has a university, filter restaurants by it
         const url = universityId 
-          ? `https://mongobyte.onrender.com/api/v1/restaurants?university=${universityId}`
-          : "https://mongobyte.onrender.com/api/v1/restaurants";
+          ? `https://mongobyte.vercel.app/api/v1/restaurants?university=${universityId}`
+          : "https://mongobyte.vercel.app/api/v1/restaurants";
           
         const response = await axios.get(url);
         const restaurantsData = response.data.data || response.data;

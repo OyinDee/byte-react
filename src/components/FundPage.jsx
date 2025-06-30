@@ -34,7 +34,7 @@ const FundPage = () => {
       if (token) {
         try {
           const response = await axios.get(
-            "https://mongobyte.onrender.com/api/v1/users/getProfile",
+            "https://mongobyte.vercel.app/api/v1/users/getProfile",
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -77,7 +77,7 @@ const FundPage = () => {
 
     try {
       const response = await fetch(
-        "https://mongobyte.onrender.com/api/v1/pay/pay",
+        "https://mongobyte.vercel.app/api/v1/pay/pay",
         {
           method: "POST",
           headers: {
@@ -118,7 +118,7 @@ const FundPage = () => {
 
     try {
       const response = await axios.post(
-        "https://mongobyte.onrender.com/api/v1/users/transfer",
+        "https://mongobyte.vercel.app/api/v1/users/transfer",
         {
           recipientUsername,
           amount: transferAmount,

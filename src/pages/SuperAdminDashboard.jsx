@@ -24,7 +24,7 @@ const SuperAdminDashboard = () => {
       setLoading(true); 
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("https://mongobyte.onrender.com/api/superadmin/allrestaurants", {
+        const response = await axios.get("https://mongobyte.vercel.app/api/superadmin/allrestaurants", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setRestaurants(response.data);
@@ -58,7 +58,7 @@ const SuperAdminDashboard = () => {
     if (!selectedImage) return "";
     try {
       const response = await axios.post(
-        "https://mongobyte.onrender.com/api/v1/users/upload",
+        "https://mongobyte.vercel.app/api/v1/users/upload",
         { image: selectedImage }
       );
       return response.data.url;
@@ -78,7 +78,7 @@ const SuperAdminDashboard = () => {
         imageUrl = await handleImageUpload();
       }
 
-      await axios.post("https://mongobyte.onrender.com/api/superadmin/restaurants", {
+      await axios.post("https://mongobyte.vercel.app/api/superadmin/restaurants", {
         ...newRestaurant,
         imageUrl,
       }, {
@@ -86,7 +86,7 @@ const SuperAdminDashboard = () => {
       });
 
       toast.success("Restaurant added successfully!");
-      const response = await axios.get("https://mongobyte.onrender.com/api/superadmin/allrestaurants", {
+      const response = await axios.get("https://mongobyte.vercel.app/api/superadmin/allrestaurants", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRestaurants(response.data);

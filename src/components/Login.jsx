@@ -43,7 +43,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://mongobyte.onrender.com/api/v1/auth/login', {
+      const response = await axios.post('https://mongobyte.vercel.app/api/v1/auth/login', {
         username: username.trim(),
         password: password.trim(),
       });

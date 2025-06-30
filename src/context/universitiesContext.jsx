@@ -14,7 +14,7 @@ export const UniversitiesProvider = ({ children }) => {
 
   const fetchUniversities = async () => {
     try {
-      const response = await axios.get('https://mongobyte.onrender.com/api/v1/universities');
+      const response = await axios.get('https://mongobyte.vercel.app/api/v1/universities');
       setUniversities(response.data.data.filter(uni => uni.isActive));
       setLoading(false);
     } catch (error) {

@@ -73,7 +73,7 @@ const RestaurantSignup = () => {
     try {
       const fullPhoneNumber = `${phoneCode}${phoneNumber}`;
 
-      await axios.post("https://mongobyte.onrender.com/api/v1/restaurants/register", {
+      await axios.post("https://mongobyte.vercel.app/api/v1/restaurants/register", {
         name: name.trim(),
         email: email.trim(),
         password,
