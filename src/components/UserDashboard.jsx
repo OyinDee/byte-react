@@ -80,13 +80,6 @@ const CombinedPage = () => {
     );
   });
 
-  // Handler for Find Food button
-  const handleFindFood = () => {
-    if (searchQuery.trim() && filteredRestaurants.length === 0) {
-      toast.info("No food or restaurant found matching your search.");
-    }
-  };
-
   const handleRestaurantClick = (restaurant) => {
     if (!restaurant.isActive) {
       toast.warn("This restaurant is unavailable, you won't be able to place an order.");
@@ -182,17 +175,11 @@ const CombinedPage = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for your favorite restaurants or meals... 🔍"
-                className="block w-full pl-12 pr-4 py-5 border-2 border-orange-200 rounded-3xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-4 focus:ring-pepperoni/20 focus:border-pepperoni text-lg shadow-xl transition-all duration-300 font-sans placeholder:text-sm"
+                placeholder="Search restaurants or meals... 🔍"
+                className="block w-full pl-12 pr-4 py-5 border-2 border-orange-200 rounded-3xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-4 focus:ring-pepperoni/20 focus:border-pepperoni text-lg shadow-xl transition-all duration-300 font-sans"
               />
               <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
-                <button
-                  type="button"
-                  className="bg-gradient-to-r from-pepperoni to-red-600 text-white px-4 py-2 rounded-2xl text-sm font-medium focus:outline-none"
-                  onClick={handleFindFood}
-                >
-                  Find Food
-                </button>
+                {/* Find Food button removed as per user request */}
               </div>
             </div>
           </motion.div>

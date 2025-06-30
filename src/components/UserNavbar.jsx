@@ -9,6 +9,7 @@ import {
   UserIcon,
   ArrowRightOnRectangleIcon,
   AcademicCapIcon,
+  BanknotesIcon,
 } from "@heroicons/react/24/outline";
 import { useCart } from "../context/cartContext";
 import { checkNotificationPermission, subscribeUserToPush } from "../utils/notificationUtil";
@@ -110,6 +111,14 @@ const UserNavbar = () => {
               >
                 <BellIcon className="w-5 h-5" />
                 <span className="font-medium">Notifications</span>
+              </Link>
+
+              <Link
+                to="/user/fund"
+                className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 ${getLinkClassName("/user/fund")}`}
+              >
+                <BanknotesIcon className="w-5 h-5" />
+                <span className="font-medium">Fund</span>
               </Link>
               
               <div className="relative">
@@ -243,6 +252,14 @@ const UserNavbar = () => {
             >
               <BellIcon className="w-6 h-6 mb-1 text-current" />
               <span className="text-xs font-medium text-current">Notifs</span>
+            </Link>
+
+            <Link
+              to="/user/fund"
+              className={`flex flex-col items-center justify-center px-4 py-3 rounded-xl transition-all duration-300 ${getMobileLinkClassName("/user/fund")}`}
+            >
+              <BanknotesIcon className="w-6 h-6 mb-1 text-current" />
+              <span className="text-xs font-medium text-current">Fund</span>
             </Link>
             
             <Link
