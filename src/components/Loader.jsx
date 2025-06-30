@@ -87,7 +87,7 @@ const LoadingPage = () => {
             transition={{ duration: 2, repeat: Infinity }}
           >
             <img 
-              src="/Images/Logo 14.png" 
+              src="/Images/Logo 8.jpg" 
               alt="Byte Logo" 
               className="w-full h-full object-cover"
               onError={(e) => {
