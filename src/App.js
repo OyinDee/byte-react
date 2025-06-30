@@ -6,7 +6,6 @@ import { AuthProvider } from "./context/authContext";
 import { CartProvider } from "./context/cartContext";
 import { NotificationProvider } from "./context/notificationContext";
 import { UniversitiesProvider } from "./context/universitiesContext";
-import { SecurityProvider } from "./context/securityContext";
 import NavbarWrapper from "./components/NavbarWrapper";
 import Home from "./pages/Home";
 import Login from "./components/Login";
@@ -44,7 +43,6 @@ function ScrollToTop() {
 function App() {
   return (
     <AuthProvider>
-      <SecurityProvider>
         <UniversitiesProvider>
           <NotificationProvider>
             <CartProvider>
