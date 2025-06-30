@@ -175,7 +175,7 @@ const CombinedPage = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search restaurants or meals... 🔍"
+                placeholder="Search restaurants or meals... "
                 className="block w-full pl-12 pr-4 py-5 border-2 border-orange-200 rounded-3xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-4 focus:ring-pepperoni/20 focus:border-pepperoni text-lg shadow-xl transition-all duration-300 font-sans"
               />
               <div className="absolute inset-y-0 right-0 pr-4 flex items-center">

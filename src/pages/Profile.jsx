@@ -136,54 +136,23 @@ const Profile = () => {
     setUpdateLoading(true);
 
     try {
-      // Only include fields that have changed
-      const updatedFields = {};
-
-      // Profile image
+      // Always use the latest value for each field, falling back to user state if unchanged
+      let imageUrl = user?.imageUrl;
       if (selectedImage) {
-        const imageUrl = await handleImageUpload();
-        if (imageUrl && imageUrl !== user?.imageUrl) {
-          updatedFields.imageUrl = imageUrl;
-        }
+        imageUrl = await handleImageUpload();
       }
 
-      // Bio
-      if (bio !== (user?.bio || "")) {
-        updatedFields.bio = bio;
-      }
+      const profileData = {
+        imageUrl: imageUrl || user?.imageUrl || "",
+        bio: bio !== undefined ? bio : user?.bio || "",
+        location: location !== undefined ? location : user?.location || "",
+        nearestLandmark: nearestLandmark !== undefined ? nearestLandmark : user?.nearestLandmark || "",
+        university: selectedUniversity !== undefined ? selectedUniversity : (typeof user?.university === 'object' ? user?.university?._id : user?.university) || ""
+      };
 
-      // Location
-      if (location !== (user?.location || "")) {
-        updatedFields.location = location;
-      }
-
-      // Nearest Landmark
-      if (nearestLandmark !== (user?.nearestLandmark || "")) {
-        updatedFields.nearestLandmark = nearestLandmark;
-      }
-
-      // University (handle both string and object cases)
-      let currentUniversityId = "";
-      if (typeof user?.university === "object" && user?.university?._id) {
-        currentUniversityId = user.university._id;
-      } else if (typeof user?.university === "string") {
-        currentUniversityId = user.university;
-      }
-      if (selectedUniversity !== (currentUniversityId || "")) {
-        updatedFields.university = selectedUniversity;
-      }
-
-      // If nothing changed, do nothing
-      if (Object.keys(updatedFields).length === 0) {
-        setIsModalOpen(false);
-        setUpdateLoading(false);
-        return;
-      }
-
-      // Use regular axios for profile update
       await axios.put(
         "https://mongobyte.onrender.com/api/v1/users/updateProfile",
-        updatedFields,
+        profileData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -194,7 +163,7 @@ const Profile = () => {
 
       setUser((prevUser) => ({
         ...prevUser,
-        ...updatedFields,
+        ...profileData,
       }));
       setIsModalOpen(false);
       setUpdateLoading(false);
@@ -529,7 +498,7 @@ const Profile = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={openModal}
-            className="flex-1 bg-crust text-white font-semibold py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-3 text-lg sm:text-base xs:text-sm hover:bg-gray-900 transition-all"
+            className="flex-1 bg-crust text-white font-semibold py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-3 text-lg hover:bg-gray-900 transition-all"
           >
             <FaEdit className="text-cheese" />
             Edit Profile
@@ -539,7 +508,7 @@ const Profile = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate('/user/fund')}
-            className="flex-1 bg-cheese text-crust font-semibold py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-3 text-lg sm:text-base xs:text-sm hover:bg-yellow-400 transition-all"
+            className="flex-1 bg-cheese text-crust font-semibold py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-3 text-lg hover:bg-yellow-400 transition-all"
           >
             <FaWallet />
             Add Funds
@@ -549,7 +518,7 @@ const Profile = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate('/user/orderhistory')}
-            className="flex-1 bg-pepperoni text-white font-semibold py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-3 text-lg sm:text-base xs:text-sm hover:bg-red-700 transition-all"
+            className="flex-1 bg-pepperoni text-white font-semibold py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-3 text-lg hover:bg-red-700 transition-all"
           >
             <FaHistory />
             Order History
@@ -559,7 +528,7 @@ const Profile = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleLogout}
-            className="flex-1 bg-gray-200 text-gray-800 font-semibold py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-3 text-lg sm:text-base xs:text-sm hover:bg-gray-300 transition-all"
+            className="flex-1 bg-gray-200 text-gray-800 font-semibold py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-3 text-lg hover:bg-gray-300 transition-all"
           >
             <FaSignOutAlt />
             Sign Out
@@ -635,7 +604,7 @@ const Profile = () => {
                   <textarea
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent resize-none hover:border-cheese transition-colors placeholder:text-center"
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent resize-none hover:border-cheese transition-colors"
                     rows="4"
                     placeholder="Tell us about yourself..."
                     maxLength={200}
@@ -652,7 +621,7 @@ const Profile = () => {
                     type="text"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent hover:border-cheese transition-colors placeholder:text-center"
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent hover:border-cheese transition-colors"
                     placeholder="Your delivery location..."
                   />
                 </div>
@@ -664,7 +633,7 @@ const Profile = () => {
                     type="text"
                     value={nearestLandmark}
                     onChange={(e) => setNearestLandmark(e.target.value)}
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent hover:border-cheese transition-colors placeholder:text-center"
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent hover:border-cheese transition-colors"
                     placeholder="Nearby landmark..."
                   />
                 </div>
@@ -678,7 +647,7 @@ const Profile = () => {
                   <select
                     value={selectedUniversity}
                     onChange={(e) => setSelectedUniversity(e.target.value)}
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent hover:border-cheese transition-colors placeholder:text-center"
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent hover:border-cheese transition-colors"
                   >
                     <option value="">Select your university</option>
                     {universities.map((university) => (
