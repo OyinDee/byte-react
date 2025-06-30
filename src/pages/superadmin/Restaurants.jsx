@@ -19,6 +19,7 @@ import {
 } from "@heroicons/react/24/outline";
 import LoadingPage from "../../components/Loader";
 import { toast } from "react-toastify";
+import { FaUpload, FaCamera, FaCheckCircle } from "react-icons/fa";
 
 const Restaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -34,7 +35,10 @@ const Restaurants = () => {
     location: "",
     contactNumber: "",
     isActive: true,
-    university: ""
+    university: "",
+    bankName: "",
+    accountNumber: "",
+    accountHolder: ""
   });
   const [universities, setUniversities] = useState([]);
   const [stats, setStats] = useState({
@@ -43,6 +47,24 @@ const Restaurants = () => {
     inactive: 0,
     withMenu: 0
   });
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newRestaurant, setNewRestaurant] = useState({
+    name: "",
+    email: "",
+    university: "",
+    location: "",
+    description: "",
+    contactNumber: "",
+    imageUrl: "",
+    bankName: "",
+    accountNumber: "",
+    accountHolder: ""
+  });
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [detailsRestaurant, setDetailsRestaurant] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [selectedCreateImage, setSelectedCreateImage] = useState(null);
+  const [selectedEditImage, setSelectedEditImage] = useState(null);
 
   useEffect(() => {
     fetchRestaurants();
@@ -54,7 +76,7 @@ const Restaurants = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "https://mongobyte.vercel.app/api/superadmin/allrestaurants",
+        "https://mongobyte.vercel.app/api/v1/restaurants",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -67,7 +89,7 @@ const Restaurants = () => {
         total: response.data.length,
         active: response.data.filter(r => r.isActive).length,
         inactive: response.data.filter(r => !r.isActive).length,
-        withMenu: response.data.filter(r => r.menu && r.menu.length > 0).length
+        withMenu: response.data.filter(r => Array.isArray(r.meals) && r.meals.length > 0).length
       };
       
       setStats(stats);
@@ -101,7 +123,10 @@ const Restaurants = () => {
       location: restaurant.location || "",
       contactNumber: restaurant.contactNumber || "",
       isActive: restaurant.isActive,
-      university: restaurant.university || ""
+      university: restaurant.university || "",
+      bankName: restaurant.bankName || "",
+      accountNumber: restaurant.accountNumber || "",
+      accountHolder: restaurant.accountHolder || ""
     });
     setIsEditModalOpen(true);
   };
@@ -119,25 +144,39 @@ const Restaurants = () => {
     });
   };
 
+  const handleEditImageChange = (event) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedEditImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmitEdit = async () => {
     try {
       const token = localStorage.getItem("token");
+      let imageUrl = editedRestaurant.imageUrl;
+      if (selectedEditImage) {
+        imageUrl = await uploadImage(selectedEditImage);
+      }
       await axios.put(
-        `https://mongobyte.vercel.app/api/superadmin/restaurants/${selectedRestaurant._id}`,
-        editedRestaurant,
+        `https://mongobyte.vercel.app/api/v1/restaurants/${selectedRestaurant._id}`,
+        { ...editedRestaurant, imageUrl },
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
         }
       );
-      
-      // Update the restaurants list
       setRestaurants(restaurants.map(restaurant => 
         restaurant._id === selectedRestaurant._id 
-          ? { ...restaurant, ...editedRestaurant } 
+          ? { ...restaurant, ...editedRestaurant, imageUrl } 
           : restaurant
       ));
-      
-      // Update stats if isActive status changed
       if (selectedRestaurant.isActive !== editedRestaurant.isActive) {
         setStats({
           ...stats,
@@ -149,11 +188,10 @@ const Restaurants = () => {
             : stats.inactive + 1
         });
       }
-      
       setIsEditModalOpen(false);
+      setSelectedEditImage(null);
       toast.success("Restaurant updated successfully");
     } catch (error) {
-      console.error("Error updating restaurant:", error);
       toast.error("Failed to update restaurant");
     }
   };
@@ -162,7 +200,7 @@ const Restaurants = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `https://mongobyte.vercel.app/api/superadmin/restaurants/${selectedRestaurant._id}`,
+        `https://mongobyte.vercel.app/api/v1/restaurants/${selectedRestaurant._id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -187,6 +225,117 @@ const Restaurants = () => {
     } catch (error) {
       console.error("Error deleting restaurant:", error);
       toast.error("Failed to delete restaurant");
+    }
+  };
+
+  const handleCreateInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewRestaurant({
+      ...newRestaurant,
+      [name]: value
+    });
+  };
+
+  const handleCreateImageChange = (event) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedCreateImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCreateRestaurant = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      let imageUrl = newRestaurant.imageUrl;
+      if (selectedCreateImage) {
+        imageUrl = await uploadImage(selectedCreateImage);
+      }
+      await axios.post(
+        "https://mongobyte.vercel.app/api/v1/restaurants/create",
+        { ...newRestaurant, imageUrl },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Restaurant created successfully");
+      setIsCreateModalOpen(false);
+      setNewRestaurant({
+        name: "",
+        email: "",
+        university: "",
+        location: "",
+        description: "",
+        contactNumber: "",
+        imageUrl: "",
+        bankName: "",
+        accountNumber: "",
+        accountHolder: ""
+      });
+      setSelectedCreateImage(null);
+      fetchRestaurants();
+    } catch (error) {
+      toast.error("Failed to create restaurant");
+    }
+  };
+
+  const handleToggleActive = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.patch(
+        `https://mongobyte.vercel.app/api/v1/restaurants/${id}/toggle-active`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Status updated");
+      fetchRestaurants();
+    } catch (error) {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const handleViewDetails = async (id) => {
+    setDetailsLoading(true);
+    setIsDetailsModalOpen(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `https://mongobyte.vercel.app/api/v1/restaurants/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setDetailsRestaurant(response.data);
+    } catch (error) {
+      toast.error("Failed to fetch details");
+      setDetailsRestaurant(null);
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  const uploadImage = async (imageData) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        "https://mongobyte.vercel.app/api/v1/users/upload",
+        { image: imageData },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+        }
+      );
+      return response.data.url;
+    } catch (error) {
+      toast.error("Image upload failed");
+      throw error;
     }
   };
 
@@ -226,7 +375,7 @@ const Restaurants = () => {
               Refresh
             </button>
             <button 
-              onClick={() => window.location.href = '/restaurant/signup'} 
+              onClick={() => setIsCreateModalOpen(true)} 
               className="flex items-center gap-2 bg-pepperoni hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors shadow-md"
             >
               <BuildingStorefrontIcon className="w-5 h-5" />
@@ -345,7 +494,14 @@ const Restaurants = () => {
                         </p>
                       </div>
                       
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button 
+                          onClick={() => handleViewDetails(restaurant._id)}
+                          className="p-1 text-gray-500 hover:text-blue-600 rounded-full hover:bg-gray-100"
+                          title="View Details"
+                        >
+                          <MagnifyingGlassIcon className="w-5 h-5" />
+                        </button>
                         <button 
                           onClick={() => handleEditRestaurant(restaurant)}
                           className="p-1 text-gray-500 hover:text-pepperoni rounded-full hover:bg-gray-100"
@@ -359,6 +515,13 @@ const Restaurants = () => {
                           title="Delete Restaurant"
                         >
                           <TrashIcon className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleToggleActive(restaurant._id)}
+                          className={`p-1 rounded-full ${restaurant.isActive ? 'text-green-600 hover:bg-green-50' : 'text-red-600 hover:bg-red-50'}`}
+                          title={restaurant.isActive ? "Deactivate" : "Activate"}
+                        >
+                          {restaurant.isActive ? <CheckCircleIcon className="w-5 h-5" /> : <XCircleIcon className="w-5 h-5" />}
                         </button>
                       </div>
                     </div>
@@ -385,19 +548,22 @@ const Restaurants = () => {
                       <p className="text-sm flex items-center gap-2">
                         <BanknotesIcon className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-600">
-                          {restaurant.accountNumber ? "Bank details provided" : "No bank details"}
+                          {restaurant.bankName && restaurant.accountNumber && restaurant.accountHolder ? (
+                            <>
+                              {restaurant.bankName} - {restaurant.accountNumber} ({restaurant.accountHolder})
+                            </>
+                          ) : "No bank details"}
                         </span>
                       </p>
                     </div>
                     
-                    <div className="mt-3 flex justify-between items-center">
+                    <div className="mt-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
                       <span className="text-xs text-gray-500">
-                        {restaurant.menu?.length || 0} menu items
+                        {Array.isArray(restaurant.meals) ? restaurant.meals.length : 0} menu items
                       </span>
-                      
-                      {restaurant.ordersCount > 0 ? (
+                      {Array.isArray(restaurant.orders) && restaurant.orders.length > 0 ? (
                         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                          {restaurant.ordersCount} orders processed
+                          {restaurant.orders.length} orders processed
                         </span>
                       ) : (
                         <span className="text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">
@@ -426,6 +592,40 @@ const Restaurants = () => {
             </div>
             
             <div className="p-6 space-y-4">
+              {/* Image Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Logo/Image</label>
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <img
+                      src={selectedEditImage || editedRestaurant.imageUrl || "https://res.cloudinary.com/dol47ucmj/image/upload/v1729928426/jm9dfybhu5pqqevrhyke.jpg"}
+                      alt="Preview"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-cheese"
+                    />
+                    {selectedEditImage && (
+                      <div className="absolute -top-2 -right-2 bg-pepperoni text-white p-1 rounded-full">
+                        <FaCheckCircle className="text-xs" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleEditImageChange}
+                      className="hidden"
+                      id="restaurant-edit-upload"
+                    />
+                    <label
+                      htmlFor="restaurant-edit-upload"
+                      className="cursor-pointer bg-orange-50 hover:bg-orange-100 text-crust font-medium py-2 px-4 rounded-xl border-2 border-dashed border-cheese hover:border-pepperoni transition-all flex items-center justify-center gap-2"
+                    >
+                      <FaUpload />
+                      Choose Logo
+                    </label>
+                  </div>
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Restaurant Name</label>
                 <input
@@ -498,6 +698,40 @@ const Restaurants = () => {
                 </select>
               </div>
               
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                <input
+                  type="text"
+                  name="bankName"
+                  value={editedRestaurant.bankName || ''}
+                  onChange={handleEditInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+                <input
+                  type="text"
+                  name="accountNumber"
+                  value={editedRestaurant.accountNumber || ''}
+                  onChange={handleEditInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Account Holder</label>
+                <input
+                  type="text"
+                  name="accountHolder"
+                  value={editedRestaurant.accountHolder || ''}
+                  onChange={handleEditInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                  required
+                />
+              </div>
+              
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -564,6 +798,230 @@ const Restaurants = () => {
                   className="px-4 py-2 bg-red-500 text-white rounded-lg shadow-sm hover:bg-red-600 transition-colors"
                 >
                   Delete Restaurant
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Create Restaurant Modal */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6 bg-cheese rounded-t-xl">
+              <h3 className="text-xl font-bold text-crust">Create Restaurant</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Image Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Logo/Image</label>
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <img
+                      src={selectedCreateImage || newRestaurant.imageUrl || "https://res.cloudinary.com/dol47ucmj/image/upload/v1729928426/jm9dfybhu5pqqevrhyke.jpg"}
+                      alt="Preview"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-cheese"
+                    />
+                    {selectedCreateImage && (
+                      <div className="absolute -top-2 -right-2 bg-pepperoni text-white p-1 rounded-full">
+                        <FaCheckCircle className="text-xs" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCreateImageChange}
+                      className="hidden"
+                      id="restaurant-create-upload"
+                    />
+                    <label
+                      htmlFor="restaurant-create-upload"
+                      className="cursor-pointer bg-orange-50 hover:bg-orange-100 text-crust font-medium py-2 px-4 rounded-xl border-2 border-dashed border-cheese hover:border-pepperoni transition-all flex items-center justify-center gap-2"
+                    >
+                      <FaUpload />
+                      Choose Logo
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Restaurant Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={newRestaurant.name}
+                  onChange={handleCreateInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={newRestaurant.email}
+                  onChange={handleCreateInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  name="description"
+                  value={newRestaurant.description}
+                  onChange={handleCreateInputChange}
+                  rows="3"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                ></textarea>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <input
+                  type="text"
+                  name="location"
+                  value={newRestaurant.location}
+                  onChange={handleCreateInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                <input
+                  type="text"
+                  name="contactNumber"
+                  value={newRestaurant.contactNumber}
+                  onChange={handleCreateInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                <input
+                  type="text"
+                  name="bankName"
+                  value={newRestaurant.bankName || ''}
+                  onChange={handleCreateInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+                <input
+                  type="text"
+                  name="accountNumber"
+                  value={newRestaurant.accountNumber || ''}
+                  onChange={handleCreateInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Account Holder</label>
+                <input
+                  type="text"
+                  name="accountHolder"
+                  value={newRestaurant.accountHolder || ''}
+                  onChange={handleCreateInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">University</label>
+                <select
+                  name="university"
+                  value={newRestaurant.university}
+                  onChange={handleCreateInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
+                >
+                  <option value="">Select University</option>
+                  {universities.map(university => (
+                    <option key={university._id} value={university._id}>
+                      {university.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateRestaurant}
+                  className="px-4 py-2 bg-cheese text-crust rounded-lg shadow-sm hover:bg-yellow-500 transition-colors"
+                >
+                  Create
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Details Modal */}
+      {isDetailsModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6 bg-blue-400 rounded-t-xl">
+              <h3 className="text-xl font-bold text-white">Restaurant Details</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              {detailsLoading ? (
+                <div className="text-center">Loading...</div>
+              ) : detailsRestaurant ? (
+                <div>
+                  <div className="mb-2">
+                    <strong>Name:</strong> {detailsRestaurant.name}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Email:</strong> {detailsRestaurant.email}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Description:</strong> {detailsRestaurant.description}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Location:</strong> {detailsRestaurant.location}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Contact Number:</strong> {detailsRestaurant.contactNumber}
+                  </div>
+                  <div className="mb-2">
+                    <strong>University:</strong> {universities.find(u => u._id === detailsRestaurant.university)?.name || "No university"}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Image:</strong> {detailsRestaurant.imageUrl ? <img src={detailsRestaurant.imageUrl} alt="Restaurant" className="w-32 h-20 object-cover rounded" /> : "No image"}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Active:</strong> {detailsRestaurant.isActive ? "Yes" : "No"}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Created At:</strong> {detailsRestaurant.createdAt ? format(new Date(detailsRestaurant.createdAt), "MMM d, yyyy") : "-"}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center text-red-500">No details found.</div>
+              )}
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={() => setIsDetailsModalOpen(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Close
                 </button>
               </div>
             </div>

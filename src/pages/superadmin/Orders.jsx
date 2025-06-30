@@ -24,9 +24,10 @@ const Orders = () => {
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
-    processing: 0,
+    confirmed: 0,
     delivered: 0,
     cancelled: 0,
+    others: 0,
     revenue: 0
   });
 
@@ -39,24 +40,55 @@ const Orders = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "https://mongobyte.vercel.app/api/superadmin/orders",
+        "https://mongobyte.vercel.app/api/v1/superadmin/orders",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      
-      setOrders(response.data);
-      
-      // Calculate stats
+      console.log("Fetched orders:", response.data);
+
+      // Sort orders by createdAt descending (most recent first)
+      const sortedOrders = [...response.data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      // Use restaurantName from order or user if available, else fetch by id
+      const ordersWithRestaurant = await Promise.all(
+        sortedOrders.map(async (order) => {
+          // Prefer order.restaurantName, then order.user.restaurantName, then fetch by id
+          let restaurantData = null;
+          if (order.restaurantName) {
+            restaurantData = { name: order.restaurantName };
+          } else if (order.user && order.user.restaurantName) {
+            restaurantData = { name: order.user.restaurantName };
+          } else if (order.restaurant && typeof order.restaurant === 'string') {
+            // If restaurantName is not available, do not fetch, just fallback to Unknown
+            restaurantData = { name: 'Unknown' };
+          } else if (order.restaurant && typeof order.restaurant === 'object' && order.restaurant.name) {
+            restaurantData = order.restaurant;
+          } else {
+            restaurantData = { name: 'Unknown' };
+          }
+          return { ...order, restaurant: restaurantData };
+        })
+      );
+      setOrders(ordersWithRestaurant);
+
+      // Calculate stats (normalize status to lower case, treat 'canceled' and 'cancelled' as same)
       const stats = {
-        total: response.data.length,
-        pending: response.data.filter(o => o.status === "pending").length,
-        processing: response.data.filter(o => o.status === "processing").length,
-        delivered: response.data.filter(o => o.status === "delivered").length,
-        cancelled: response.data.filter(o => o.status === "cancelled").length,
-        revenue: response.data.reduce((sum, order) => sum + order.totalAmount, 0)
+        total: ordersWithRestaurant.length,
+        pending: ordersWithRestaurant.filter(o => (o.status || '').toLowerCase() === "pending").length,
+        confirmed: ordersWithRestaurant.filter(o => (o.status || '').toLowerCase() === "confirmed").length,
+        delivered: ordersWithRestaurant.filter(o => (o.status || '').toLowerCase() === "delivered").length,
+        cancelled: ordersWithRestaurant.filter(o => {
+          const s = (o.status || '').toLowerCase();
+          return s === "cancelled" || s === "canceled";
+        }).length,
+        others: ordersWithRestaurant.filter(o => {
+          const s = (o.status || '').toLowerCase();
+          return !["pending","confirmed","delivered","cancelled","canceled"].includes(s);
+        }).length,
+        revenue: ordersWithRestaurant.reduce((sum, order) => sum + (order.totalPrice || 0), 0)
       };
-      
+
       setStats(stats);
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -70,20 +102,20 @@ const Orders = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `https://mongobyte.vercel.app/api/superadmin/orders/${orderId}`,
+        `https://mongobyte.vercel.app/api/v1/superadmin/orders/${orderId}/status`,
         { status },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      
+
       // Update local state
-      setOrders(orders.map(order => 
-        order._id === orderId ? {...order, status} : order
+      setOrders(orders.map(order =>
+        order._id === orderId ? { ...order, status } : order
       ));
-      
+
       toast.success(`Order status updated to ${status}`);
-      
+
       // Recalculate stats
       const updatedStats = {
         total: orders.length,
@@ -91,9 +123,9 @@ const Orders = () => {
         processing: orders.filter(o => o._id === orderId ? status === "processing" : o.status === "processing").length,
         delivered: orders.filter(o => o._id === orderId ? status === "delivered" : o.status === "delivered").length,
         cancelled: orders.filter(o => o._id === orderId ? status === "cancelled" : o.status === "cancelled").length,
-        revenue: orders.reduce((sum, order) => sum + order.totalAmount, 0)
+        revenue: orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0)
       };
-      
+
       setStats(updatedStats);
     } catch (error) {
       console.error("Error updating order status:", error);
@@ -108,29 +140,34 @@ const Orders = () => {
   const filteredOrders = orders
     .filter(order => {
       if (filter === "all") return true;
-      return order.status === filter;
+      // Normalize status for filtering, treat 'cancelled' and 'canceled' as same
+      const status = (order.status || '').toLowerCase();
+      if (filter.toLowerCase() === 'cancelled') {
+        return status === 'cancelled' || status === 'canceled';
+      }
+      return status === filter.toLowerCase();
     })
     .filter(order => {
       if (!searchTerm) return true;
-      
       const searchLower = searchTerm.toLowerCase();
       return (
         order._id.toLowerCase().includes(searchLower) ||
         order.user?.username?.toLowerCase().includes(searchLower) ||
-        order.restaurant?.name?.toLowerCase().includes(searchLower) ||
-        order.items.some(item => item.name.toLowerCase().includes(searchLower))
+        (order.restaurant?.name?.toLowerCase?.() || '').includes(searchLower) ||
+        order.meals?.some(meal => meal.mealId?.toLowerCase().includes(searchLower))
       );
     });
 
   const getStatusBadgeClass = (status) => {
-    switch (status) {
+    switch ((status || '').toLowerCase()) {
       case "pending":
         return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case "processing":
+      case "confirmed":
         return "bg-blue-100 text-blue-800 border-blue-300";
       case "delivered":
         return "bg-green-100 text-green-800 border-green-300";
       case "cancelled":
+      case "canceled":
         return "bg-red-100 text-red-800 border-red-300";
       default:
         return "bg-gray-100 text-gray-800 border-gray-300";
@@ -138,14 +175,15 @@ const Orders = () => {
   };
 
   const getStatusIcon = (status) => {
-    switch (status) {
+    switch ((status || '').toLowerCase()) {
       case "pending":
         return <ClockIcon className="w-4 h-4" />;
-      case "processing":
+      case "confirmed":
         return <TruckIcon className="w-4 h-4" />;
       case "delivered":
         return <CheckCircleIcon className="w-4 h-4" />;
       case "cancelled":
+      case "canceled":
         return <XCircleIcon className="w-4 h-4" />;
       default:
         return <ShoppingBagIcon className="w-4 h-4" />;
@@ -177,7 +215,7 @@ const Orders = () => {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -204,8 +242,8 @@ const Orders = () => {
             transition={{ duration: 0.3, delay: 0.2 }}
             className="bg-white p-4 rounded-xl shadow-md border-l-4 border-blue-400"
           >
-            <div className="font-medium text-gray-500 text-sm">Processing</div>
-            <div className="text-2xl font-bold text-gray-900">{stats.processing}</div>
+            <div className="font-medium text-gray-500 text-sm">Confirmed</div>
+            <div className="text-2xl font-bold text-gray-900">{stats.confirmed}</div>
           </motion.div>
           
           <motion.div 
@@ -222,6 +260,16 @@ const Orders = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.4 }}
+            className="bg-white p-4 rounded-xl shadow-md border-l-4 border-red-400"
+          >
+            <div className="font-medium text-gray-500 text-sm">Canceled</div>
+            <div className="text-2xl font-bold text-gray-900">{stats.cancelled}</div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
             className="bg-white p-4 rounded-xl shadow-md border-l-4 border-pepperoni"
           >
             <div className="font-medium text-gray-500 text-sm">Total Revenue</div>
@@ -256,14 +304,14 @@ const Orders = () => {
               Pending
             </button>
             <button
-              onClick={() => setFilter("processing")}
+              onClick={() => setFilter("confirmed")}
               className={`px-3 py-1 text-sm rounded-full ${
-                filter === "processing"
+                filter === "confirmed"
                   ? "bg-blue-400 text-white font-medium"
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              Processing
+              Confirmed
             </button>
             <button
               onClick={() => setFilter("delivered")}
@@ -325,7 +373,7 @@ const Orders = () => {
                   <div className="flex flex-col md:flex-row md:items-center justify-between">
                     <div className="flex flex-col mb-3 md:mb-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-900">Order #{order._id.slice(-6)}</span>
+            <span className="font-medium text-gray-900">Order #{order.customId || order._id.slice(-6)}</span>
                         <span className={`px-2.5 py-0.5 text-xs rounded-full border flex items-center gap-1 ${getStatusBadgeClass(order.status)}`}>
                           {getStatusIcon(order.status)}
                           {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -349,7 +397,7 @@ const Orders = () => {
                       
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-500">Amount</span>
-                        <span className="font-medium">₦{order.totalAmount?.toLocaleString() || 0}</span>
+                        <span className="font-medium">₦{order.totalPrice?.toLocaleString() || 0}</span>
                       </div>
                     </div>
                   </div>
@@ -362,14 +410,19 @@ const Orders = () => {
                       <h4 className="font-medium text-gray-900 mb-2">Items</h4>
                       <div className="bg-white rounded-lg shadow-sm p-3">
                         <ul className="divide-y divide-gray-200">
-                          {order.items.map((item, index) => (
+                          {order.meals?.map((meal, index) => (
                             <li key={index} className="py-2 first:pt-0 last:pb-0">
                               <div className="flex justify-between">
                                 <div>
-                                  <span className="font-medium">{item.name}</span>
-                                  <span className="text-gray-500 ml-2">x{item.quantity}</span>
+                                  <span className="font-medium">{meal.name || (meal.meal && meal.meal.name) || meal.mealId || 'Meal'}</span>
+                                  {meal.description && (
+                                    <span className="ml-2 text-xs text-gray-500">({meal.description})</span>
+                                  )}
+                                  <span className="text-gray-500 ml-2">x{meal.quantity}</span>
                                 </div>
-                                <span>₦{(item.price * item.quantity).toLocaleString()}</span>
+                                {meal.price && (
+                                  <div className="text-gray-700 font-medium">₦{meal.price.toLocaleString()}</div>
+                                )}
                               </div>
                             </li>
                           ))}
@@ -381,9 +434,10 @@ const Orders = () => {
                       <div>
                         <h4 className="font-medium text-gray-900 mb-2">Delivery Information</h4>
                         <div className="bg-white rounded-lg shadow-sm p-3">
-                          <p><span className="text-gray-500">Address:</span> {order.deliveryAddress || "Not specified"}</p>
-                          <p><span className="text-gray-500">Phone:</span> {order.user?.phoneNumber || "Not specified"}</p>
-                          <p><span className="text-gray-500">Notes:</span> {order.notes || "None"}</p>
+                          <p><span className="text-gray-500">Address:</span> {order.location || "Not specified"}</p>
+                          <p><span className="text-gray-500">Landmark:</span> {order.nearestLandmark || "Not specified"}</p>
+                          <p><span className="text-gray-500">Phone:</span> {order.phoneNumber || order.user?.phoneNumber || "Not specified"}</p>
+                          <p><span className="text-gray-500">Notes:</span> {order.note || order.requestDescription || "None"}</p>
                         </div>
                       </div>
                       
@@ -392,7 +446,7 @@ const Orders = () => {
                         <div className="bg-white rounded-lg shadow-sm p-3">
                           <p><span className="text-gray-500">Method:</span> Byte Balance</p>
                           <p><span className="text-gray-500">Subtotal:</span> ₦{order.totalAmount?.toLocaleString() || 0}</p>
-                          <p><span className="text-gray-500">Delivery Fee:</span> ₦0</p>
+                          <p><span className="text-gray-500">Delivery Fee:</span> ₦{order.fee?.toLocaleString() || 0}</p>
                           <p className="font-medium"><span className="text-gray-500">Total:</span> ₦{order.totalAmount?.toLocaleString() || 0}</p>
                         </div>
                       </div>
@@ -401,16 +455,16 @@ const Orders = () => {
                     <div className="flex justify-end gap-2">
                       {order.status !== "delivered" && order.status !== "cancelled" && (
                         <>
-                          {order.status === "pending" && (
+                          {order.status?.toLowerCase() === "pending" && (
                             <button
-                              onClick={() => updateOrderStatus(order._id, "processing")}
+                              onClick={() => updateOrderStatus(order._id, "confirmed")}
                               className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-sm hover:bg-blue-600 transition-colors"
                             >
-                              Mark as Processing
+                              Mark as Confirmed
                             </button>
                           )}
                           
-                          {order.status === "processing" && (
+                          {order.status?.toLowerCase() === "confirmed" && (
                             <button
                               onClick={() => updateOrderStatus(order._id, "delivered")}
                               className="px-4 py-2 bg-green-500 text-white rounded-lg shadow-sm hover:bg-green-600 transition-colors"

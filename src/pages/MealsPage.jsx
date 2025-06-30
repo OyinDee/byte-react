@@ -31,14 +31,14 @@ const MealsPage = () => {
   const [editingMealId, setEditingMealId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const handleDelete = async (customId) => {
+  const handleDelete = async (mealId) => {
     if (window.confirm("Delete meal?")) {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(`https://mongobyte.vercel.app/api/v1/meals/${customId}`, {
+        await axios.delete(`https://mongobyte.vercel.app/api/v1/meals/${mealId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setMeals(meals.filter((meal) => meal.customId !== customId));
+        setMeals(meals.filter((meal) => meal._id !== mealId));
         toast.success("Meal deleted successfully!");
       } catch (error) {
         toast.error("Error deleting meal!");
@@ -57,26 +57,25 @@ const MealsPage = () => {
       availability: meal.availability,
     });
     setSelectedImage(null);  
-    setEditingMealId(meal.customId);
+    setEditingMealId(meal._id);
     setIsEditing(true);
   };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      const decodedToken = jwtDecode(token);
-      const customId = decodedToken.restaurant.customId;
       const fetchMeals = async () => {
-        setLoadingMeals(true);  
+        setLoadingMeals(true);
         try {
           const response = await axios.get(
-            `https://mongobyte.vercel.app/api/v1/restaurants/mymeals/${customId}`
+            'https://mongobyte.vercel.app/api/v1/meals/me',
+            { headers: { Authorization: `Bearer ${token}` } }
           );
           setMeals(response.data);
         } catch (error) {
           toast.error("Error fetching meals!");
         }
-        setLoadingMeals(false); 
+        setLoadingMeals(false);
       };
       fetchMeals();
     }
@@ -109,18 +108,16 @@ const MealsPage = () => {
   };
 
   const handleFormSubmit = async (e) => {
-
     e.preventDefault();
     setIsLoading(true);
     try {
       let imageUrl = form.imageUrl;
       if (selectedImage) {
-        imageUrl = await uploadImage(selectedImage);  
+        imageUrl = await uploadImage(selectedImage);
       }
       const token = localStorage.getItem("token");
       const decodedToken = jwtDecode(token);
-      const customId = decodedToken.restaurant.customId;
-
+      const restaurantId = decodedToken.restaurant._id;
       if (isEditing && editingMealId) {
         await axios.put(
           `https://mongobyte.vercel.app/api/v1/meals/${editingMealId}`,
@@ -133,7 +130,7 @@ const MealsPage = () => {
         );
         setMeals(
           meals.map((meal) =>
-            meal.customId === editingMealId
+            meal._id === editingMealId
               ? { ...meal, ...form, imageUrl, price: Number(form.price) }
               : meal
           )
@@ -143,12 +140,15 @@ const MealsPage = () => {
         toast.success("Meal updated successfully!");
       } else {
         const response = await axios.post(
-          `https://mongobyte.vercel.app/api/v1/meals/${customId}/create`,
+          `https://mongobyte.vercel.app/api/v1/meals/${restaurantId}/create`,
           {
             ...form,
             per: form.per.toLowerCase(),
             price: Number(form.price),
             imageUrl,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` }
           }
         );
         setMeals([...meals, response.data.meal]);
@@ -159,7 +159,7 @@ const MealsPage = () => {
         description: "",
         tag: "regular",
         price: "",
-        per: "", 
+        per: "",
         imageUrl: "",
         availability: true,
       });
@@ -175,13 +175,13 @@ const MealsPage = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `https://mongobyte.vercel.app/api/v1/meals/${meal.customId}`,
+        `https://mongobyte.vercel.app/api/v1/meals/${meal._id}`,
         { availability: !meal.availability },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMeals(
         meals.map((m) =>
-          m.customId === meal.customId ? { ...m, availability: !m.availability } : m
+          m._id === meal._id ? { ...m, availability: !m.availability } : m
         )
       );
       toast.success(`Meal marked as ${meal.availability ? "Unavailable" : "Available"}!`);
@@ -191,7 +191,7 @@ const MealsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white pb-24">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
@@ -431,7 +431,7 @@ const MealsPage = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {meals.map((meal, index) => (
                 <motion.div
-                  key={meal.customId}
+                  key={meal._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
@@ -505,7 +505,7 @@ const MealsPage = () => {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => handleDelete(meal.customId)}
+                        onClick={() => handleDelete(meal._id)}
                         className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all duration-300"
                       >
                         <FaTrash />

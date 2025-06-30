@@ -16,7 +16,9 @@ import {
   ArrowTrendingUpIcon,
   PresentationChartLineIcon,
   ArrowPathIcon,
-  PlusCircleIcon
+  PlusCircleIcon,
+  TruckIcon,
+  XCircleIcon
 } from "@heroicons/react/24/outline";
 import { Line, Doughnut, Bar } from 'react-chartjs-2';
 import {
@@ -101,7 +103,7 @@ const SuperAdminDashboard = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `https://mongobyte.vercel.app/api/superadmin/dashboard?range=${dateRange}`,
+        `https://mongobyte.vercel.app/api/v1/superadmin/dashboard?range=${dateRange}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -423,118 +425,6 @@ const SuperAdminDashboard = () => {
           </motion.div>
         </div>
 
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Revenue Chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.4 }}
-            className="bg-white p-6 rounded-xl shadow-md"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Revenue Overview</h3>
-                <p className="text-sm text-gray-500">Revenue trends over time</p>
-              </div>
-              <div className="bg-green-100 p-2 rounded-lg">
-                <ArrowTrendingUpIcon className="h-5 w-5 text-green-600" />
-              </div>
-            </div>
-            <div className="h-64">
-              <Line 
-                data={dashboardData.chartData.sales} 
-                options={chartOptions} 
-              />
-            </div>
-          </motion.div>
-          
-          {/* Orders Chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.5 }}
-            className="bg-white p-6 rounded-xl shadow-md"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Order Statistics</h3>
-                <p className="text-sm text-gray-500">Orders processed over time</p>
-              </div>
-              <div className="bg-blue-100 p-2 rounded-lg">
-                <ShoppingBagIcon className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-            <div className="h-64">
-              <Bar 
-                data={dashboardData.chartData.orders} 
-                options={chartOptions} 
-              />
-            </div>
-          </motion.div>
-        </div>
-
-        {/* More Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* User Growth Chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.6 }}
-            className="bg-white p-6 rounded-xl shadow-md"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">User Growth</h3>
-                <p className="text-sm text-gray-500">New user registrations</p>
-              </div>
-              <div className="bg-purple-100 p-2 rounded-lg">
-                <UsersIcon className="h-5 w-5 text-purple-600" />
-              </div>
-            </div>
-            <div className="h-64">
-              <Line 
-                data={dashboardData.chartData.users} 
-                options={chartOptions} 
-              />
-            </div>
-          </motion.div>
-          
-          {/* Restaurant Performance Chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.7 }}
-            className="bg-white p-6 rounded-xl shadow-md"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Restaurant Performance</h3>
-                <p className="text-sm text-gray-500">Orders by restaurant</p>
-              </div>
-              <div className="bg-orange-100 p-2 rounded-lg">
-                <PresentationChartLineIcon className="h-5 w-5 text-orange-600" />
-              </div>
-            </div>
-            <div className="h-64">
-              <Doughnut 
-                data={dashboardData.chartData.restaurantPerformance} 
-                options={{
-                  ...chartOptions,
-                  maintainAspectRatio: false,
-                  cutout: '65%',
-                  plugins: {
-                    ...chartOptions.plugins,
-                    legend: {
-                      ...chartOptions.plugins.legend,
-                      position: 'right'
-                    }
-                  }
-                }} 
-              />
-            </div>
-          </motion.div>
-        </div>
 
         {/* Tables Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -577,32 +467,49 @@ const SuperAdminDashboard = () => {
                         <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">#{order._id.slice(-6)}</td>
                         <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">{order.user?.username || "Unknown"}</td>
                         <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">{order.restaurant?.name || "Unknown"}</td>
-                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">₦{order.totalAmount?.toLocaleString()}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">₦{order.totalPrice?.toLocaleString()}</td>
                         <td className="px-3 py-2 whitespace-nowrap">
-                          {order.status === "delivered" && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              <CheckCircleIcon className="mr-1 h-3 w-3" />
-                              Delivered
-                            </span>
-                          )}
-                          {order.status === "pending" && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              <ClockIcon className="mr-1 h-3 w-3" />
-                              Pending
-                            </span>
-                          )}
-                          {order.status === "processing" && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              <ClockIcon className="mr-1 h-3 w-3" />
-                              Processing
-                            </span>
-                          )}
-                          {order.status === "cancelled" && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              <ClockIcon className="mr-1 h-3 w-3" />
-                              Cancelled
-                            </span>
-                          )}
+                          {(() => {
+                            const status = (order.status || '').toLowerCase();
+                            if (status === "delivered") {
+                              return (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  <CheckCircleIcon className="mr-1 h-3 w-3" />
+                                  Delivered
+                                </span>
+                              );
+                            }
+                            if (status === "pending") {
+                              return (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                  <ClockIcon className="mr-1 h-3 w-3" />
+                                  Pending
+                                </span>
+                              );
+                            }
+                            if (status === "confirmed") {
+                              return (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  <TruckIcon className="mr-1 h-3 w-3" />
+                                  Confirmed
+                                </span>
+                              );
+                            }
+                            if (status === "cancelled" || status === "canceled") {
+                              return (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                  <XCircleIcon className="mr-1 h-3 w-3" />
+                                  Cancelled
+                                </span>
+                              );
+                            }
+                            return (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <ShoppingBagIcon className="mr-1 h-3 w-3" />
+                                {order.status}
+                              </span>
+                            );
+                          })()}
                         </td>
                       </tr>
                     ))}

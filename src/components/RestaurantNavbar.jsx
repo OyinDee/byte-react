@@ -163,7 +163,7 @@ const RestaurantNavbar = () => {
       </motion.nav>
       
       {/* Content padding to avoid navbar overlap */}
-      <div className="pt-20 pb-20 md:pb-0"></div>
+      <div className="pb-16 md:pb-0"></div>
     </>
   );
 };

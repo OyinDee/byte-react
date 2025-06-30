@@ -95,7 +95,9 @@ const Login = () => {
           onSubmit={handleSubmit}
           className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-lg shadow-lg w-full max-w-md"
         >
-          <h2 className="text-2xl font-bold mb-6 text-center text-accentwhite font-secondary">Login to Byte!</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center text-accentwhite font-secondary">
+            Login to Byte!
+          </h2>
 
           {errors.length > 0 && (
             <div className="mb-6 p-4 bg-crust text-accentwhite rounded-lg">
@@ -145,11 +147,16 @@ const Login = () => {
           </div>
 
           <div className="mt-4 text-center">
-            <p className="text-accentwhite">Don’t have an account?</p>
+            <p className="text-accentwhite">Don't have an account?</p>
             <Link to="/signup">
               <span className="text-pepperoni hover:text-red-600 font-semibold mt-2 inline-block">
                 Sign Up Now!
               </span>
+            </Link>
+          </div>
+          <div className="mt-2 text-center">
+            <Link to="/restaurant/login" className="text-xs text-gray-400 hover:text-pepperoni underline">
+              Restaurant? Login here
             </Link>
           </div>
         </form>

@@ -52,6 +52,11 @@ const CartPage = () => {
       ) + parseFloat(fee || 0);
   }, []);
 
+  // Utility to check if all items are add-ons
+  const isOnlyAddOns = (items) => {
+    return Array.isArray(items) && items.length > 0 && items.every(item => item.meal && item.meal.tag === 'add-on');
+  };
+
   const handleCheckout = useCallback(async (restaurantId) => {
     if (!user) {
       toast.error("You need to log in first.");
@@ -61,17 +66,16 @@ const CartPage = () => {
       toast.error("Complete profile setup to proceed with the order.");
       return;
     }
-
     const itemsForRestaurant = cart.get(restaurantId) || [];
-
     if (itemsForRestaurant.length === 0) {
       toast.error("No items to checkout.");
       return;
     }
-
+    if (isOnlyAddOns(itemsForRestaurant)) {
+      toast.error("You cannot place an order with only add-ons in your cart. Please add a main meal.");
+      return;
+    }
     const totalAmount = totalAmountPerRestaurant(itemsForRestaurant, fee);
-    
-    // Store checkout data for payment modal
     setCurrentCheckoutData({
       restaurantId,
       itemsForRestaurant,
@@ -91,8 +95,6 @@ const CartPage = () => {
         fee: parseFloat(fee) || 1000,
       }
     });
-
-    // Show payment method selection
     setShowPaymentModal(true);
   }, [cart, fee, note, totalAmountPerRestaurant, user]);
 
@@ -411,9 +413,9 @@ const CartPage = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleCheckout(restaurantId)}
-                    disabled={isCheckoutLoading}
+                    disabled={isCheckoutLoading || isOnlyAddOns(items)}
                     className={`w-full py-4 px-6 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 ${
-                      isCheckoutLoading
+                      isCheckoutLoading || isOnlyAddOns(items)
                         ? "bg-gray-400 text-gray-600 cursor-not-allowed"
                         : "bg-gradient-to-r from-pepperoni to-red-600 hover:from-red-600 hover:to-pepperoni text-white shadow-xl hover:shadow-2xl"
                     }`}
@@ -422,6 +424,11 @@ const CartPage = () => {
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-5 h-5 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
                         Processing Order...
+                      </div>
+                    ) : isOnlyAddOns(items) ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <FaShoppingBag />
+                        Cannot order only add-ons
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-2">

@@ -41,12 +41,12 @@ const Withdrawals = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "https://mongobyte.vercel.app/api/superadmin/withdrawals",
+        "https://mongobyte.vercel.app/api/v1/withdrawals",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      
+      console.log(response.data)
       setWithdrawals(response.data);
       
       // Calculate stats
@@ -70,8 +70,8 @@ const Withdrawals = () => {
   const updateWithdrawalStatus = async (withdrawalId, status) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.put(
-        `https://mongobyte.vercel.app/api/superadmin/withdrawals/${withdrawalId}`,
+      await axios.patch(
+        `https://mongobyte.vercel.app/api/v1/withdrawals/${withdrawalId}/status`,
         { status },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -152,11 +152,11 @@ const Withdrawals = () => {
       const searchLower = searchTerm.toLowerCase();
       return (
         withdrawal._id.toLowerCase().includes(searchLower) ||
-        withdrawal.restaurant?.name?.toLowerCase().includes(searchLower) ||
-        withdrawal.restaurant?.email?.toLowerCase().includes(searchLower) ||
-        (withdrawal.restaurant?.accountNumber && withdrawal.restaurant.accountNumber.includes(searchTerm)) ||
-        (withdrawal.restaurant?.bankName && withdrawal.restaurant.bankName.toLowerCase().includes(searchLower)) ||
-        (withdrawal.restaurant?.accountHolder && withdrawal.restaurant.accountHolder.toLowerCase().includes(searchLower))
+        withdrawal.restaurantName?.toLowerCase().includes(searchLower) ||
+        withdrawal.restaurantEmail?.toLowerCase().includes(searchLower) ||
+        (withdrawal.accountNumber && withdrawal.accountNumber.includes(searchTerm)) ||
+        (withdrawal.bankName && withdrawal.bankName.toLowerCase().includes(searchLower)) ||
+        (withdrawal.accountHolder && withdrawal.accountHolder.toLowerCase().includes(searchLower))
       );
     });
 
@@ -165,7 +165,7 @@ const Withdrawals = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 pt-20 pb-12">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 pt-20 pb-12 md:pb-12 pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
@@ -185,7 +185,7 @@ const Withdrawals = () => {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -305,74 +305,106 @@ const Withdrawals = () => {
             </p>
           </div>
         ) : (
-          <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
-            <table className="min-w-full divide-y divide-gray-300">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Restaurant</th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Amount</th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date</th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {filteredWithdrawals.map((withdrawal) => (
-                  <tr key={withdrawal._id} className="hover:bg-gray-50">
-                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-100 flex items-center justify-center">
-                          {withdrawal.restaurant?.imageUrl ? (
-                            <img
-                              src={withdrawal.restaurant.imageUrl}
-                              alt=""
-                              className="h-10 w-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            <BuildingStorefrontIcon className="h-6 w-6 text-gray-400" />
-                          )}
-                        </div>
-                        <div className="ml-4">
-                          <div className="font-medium text-gray-900">{withdrawal.restaurant?.name || "Unknown Restaurant"}</div>
-                          <div className="text-gray-500">{withdrawal.restaurant?.email || "No email"}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm">
-                      <div className="font-medium text-gray-900">₦{withdrawal.amount?.toLocaleString()}</div>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                      {format(new Date(withdrawal.createdAt), "MMM d, yyyy")}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm">
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs border inline-flex items-center gap-1 ${getStatusBadgeClass(withdrawal.status)}`}>
-                        {getStatusIcon(withdrawal.status)}
-                        {withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm">
-                      <button
-                        onClick={() => handleViewDetails(withdrawal)}
-                        className="text-cheese hover:text-yellow-600 font-medium"
-                      >
-                        View Details
-                      </button>
-                    </td>
+          <>
+            {/* Table for md+ screens */}
+            <div className="hidden md:block overflow-x-auto shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+              <table className="min-w-full divide-y divide-gray-300">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Restaurant</th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Amount</th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date</th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {filteredWithdrawals.map((withdrawal) => (
+                    <tr key={withdrawal._id} className="hover:bg-gray-50">
+                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-100 flex items-center justify-center">
+                            <BuildingStorefrontIcon className="h-6 w-6 text-gray-400" />
+                          </div>
+                          <div className="ml-4">
+                            <div className="font-medium text-gray-900">{withdrawal.restaurantName || "Unknown Restaurant"}</div>
+                            <div className="text-gray-500">{withdrawal.restaurantEmail || "No email"}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm">
+                        <div className="font-medium text-gray-900">₦{withdrawal.amount?.toLocaleString()}</div>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        {format(new Date(withdrawal.createdAt), "MMM d, yyyy")}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm">
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs border inline-flex items-center gap-1 ${getStatusBadgeClass(withdrawal.status)}`}>
+                          {getStatusIcon(withdrawal.status)}
+                          {withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm">
+                        <button
+                          onClick={() => handleViewDetails(withdrawal)}
+                          className="text-cheese hover:text-yellow-600 font-medium"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Card list for mobile screens */}
+            <div className="md:hidden space-y-4">
+              {filteredWithdrawals.map((withdrawal) => (
+                <div key={withdrawal._id} className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-100 flex items-center justify-center">
+                      <BuildingStorefrontIcon className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-900">{withdrawal.restaurantName || "Unknown Restaurant"}</div>
+                      <div className="text-gray-500 text-xs">{withdrawal.restaurantEmail || "No email"}</div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Amount:</span>
+                    <span className="font-medium">₦{withdrawal.amount?.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Date:</span>
+                    <span>{format(new Date(withdrawal.createdAt), "MMM d, yyyy")}</span>
+                  </div>
+                  <div className="flex justify-between text-sm items-center">
+                    <span className="text-gray-500">Status:</span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs border inline-flex items-center gap-1 ${getStatusBadgeClass(withdrawal.status)}`}>
+                      {getStatusIcon(withdrawal.status)}
+                      {withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleViewDetails(withdrawal)}
+                    className="mt-2 w-full bg-cheese text-crust py-2 rounded-lg font-medium shadow hover:bg-yellow-500 transition"
+                  >
+                    View Details
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
       {/* Withdrawal Details Modal */}
       {isModalOpen && selectedWithdrawal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl shadow-xl max-w-md w-full"
+            className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6 bg-cheese rounded-t-xl">
               <h3 className="text-xl font-bold text-crust flex items-center gap-2">
@@ -390,7 +422,7 @@ const Withdrawals = () => {
                 
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-500">Restaurant:</span>
-                  <span className="font-medium">{selectedWithdrawal.restaurant?.name || "Unknown"}</span>
+                  <span className="font-medium">{selectedWithdrawal.restaurantName || "Unknown"}</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -400,9 +432,12 @@ const Withdrawals = () => {
                 
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-500">Date Requested:</span>
-                  <span className="font-medium">
-                    {format(new Date(selectedWithdrawal.createdAt), "MMM d, yyyy")}
-                  </span>
+                  <span className="font-medium">{format(new Date(selectedWithdrawal.createdAt), "MMM d, yyyy HH:mm")}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Last Updated:</span>
+                  <span className="font-medium">{format(new Date(selectedWithdrawal.updatedAt), "MMM d, yyyy HH:mm")}</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -419,44 +454,41 @@ const Withdrawals = () => {
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">Bank:</span>
-                    <span className="font-medium">{selectedWithdrawal.restaurant?.bankName || "Not provided"}</span>
+                    <span className="font-medium">{selectedWithdrawal.bankName || "Not provided"}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">Account Number:</span>
-                    <span className="font-medium">{selectedWithdrawal.restaurant?.accountNumber || "Not provided"}</span>
+                    <span className="font-medium">{selectedWithdrawal.accountNumber || "Not provided"}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">Account Holder:</span>
-                    <span className="font-medium">{selectedWithdrawal.restaurant?.accountHolder || "Not provided"}</span>
+                    <span className="font-medium">{selectedWithdrawal.accountHolder || "Not provided"}</span>
                   </div>
                 </div>
               </div>
               
               {selectedWithdrawal.status === "pending" && (
-                <div className="flex justify-between">
+                <div className="flex flex-col sm:flex-row justify-between gap-2 mb-2">
                   <button
                     onClick={() => updateWithdrawalStatus(selectedWithdrawal._id, "rejected")}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg shadow-sm hover:bg-red-600 transition-colors"
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg shadow-sm hover:bg-red-600 transition-colors w-full sm:w-auto"
                   >
                     Reject
                   </button>
                   <button
                     onClick={() => updateWithdrawalStatus(selectedWithdrawal._id, "approved")}
-                    className="px-4 py-2 bg-green-500 text-white rounded-lg shadow-sm hover:bg-green-600 transition-colors"
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg shadow-sm hover:bg-green-600 transition-colors w-full sm:w-auto"
                   >
                     Approve
                   </button>
                 </div>
               )}
-              
-              {selectedWithdrawal.status !== "pending" && (
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-                >
-                  Close
-                </button>
-              )}
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors mt-2"
+              >
+                Cancel
+              </button>
             </div>
           </motion.div>
         </div>

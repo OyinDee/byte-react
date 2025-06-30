@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    const demoNotifications = [
-      { id: 1, message: 'New order received', timestamp: '2024-09-11 10:34 AM' },
-      { id: 2, message: '400 has been added to wallet', timestamp: '2024-09-11 09:25 AM' },
-      { id: 3, message: 'New order received', timestamp: '2024-09-11 08:45 AM' },
-    ];
-    setNotifications(demoNotifications);
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          'https://mongobyte.vercel.app/api/v1/restaurants/notifications',
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setNotifications(response.data);
+      } catch (error) {
+        setNotifications([]);
+      }
+    };
+    fetchNotifications();
   }, []);
 
   return (

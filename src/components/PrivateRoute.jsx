@@ -8,22 +8,43 @@ const PrivateRoute = ({ element, allowedRoles = [] }) => {
   const [redirect, setRedirect] = useState(null);
 
   useEffect(() => {
-    if (!loading) {
-      if (!auth) {
-        setRedirect("/login");
-      } else if (
-        allowedRoles.length > 0 && 
-        !(auth.user && allowedRoles.includes(auth.user.role))
-      ) {
-        // If specific roles are required and user doesn't have permission
-        setRedirect(auth.restaurant ? "/restaurant/dashboard" : "/user");
-      } else if (auth.user && auth.user.superAdmin && (window.location.pathname.startsWith("/restaurant") || window.location.pathname.startsWith("/user"))) {
+    if (loading) return;
+    const path = window.location.pathname;
+    if (!auth) {
+      if (path !== "/login") setRedirect("/login");
+      return;
+    }
+
+
+    // Superadmin logic (only user.superAdmin)
+    if (auth.user && auth.user.superAdmin) {
+      if (!path.startsWith("/superadmin")) {
         setRedirect("/superadmin/dashboard");
-      } else if (auth.user && window.location.pathname.startsWith("/restaurant") && !window.location.pathname.includes("/restaurant/signup")) {
-        setRedirect("/user");
-      } else if (auth.restaurant && window.location.pathname.startsWith("/user")) {
-        setRedirect("/restaurant/dashboard");
       }
+      return;
+    }
+
+    // Role-based access (treat allowedRoles=["superadmin"] as user.superAdmin)
+    if (allowedRoles.length > 0) {
+      if (allowedRoles.includes("superadmin")) {
+        if (!(auth.user && auth.user.superAdmin)) {
+          setRedirect(auth.restaurant ? "/restaurant/dashboard" : "/user");
+          return;
+        }
+      } else if (!(auth.user && allowedRoles.includes(auth.user.role))) {
+        setRedirect(auth.restaurant ? "/restaurant/dashboard" : "/user");
+        return;
+      }
+    }
+
+    // Restaurant logic
+    if (auth.user && path.startsWith("/restaurant") && !path.includes("/restaurant/signup")) {
+      setRedirect("/user");
+      return;
+    }
+    if (auth.restaurant && path.startsWith("/user")) {
+      setRedirect("/restaurant/dashboard");
+      return;
     }
   }, [loading, auth, allowedRoles]);
 

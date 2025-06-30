@@ -29,7 +29,7 @@ const SuperAdminNavbar = () => {
   return (
     <nav className="bg-black p-4">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <div className="fixed bottom-0 inset-x-0 bg-black p-4 md:hidden flex justify-between items-center z-50">
+        <div className="fixed bottom-0 inset-x-0 bg-black p-4 md:py-4 md:hidden flex justify-between items-center z-50">
           <ul className="flex justify-between w-full text-white relative">
               <>
                 <li>
@@ -40,7 +40,7 @@ const SuperAdminNavbar = () => {
                     )}`}
                   >
                     <HomeIcon className="h-5 w-5 mb-1" />
-                    <span className="text-xs">Home</span>
+                    {/* <span className="text-xs">Home</span> */}
                   </Link>
                 </li>
                 <li>
@@ -51,7 +51,7 @@ const SuperAdminNavbar = () => {
                     )}`}
                   >
                     <ClipboardDocumentListIcon className="h-5 w-5 mb-1" />
-                    <span className="text-xs">Orders</span>
+                    {/* <span className="text-xs">Orders</span> */}
                   </Link>
                 </li>
                 <li>
@@ -62,18 +62,7 @@ const SuperAdminNavbar = () => {
                     )}`}
                   >
                     <BuildingStorefrontIcon className="h-5 w-5 mb-1" />
-                    <span className="text-xs">Restaurants</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/restaurant/signup"
-                    className={`flex flex-col items-center ${getLinkClassName(
-                      "/restaurant/signup"
-                    )}`}
-                  >
-                    <PlusCircleIcon className="h-5 w-5 mb-1" />
-                    <span className="text-xs">Add Restaurant</span>
+                    {/* <span className="text-xs">Restaurants</span> */}
                   </Link>
                 </li>
                 <li>
@@ -84,7 +73,7 @@ const SuperAdminNavbar = () => {
                     )}`}
                   >
                     <CurrencyDollarIcon className="h-5 w-5 mb-1" />
-                    <span className="text-xs">Withdrawals</span>
+                    {/* <span className="text-xs">Withdrawals</span> */}
                   </Link>
                 </li>
                 <li>
@@ -93,7 +82,7 @@ const SuperAdminNavbar = () => {
                     className="flex flex-col items-center hover:text-cheese transition-colors duration-200"
                   >
                     <ArrowRightOnRectangleIcon className="h-5 w-5 mb-1" />
-                    <span className="text-xs">Logout</span>
+                    {/* <span className="text-xs">Logout</span> */}
                   </button>
                 </li>
               </>
@@ -107,14 +96,6 @@ const SuperAdminNavbar = () => {
             className={`text-lg font-semibold ${getLinkClassName("/superadmin/dashboard")}`}
           >
             Home
-          </Link>
-          <Link
-            to="/superadmin/orders"
-            className={`text-lg font-semibold ${getLinkClassName(
-              "/superadmin/orders"
-            )}`}
-          >
-            Orders
           </Link>
           <Link
             to="/superadmin/restaurants"

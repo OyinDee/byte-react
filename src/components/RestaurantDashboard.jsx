@@ -5,21 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { motion } from "framer-motion";
 import { format, subDays, subMonths } from "date-fns";
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  ArcElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
-import { 
   ShoppingBagIcon,
   CurrencyDollarIcon,
   UsersIcon,
@@ -28,10 +14,10 @@ import {
   ClockIcon,
   CheckCircleIcon,
   DocumentArrowDownIcon,
-  ChartBarIcon,
   EyeIcon,
   BanknotesIcon,
   PresentationChartLineIcon,
+  ChartBarIcon,
   StarIcon,
   ChatBubbleLeftRightIcon,
   HeartIcon,
@@ -40,20 +26,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import LoadingPage from "./Loader";
-
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  ArcElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
 
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -106,6 +78,22 @@ const RestaurantDashboard = () => {
     }
   });
 
+  // Move fetchDashboardStats definition above useEffect
+  const fetchDashboardStats = useCallback(async (restaurantId, token) => {
+    try {
+      const response = await axios.get(
+        `https://mongobyte.vercel.app/api/v1/restaurants/${restaurantId}/stats?range=${dateRange}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setDashboardStats(response.data);
+    } catch (error) {
+      // Generate mock data for demonstration
+      // generateMockStats();
+    }
+  }, [dateRange]);
+
   useEffect(() => {
     const fetchRestaurantAndOrders = async () => {
       const token = localStorage.getItem("token");
@@ -145,80 +133,6 @@ const RestaurantDashboard = () => {
 
     fetchRestaurantAndOrders();
   }, [dateRange, fetchDashboardStats]);
-
-  const generateMockStats = useCallback(() => {
-    const mockOrders = orders || [];
-    const totalOrders = mockOrders.length;
-    const totalRevenue = mockOrders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
-    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-    
-    // Generate mock monthly data
-    const monthlyLabels = [];
-    const monthlyRevenue = [];
-    const monthlyOrders = [];
-    
-    for (let i = 11; i >= 0; i--) {
-      const date = subMonths(new Date(), i);
-      monthlyLabels.push(format(date, 'MMM yyyy'));
-      monthlyRevenue.push(Math.random() * 50000 + 10000);
-      monthlyOrders.push(Math.floor(Math.random() * 100) + 20);
-    }
-
-    // Generate mock daily data for the last 30 days
-    const dailyLabels = [];
-    const dailyRevenue = [];
-    const dailyOrders = [];
-    
-    for (let i = 29; i >= 0; i--) {
-      const date = subDays(new Date(), i);
-      dailyLabels.push(format(date, 'MMM dd'));
-      dailyRevenue.push(Math.random() * 5000 + 1000);
-      dailyOrders.push(Math.floor(Math.random() * 20) + 5);
-    }
-
-    setDashboardStats({
-      totalOrders,
-      totalRevenue,
-      avgOrderValue,
-      totalCustomers: Math.floor(totalOrders * 0.8),
-      pendingOrders: mockOrders.filter(o => o.status === 'Pending').length,
-      completedOrders: mockOrders.filter(o => o.status === 'Delivered').length,
-      cancelledOrders: mockOrders.filter(o => o.status === 'Cancelled').length,
-      orderGrowth: Math.random() * 20 - 10,
-      revenueGrowth: Math.random() * 25 - 5,
-      topMeals: [
-        { name: "Jollof Rice", orders: 45, revenue: 67500 },
-        { name: "Fried Rice", orders: 32, revenue: 48000 },
-        { name: "Chicken & Chips", orders: 28, revenue: 42000 }
-      ],
-      recentOrders: mockOrders.slice(0, 5),
-      monthlyData: {
-        labels: monthlyLabels,
-        revenue: monthlyRevenue,
-        orders: monthlyOrders
-      },
-      dailyData: {
-        labels: dailyLabels,
-        revenue: dailyRevenue,
-        orders: dailyOrders
-      }
-    });
-  }, [orders]);
-
-  const fetchDashboardStats = useCallback(async (restaurantId, token) => {
-    try {
-      const response = await axios.get(
-        `https://mongobyte.vercel.app/api/v1/restaurants/${restaurantId}/stats?range=${dateRange}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setDashboardStats(response.data);
-    } catch (error) {
-      // Generate mock data for demonstration
-      generateMockStats();
-    }
-  }, [dateRange, generateMockStats]);
 
   const handleWithdrawal = async () => {
     toast.info("Processing withdrawal request...");
@@ -582,77 +496,6 @@ const RestaurantDashboard = () => {
     } catch (error) {
       toast.error('Error exporting daily report');
     }
-  };
-
-  // Chart configurations
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          font: { family: "'Inter', sans-serif" }
-        }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleFont: { family: "'Inter', sans-serif", size: 14, weight: 600 },
-        bodyFont: { family: "'Inter', sans-serif", size: 12 },
-        padding: 12,
-        cornerRadius: 8
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: { color: 'rgba(0, 0, 0, 0.05)' },
-        ticks: { font: { family: "'Inter', sans-serif" } }
-      },
-      x: {
-        grid: { display: false },
-        ticks: { font: { family: "'Inter', sans-serif" } }
-      }
-    }
-  };
-
-  const revenueChartData = {
-    labels: dateRange === 'month' ? dashboardStats.dailyData.labels : dashboardStats.monthlyData.labels,
-    datasets: [
-      {
-        label: 'Revenue (₦)',
-        data: dateRange === 'month' ? dashboardStats.dailyData.revenue : dashboardStats.monthlyData.revenue,
-        borderColor: 'rgb(255, 204, 0)',
-        backgroundColor: 'rgba(255, 204, 0, 0.1)',
-        borderWidth: 3,
-        fill: true,
-        tension: 0.4
-      }
-    ]
-  };
-
-  const ordersChartData = {
-    labels: dateRange === 'month' ? dashboardStats.dailyData.labels : dashboardStats.monthlyData.labels,
-    datasets: [
-      {
-        label: 'Orders',
-        data: dateRange === 'month' ? dashboardStats.dailyData.orders : dashboardStats.monthlyData.orders,
-        backgroundColor: 'rgba(54, 162, 235, 0.8)',
-        borderColor: 'rgb(54, 162, 235)',
-        borderWidth: 2
-      }
-    ]
-  };
-
-  const orderStatusData = {
-    labels: ['Completed', 'Pending', 'Cancelled'],
-    datasets: [
-      {
-        data: [dashboardStats.completedOrders, dashboardStats.pendingOrders, dashboardStats.cancelledOrders],
-        backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
-        borderWidth: 0
-      }
-    ]
   };
 
   if (loading) {
@@ -1026,131 +869,6 @@ const RestaurantDashboard = () => {
                 </button>
               </motion.div>
             </div>
-
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Revenue Chart */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-                className="bg-white p-6 rounded-xl shadow-md"
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">Revenue Trends</h3>
-                    <p className="text-sm text-gray-500">Revenue over time</p>
-                  </div>
-                  <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-200">
-                    <button
-                      onClick={() => setDateRange("week")}
-                      className={`px-3 py-1 text-sm font-medium rounded-l-lg ${
-                        dateRange === "week" 
-                          ? "bg-cheese text-crust"
-                          : "text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      Week
-                    </button>
-                    <button
-                      onClick={() => setDateRange("month")}
-                      className={`px-3 py-1 text-sm font-medium rounded-r-lg ${
-                        dateRange === "month" 
-                          ? "bg-cheese text-crust"
-                          : "text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      Month
-                    </button>
-                  </div>
-                </div>
-                <div className="h-64">
-                  <Line data={revenueChartData} options={chartOptions} />
-                </div>
-              </motion.div>
-
-              {/* Orders Chart */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 }}
-                className="bg-white p-6 rounded-xl shadow-md"
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">Order Volume</h3>
-                    <p className="text-sm text-gray-500">Number of orders</p>
-                  </div>
-                </div>
-                <div className="h-64">
-                  <Bar data={ordersChartData} options={chartOptions} />
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Order Status Distribution */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9 }}
-              className="bg-white p-6 rounded-xl shadow-md"
-            >
-              <h3 className="text-lg font-bold text-gray-900 mb-6">Order Status Distribution</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="h-64">
-                  <Doughnut data={orderStatusData} options={{ ...chartOptions, cutout: '60%' }} />
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                      <span className="font-medium">Completed</span>
-                    </div>
-                    <span className="text-lg font-bold">{dashboardStats.completedOrders}</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-                      <span className="font-medium">Pending</span>
-                    </div>
-                    <span className="text-lg font-bold">{dashboardStats.pendingOrders}</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
-                      <span className="font-medium">Cancelled</span>
-                    </div>
-                    <span className="text-lg font-bold">{dashboardStats.cancelledOrders}</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Top Performing Meals */}
-            {dashboardStats.topMeals && dashboardStats.topMeals.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0 }}
-                className="bg-white p-6 rounded-xl shadow-md"
-              >
-                <h3 className="text-lg font-bold text-gray-900 mb-6">Top Performing Meals</h3>
-                <div className="space-y-4">
-                  {dashboardStats.topMeals.map((meal, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-gray-900">{meal.name}</h4>
-                        <p className="text-sm text-gray-500">{meal.orders} orders</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-gray-900">₦{meal.revenue.toLocaleString()}</p>
-                        <p className="text-sm text-gray-500">Revenue</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
           </div>
         )}
 
@@ -1245,12 +963,7 @@ const RestaurantDashboard = () => {
               <div className="mt-8">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Monthly Performance</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="h-64">
-                    <Line data={revenueChartData} options={chartOptions} />
-                  </div>
-                  <div className="h-64">
-                    <Bar data={ordersChartData} options={chartOptions} />
-                  </div>
+                  {/* Monthly Performance content removed as per instructions */}
                 </div>
               </div>
 
