@@ -347,25 +347,34 @@ const RestaurantDashboard = () => {
   const updateOrderStatus = async (orderId, newStatus) => {
     const token = localStorage.getItem("token");
     try {
-      await axios.patch(
-        `https://mongobyte.vercel.app/api/v1/orders/${orderId}/status`,
-        { status: newStatus },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      
-      // Update local state
-      setOrders(prev => 
-        prev.map(order => 
-          order._id === orderId 
+      if (newStatus === 'confirmed') {
+        await axios.patch(
+          `https://mongobyte.vercel.app/api/v1/orders/${orderId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      } else {
+        await axios.post(
+          `https://mongobyte.vercel.app/api/v1/orders/${orderId}/status`,
+          { status: newStatus },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+      setOrders(prev =>
+        prev.map(order =>
+          order._id === orderId
             ? { ...order, status: newStatus }
             : order
         )
       );
-      
       toast.success(`Order status updated to ${newStatus}`);
     } catch (error) {
       toast.error(
@@ -878,7 +887,7 @@ const RestaurantDashboard = () => {
             {/* Order Status Filters */}
             <div className="bg-white p-4 rounded-xl shadow-sm">
               <div className="flex flex-wrap gap-2">
-                {['Pending', 'Confirmed', 'Delivered', 'Fee Requested'].map((status) => (
+                {['pending', 'confirmed', 'delivered', 'fee requested'].map((status) => (
                   <button
                     key={status}
                     onClick={() => setActiveTab(status)}
@@ -888,7 +897,7 @@ const RestaurantDashboard = () => {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {status} ({orders.filter(order => order.status === status).length})
+                    {status.charAt(0).toUpperCase() + status.slice(1)} ({orders.filter(order => order.status === status).length})
                   </button>
                 ))}
               </div>
@@ -901,10 +910,10 @@ const RestaurantDashboard = () => {
                 .slice(0, visibleOrdersCount)
                 .map((order) => (
                   <OrderCard
-                    key={order.customId}
+                    key={order._id}
                     order={order}
-                    isPending={order.status === "Pending"}
-                    isConfirmed={order.status === "Confirmed"}
+                    isPending={order.status === 'pending'}
+                    isConfirmed={order.status === 'confirmed'}
                     updateOrderStatus={updateOrderStatus}
                   />
                 ))}
@@ -1441,7 +1450,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
   const onRequest = async () => {
     if (isPending && fees) {
       setIsRequesting(true);
-      await updateOrderStatus(order.customId, requestDescription, fees);
+      await updateOrderStatus(order._id, requestDescription, fees);
       setIsRequesting(false);
     }
   };
@@ -1452,7 +1461,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
       const token = localStorage.getItem("token");
       try {
         const response = await axios.patch(
-          `https://mongobyte.vercel.app/api/v1/orders/deliver/${order.customId}`,
+          `https://mongobyte.vercel.app/api/v1/orders/deliver/${order._id}`,
           {},
           {
             headers: {
@@ -1476,10 +1485,10 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Pending': return 'bg-yellow-100 text-yellow-800';
-      case 'Confirmed': return 'bg-blue-100 text-blue-800';
-      case 'Delivered': return 'bg-green-100 text-green-800';
-      case 'Fee Requested': return 'bg-purple-100 text-purple-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'confirmed': return 'bg-blue-100 text-blue-800';
+      case 'delivered': return 'bg-green-100 text-green-800';
+      case 'fee requested': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -1496,7 +1505,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
             <div className="flex items-center space-x-3 mb-2">
               <h3 className="text-lg font-semibold text-gray-900">Order #{order.customId?.slice(-6)}</h3>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                {order.status}
+                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
               </span>
             </div>
             <div className="text-sm text-gray-500 space-y-1">
