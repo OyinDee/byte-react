@@ -3,7 +3,7 @@ import { BRAND_NAME } from "../utils/brandAssets";
 
 const Footer = () => {
   return (
-    <footer className="bg-crust text-white py-16 mt-0 border-t-4 border-pepperoni/50">
+    <footer className="bg-crust text-white py-16 mt-0 mb-12 lg:mb-0 border-t-4 border-pepperoni/50">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div>
