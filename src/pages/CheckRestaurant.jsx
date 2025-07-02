@@ -91,13 +91,13 @@ const RestaurantPage = () => {
   if (loading) return <LoadingPage />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 pt-16 md:pt-24 pb-24 md:pb-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 pb-24 md:pb-6">
       <ToastContainer position="top-right" />
       
       {restaurant && (
         <>
           {/* Restaurant Hero Section */}
-          <div className="relative h-80 md:h-96 overflow-hidden">
+          <div className="relative h-84 md:h-96 overflow-hidden">
             <img
               src={restaurant.imageUrl}
               alt={restaurant.name}

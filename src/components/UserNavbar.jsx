@@ -148,7 +148,7 @@ const UserNavbar = () => {
                         View Profile
                       </Link>
                       <Link
-                        to="/user/order-history"
+                        to="/user/orderhistory"
                         className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                         onClick={() => setShowProfileMenu(false)}
                       >
