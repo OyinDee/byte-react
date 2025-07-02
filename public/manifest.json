@@ -1,6 +1,6 @@
 {
-    "name": "Byte!",
-    "short_name": "Byte!",
+    "name": "BYTE!",
+    "short_name": "BYTE!",
     "description": "Your go-to food ordering app!",
     "start_url": "/",
     "display": "standalone",

@@ -690,7 +690,7 @@ const Landing = () => {
               </p>
               
               <p className="text-lg text-gray-700 mb-8 font-sans">
-                Founded by students who understood the challenges of campus dining, {BRAND_NAME} was created to solve real problems: 
+                Founded by a student who understood the challenges of campus dining, {BRAND_NAME} was created to solve real problems: 
                 limited dining options, inflexible meal plans, and the need for convenient, affordable food delivery.
               </p>
               

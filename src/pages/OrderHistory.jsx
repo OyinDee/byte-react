@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingPage from '../components/Loader';
+import UserFeeApproval from '../components/UserFeeApproval';
 import { 
   FaHistory, 
   FaReceipt, 
@@ -25,6 +26,8 @@ const OrderHistory = () => {
   const [processingOrders, setProcessingOrders] = useState({});
   const [page, setPage] = useState(1);
   const [hasMoreOrders, setHasMoreOrders] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showFeeApprovalModal, setShowFeeApprovalModal] = useState(false);
 
   const ordersPerPage = 10;
 
@@ -70,29 +73,24 @@ const OrderHistory = () => {
     }));
   };
 
-  const handleAcceptFee = async (orderId) => {
-    setProcessingOrders((prevState) => ({
-      ...prevState,
-      [orderId]: true,
-    }));
-    toast.info('Please wait while the fee is being accepted...');
+  const handleAcceptFee = (order) => {
+    setSelectedOrder(order);
+    setShowFeeApprovalModal(true);
+  };
 
-    try {
-      await axios.post(
-        `https://mongobyte.vercel.app/api/v1/orders/${orderId}/status`,
-        { action: 'accept' },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      toast.success('Fee accepted successfully');
-      fetchOrderHistory();
-    } catch (error) {
-      handleAxiosError(error, 'Failed to accept fee.');
-    } finally {
-      setProcessingOrders((prevState) => ({
-        ...prevState,
-        [orderId]: false,
-      }));
-    }
+  const handleOrderUpdate = (updatedOrder) => {
+    setOrders(prevOrders => 
+      prevOrders.map(order => 
+        order.customId === updatedOrder.customId ? updatedOrder : order
+      )
+    );
+    setSelectedOrder(null);
+    setShowFeeApprovalModal(false);
+  };
+
+  const closeFeeApprovalModal = () => {
+    setSelectedOrder(null);
+    setShowFeeApprovalModal(false);
   };
 
   const handleCancelOrder = async (orderId) => {
@@ -293,12 +291,11 @@ const OrderHistory = () => {
                               <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => handleAcceptFee(order.customId)}
-                                disabled={processingOrders[order.customId]}
-                                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+                                onClick={() => handleAcceptFee(order)}
+                                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                               >
                                 <FaCheck />
-                                Accept Fee
+                                Review Fee Request
                               </motion.button>
                               <motion.button
                                 whileHover={{ scale: 1.02 }}
@@ -340,6 +337,19 @@ const OrderHistory = () => {
           </div>
         )}
       </div>
+
+      {/* Fee Approval Modal */}
+      {showFeeApprovalModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <UserFeeApproval
+              order={selectedOrder}
+              onOrderUpdate={handleOrderUpdate}
+              onClose={closeFeeApprovalModal}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

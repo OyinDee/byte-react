@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { FaTrashAlt, FaShoppingBag, FaMapMarkerAlt, FaStickyNote, FaWallet, FaCreditCard } from "react-icons/fa";
+import { FaTrashAlt, FaShoppingBag, FaMapMarkerAlt, FaStickyNote, FaWallet, FaCreditCard, FaGift, FaUserFriends } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import { jwtDecode } from 'jwt-decode';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from "../context/cartContext";
+import UserLookup from "../components/UserLookup";
 
 const CartPage = () => {
   const { cart, removeItem, clearCart } = useCart();
@@ -15,6 +16,17 @@ const CartPage = () => {
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [currentCheckoutData, setCurrentCheckoutData] = useState(null);
+  
+  // Order for another user states
+  const [isOrderingForOther, setIsOrderingForOther] = useState(false);
+  const [recipientInfo, setRecipientInfo] = useState(null);
+  const [orderForUsername, setOrderForUsername] = useState('');
+  const [overrideDeliveryInfo, setOverrideDeliveryInfo] = useState({
+    location: '',
+    phoneNumber: '',
+    nearestLandmark: ''
+  });
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,15 +69,85 @@ const CartPage = () => {
     return Array.isArray(items) && items.length > 0 && items.every(item => item.meal && item.meal.tag === 'add-on');
   };
 
+  // Handle user lookup for ordering for others
+  const handleUserFound = (userInfo) => {
+    setRecipientInfo(userInfo);
+    setOrderForUsername(userInfo.username);
+    
+    // Pre-fill delivery info if available
+    if (userInfo.hasDeliveryInfo) {
+      setOverrideDeliveryInfo({
+        location: userInfo.location || '',
+        phoneNumber: userInfo.phoneNumber || '',
+        nearestLandmark: userInfo.nearestLandmark || ''
+      });
+    } else {
+      // Clear override fields if user doesn't have complete info
+      setOverrideDeliveryInfo({
+        location: '',
+        phoneNumber: '',
+        nearestLandmark: ''
+      });
+    }
+  };
+
+  const handleUserNotFound = (error) => {
+    setRecipientInfo(null);
+    setOrderForUsername('');
+    setOverrideDeliveryInfo({
+      location: '',
+      phoneNumber: '',
+      nearestLandmark: ''
+    });
+  };
+
+  const handleClearUserSelection = () => {
+    setRecipientInfo(null);
+    setOrderForUsername('');
+    setOverrideDeliveryInfo({
+      location: '',
+      phoneNumber: '',
+      nearestLandmark: ''
+    });
+  };
+
+  const toggleOrderType = (forOther) => {
+    setIsOrderingForOther(forOther);
+    if (!forOther) {
+      // Reset all gift order states when switching back to self
+      handleClearUserSelection();
+    }
+  };
+
   const handleCheckout = useCallback(async (restaurantId) => {
     if (!user) {
       toast.error("You need to log in first.");
       return;
     }
-    if (user.location === "" || user.nearestLandmark === "") {
-      toast.error("Complete profile setup to proceed with the order.");
-      return;
+    
+    // Check if ordering for another user and validate recipient
+    if (isOrderingForOther) {
+      if (!recipientInfo || !orderForUsername) {
+        toast.error("Please select a recipient for this gift order.");
+        return;
+      }
+      
+      // Check if we have required delivery information
+      const finalLocation = overrideDeliveryInfo.location || recipientInfo.location;
+      const finalPhone = overrideDeliveryInfo.phoneNumber || recipientInfo.phoneNumber;
+      
+      if (!finalLocation || !finalPhone) {
+        toast.error("Please provide delivery location and phone number for the recipient.");
+        return;
+      }
+    } else {
+      // Regular order validation
+      if (user.location === "" || user.nearestLandmark === "") {
+        toast.error("Complete profile setup to proceed with the order.");
+        return;
+      }
     }
+    
     const itemsForRestaurant = cart.get(restaurantId) || [];
     if (itemsForRestaurant.length === 0) {
       toast.error("No items to checkout.");
@@ -75,28 +157,44 @@ const CartPage = () => {
       toast.error("You cannot place an order with only add-ons in your cart. Please add a main meal.");
       return;
     }
+    
     const totalAmount = totalAmountPerRestaurant(itemsForRestaurant, fee);
+    
+    // Build order details with conditional recipient info
+    const orderDetails = {
+      restaurantCustomId: restaurantId,
+      meals: itemsForRestaurant.map(({ meal, quantity }) => ({
+        mealId: meal.customId,
+        quantity,
+      })),
+      totalPrice: totalAmount,
+      user: user._id,
+      note: isOrderingForOther 
+        ? `Gift order for @${orderForUsername}. ${note}`.trim()
+        : note,
+      fee: parseFloat(fee) || 1000,
+    };
+
+    // Add delivery information based on order type
+    if (isOrderingForOther) {
+      orderDetails.orderForUsername = orderForUsername;
+      orderDetails.location = overrideDeliveryInfo.location || recipientInfo.location;
+      orderDetails.phoneNumber = overrideDeliveryInfo.phoneNumber || recipientInfo.phoneNumber;
+      orderDetails.nearestLandmark = overrideDeliveryInfo.nearestLandmark || recipientInfo.nearestLandmark || "";
+    } else {
+      orderDetails.location = user.location;
+      orderDetails.phoneNumber = user.phoneNumber;
+      orderDetails.nearestLandmark = user.nearestLandmark || "";
+    }
+    
     setCurrentCheckoutData({
       restaurantId,
       itemsForRestaurant,
       totalAmount,
-      orderDetails: {
-        restaurantCustomId: restaurantId,
-        meals: itemsForRestaurant.map(({ meal, quantity }) => ({
-          mealId: meal.customId,
-          quantity,
-        })),
-        totalPrice: totalAmount,
-        location: user.location,
-        phoneNumber: user.phoneNumber,
-        user: user._id,
-        note,
-        nearestLandmark: user.nearestLandmark || "",
-        fee: parseFloat(fee) || 1000,
-      }
+      orderDetails
     });
     setShowPaymentModal(true);
-  }, [cart, fee, note, totalAmountPerRestaurant, user]);
+  }, [cart, fee, note, totalAmountPerRestaurant, user, isOrderingForOther, recipientInfo, orderForUsername, overrideDeliveryInfo]);
 
   const processWalletPayment = useCallback(async () => {
     if (!currentCheckoutData) return;
@@ -135,11 +233,15 @@ const CartPage = () => {
       setShowPaymentModal(false);
       setCurrentCheckoutData(null);
       
-      toast.dismiss(loadingToast);
+      if (loadingToast) {
+        toast.dismiss(loadingToast);
+      }
       toast.success("Order placed successfully!");
 
     } catch (error) {
-      toast.dismiss(loadingToast);
+      if (loadingToast) {
+        toast.dismiss(loadingToast);
+      }
       toast.error(error.message || "Something went wrong.");
     } finally {
       setIsCheckoutLoading(false);
@@ -177,53 +279,59 @@ const CartPage = () => {
               value: orderDetails.restaurantCustomId
             }
           ]
-        },
-        callback: async function(response) {
-          // Payment successful, now create the order
-          try {
-            const token = localStorage.getItem('token');
-            const orderResponse = await fetch("https://mongobyte.vercel.app/api/v1/orders/create", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-              },
-              body: JSON.stringify({ 
-                ...orderDetails, 
-                paymentMethod: 'card',
-                paymentReference: response.reference 
-              }),
-            });
+        },          callback: async function(response) {
+            // Payment successful, now create the order
+            try {
+              const token = localStorage.getItem('token');
+              const orderResponse = await fetch("https://mongobyte.vercel.app/api/v1/orders/create", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ 
+                  ...orderDetails, 
+                  paymentMethod: 'card',
+                  paymentReference: response.reference 
+                }),
+              });
 
-            const orderData = await orderResponse.json();
+              const orderData = await orderResponse.json();
 
-            if (!orderResponse.ok) {
-              throw new Error(orderData.message || "Failed to place the order.");
+              if (!orderResponse.ok) {
+                throw new Error(orderData.message || "Failed to place the order.");
+              }
+
+              clearCart();
+              setNote('');
+              setShowPaymentModal(false);
+              setCurrentCheckoutData(null);
+              
+              if (loadingToast) {
+                toast.dismiss(loadingToast);
+              }
+              toast.success("Payment successful! Order placed successfully!");
+            } catch (error) {
+              if (loadingToast) {
+                toast.dismiss(loadingToast);
+              }
+              toast.error(error.message || "Order creation failed after payment.");
             }
-
-            clearCart();
-            setNote('');
-            setShowPaymentModal(false);
-            setCurrentCheckoutData(null);
-            
-            toast.dismiss(loadingToast);
-            toast.success("Payment successful! Order placed successfully!");
-
-          } catch (error) {
-            toast.dismiss(loadingToast);
-            toast.error(error.message || "Order creation failed after payment.");
-          }
-        },
-        onClose: function() {
-          toast.dismiss(loadingToast);
-          toast.info("Payment cancelled");
+          },
+          onClose: function() {
+            if (loadingToast) {
+              toast.dismiss(loadingToast);
+            }
+            toast.info("Payment cancelled");
         }
       });
 
       handler.openIframe();
 
     } catch (error) {
-      toast.dismiss(loadingToast);
+      if (loadingToast) {
+        toast.dismiss(loadingToast);
+      }
       toast.error("Payment initialization failed. Please try again.");
     } finally {
       setIsCheckoutLoading(false);
@@ -271,6 +379,140 @@ const CartPage = () => {
           </motion.div>
         ) : (
           <div className="space-y-6">
+            {/* Order Type Selector */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6"
+            >
+              <h3 className="text-xl font-bold text-crust mb-4 flex items-center gap-2">
+                <FaUserFriends className="text-blue-600" />
+                Who are you ordering for?
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => toggleOrderType(false)}
+                  className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                    !isOrderingForOther 
+                      ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-full ${!isOrderingForOther ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                      <FaShoppingBag className={!isOrderingForOther ? 'text-blue-600' : 'text-gray-500'} />
+                    </div>
+                    <div className="text-left">
+                      <h4 className="font-bold">Order for Myself</h4>
+                      <p className="text-sm opacity-75">Standard personal order</p>
+                    </div>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => toggleOrderType(true)}
+                  className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                    isOrderingForOther 
+                      ? 'border-purple-500 bg-purple-50 text-purple-700' 
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-full ${isOrderingForOther ? 'bg-purple-100' : 'bg-gray-100'}`}>
+                      <FaGift className={isOrderingForOther ? 'text-purple-600' : 'text-gray-500'} />
+                    </div>
+                    <div className="text-left">
+                      <h4 className="font-bold">Order for Someone Else</h4>
+                      <p className="text-sm opacity-75">Send food to a friend</p>
+                    </div>
+                  </div>
+                </motion.button>
+              </div>
+
+              {/* User Lookup Component */}
+              {isOrderingForOther && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <UserLookup
+                    onUserFound={handleUserFound}
+                    onUserNotFound={handleUserNotFound}
+                    onClear={handleClearUserSelection}
+                  />
+                </motion.div>
+              )}
+
+              {/* Delivery Information Override for Gift Orders */}
+              {isOrderingForOther && recipientInfo && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-6 border-2 border-orange-200 mt-6"
+                >
+                  <h4 className="text-lg font-bold text-crust mb-4 flex items-center gap-2">
+                    <FaMapMarkerAlt className="text-orange-600" />
+                    Delivery Information for @{recipientInfo.username}
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {recipientInfo.hasDeliveryInfo 
+                      ? "You can use their saved information or provide custom delivery details below:"
+                      : "Please provide the delivery information for this order:"
+                    }
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Delivery Location *
+                      </label>
+                      <input
+                        type="text"
+                        value={overrideDeliveryInfo.location}
+                        onChange={(e) => setOverrideDeliveryInfo(prev => ({...prev, location: e.target.value}))}
+                        placeholder={recipientInfo.location ? `Default: ${recipientInfo.location}` : "Enter delivery location"}
+                        className="w-full p-3 border border-orange-300 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-transparent font-sans"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        value={overrideDeliveryInfo.phoneNumber}
+                        onChange={(e) => setOverrideDeliveryInfo(prev => ({...prev, phoneNumber: e.target.value}))}
+                        placeholder={recipientInfo.phoneNumber ? `Default: ${recipientInfo.phoneNumber}` : "Enter phone number"}
+                        className="w-full p-3 border border-orange-300 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-transparent font-sans"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Nearest Landmark
+                    </label>
+                    <input
+                      type="text"
+                      value={overrideDeliveryInfo.nearestLandmark}
+                      onChange={(e) => setOverrideDeliveryInfo(prev => ({...prev, nearestLandmark: e.target.value}))}
+                      placeholder={recipientInfo.nearestLandmark ? `Default: ${recipientInfo.nearestLandmark}` : "Enter nearest landmark (optional)"}
+                      className="w-full p-3 border border-orange-300 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-transparent font-sans"
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
             {Array.from(cart.entries()).map(([restaurantId, items], index) => (
               <motion.div
                 key={restaurantId}
@@ -357,12 +599,16 @@ const CartPage = () => {
                   <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
                     <label className="flex items-center gap-2 text-sm font-semibold text-crust mb-3">
                       <FaStickyNote className="text-yellow-600" />
-                      Add a note for your order
+                      {isOrderingForOther ? `Add a note for ${recipientInfo?.username || 'recipient'}'s order` : 'Add a note for your order'}
                     </label>
                     <textarea
                       className="w-full p-3 border border-yellow-300 rounded-xl focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none font-sans"
                       rows="3"
-                      placeholder="Special requests, allergies, or preferences..."
+                      placeholder={
+                        isOrderingForOther 
+                          ? `Special message or delivery instructions for ${recipientInfo?.username || 'recipient'}...`
+                          : "Special requests, allergies, or preferences..."
+                      }
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                     />
@@ -406,6 +652,26 @@ const CartPage = () => {
                         ₦{totalAmountPerRestaurant(items, fee).toFixed(2)}
                       </span>
                     </div>
+                    
+                    {/* Gift Order Summary */}
+                    {isOrderingForOther && recipientInfo && (
+                      <div className="mt-4 pt-4 border-t border-pepperoni/20">
+                        <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg p-3">
+                          <h4 className="font-bold text-purple-700 mb-2 flex items-center gap-2">
+                            <FaGift />
+                            Gift Order Summary
+                          </h4>
+                          <div className="text-sm space-y-1">
+                            <p><span className="font-semibold">Recipient:</span> @{recipientInfo.username}</p>
+                            <p><span className="font-semibold">Delivery to:</span> {overrideDeliveryInfo.location || recipientInfo.location}</p>
+                            <p><span className="font-semibold">Contact:</span> {overrideDeliveryInfo.phoneNumber || recipientInfo.phoneNumber}</p>
+                            {(overrideDeliveryInfo.nearestLandmark || recipientInfo.nearestLandmark) && (
+                              <p><span className="font-semibold">Landmark:</span> {overrideDeliveryInfo.nearestLandmark || recipientInfo.nearestLandmark}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Checkout Button */}

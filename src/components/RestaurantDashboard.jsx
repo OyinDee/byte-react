@@ -22,10 +22,14 @@ import {
   ChatBubbleLeftRightIcon,
   HeartIcon,
   ExclamationTriangleIcon,
-  FlagIcon
+  FlagIcon,
+  XCircleIcon,
+  TruckIcon,
+  InformationCircleIcon
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import LoadingPage from "./Loader";
+import RestaurantFeeRequest from "./RestaurantFeeRequest";
 
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -77,6 +81,7 @@ const RestaurantDashboard = () => {
       orders: []
     }
   });
+  const [orderStatusFilter, setOrderStatusFilter] = useState('pending');
 
   // Move fetchDashboardStats definition above useEffect
   const fetchDashboardStats = useCallback(async (restaurantId, token) => {
@@ -179,7 +184,13 @@ const RestaurantDashboard = () => {
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
       setOrders(sortedOrders);
-      console.log(response)
+      // Log for debugging (fee information is hidden from restaurant view)
+      console.log('Orders fetched for restaurant:', sortedOrders.map(order => ({
+        ...order,
+        foodAmount: order.totalPrice - (order.fee || 0),
+        totalPrice: undefined, // Hide total price for clarity
+        fee: undefined // Hide fee amount from restaurant
+      })));
     } catch (error) {
       toast.error("Error fetching orders.");
     }
@@ -345,22 +356,40 @@ const RestaurantDashboard = () => {
     }
   };
 
-  const updateOrderStatus = async (orderId, newStatus) => {
+  const updateOrderStatus = async (orderCustomId, newStatus, additionalData = {}) => {
     const token = localStorage.getItem("token");
     try {
-      if (newStatus === 'confirmed') {
-        await axios.patch(
-          `https://mongobyte.vercel.app/api/v1/orders/${orderId}`,
-          {},
+      // For confirming order with or without additional fee
+      if (newStatus.toLowerCase() === 'confirmed') {
+        await axios.post(
+          `https://mongobyte.vercel.app/api/v1/orders/${orderCustomId}/confirm`,
+          additionalData,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-      } else {
+      } 
+      // For fee request specifically
+      else if (newStatus.toLowerCase() === 'fee requested') {
         await axios.post(
-          `https://mongobyte.vercel.app/api/v1/orders/${orderId}/status`,
+          `https://mongobyte.vercel.app/api/v1/orders/${orderCustomId}/confirm`,
+          {
+            additionalFee: additionalData.additionalFee,
+            requestDescription: additionalData.requestDescription
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+      // For other status updates (delivered, canceled, etc.)
+      else {
+        await axios.post(
+          `https://mongobyte.vercel.app/api/v1/orders/${orderCustomId}/status`,
           { status: newStatus },
           {
             headers: {
@@ -369,18 +398,41 @@ const RestaurantDashboard = () => {
           }
         );
       }
+      
+      // Update local state
       setOrders(prev =>
         prev.map(order =>
-          order._id === orderId
-            ? { ...order, status: newStatus }
+          order.customId === orderCustomId
+            ? { ...order, status: newStatus, ...additionalData }
             : order
         )
       );
-      toast.success(`Order status updated to ${newStatus}`);
+      
+      toast.success(`Order ${newStatus === 'fee requested' ? 'fee request sent' : `status updated to ${newStatus}`}`);
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Error updating order status."
-      );
+      if (error.response?.status === 400 && error.response.data.message.includes('exceeds allowed limit')) {
+        toast.info('Fee request sent to customer for approval!');
+        setOrders(prev =>
+          prev.map(order =>
+            order.customId === orderCustomId
+              ? { ...order, status: 'Fee Requested' }
+              : order
+          )
+        );
+      } else if (error.response?.status === 400 && error.response.data.message.includes('Insufficient balance')) {
+        toast.error('Order cancelled due to insufficient customer balance.');
+        setOrders(prev =>
+          prev.map(order =>
+            order.customId === orderCustomId
+              ? { ...order, status: 'Canceled' }
+              : order
+          )
+        );
+      } else {
+        toast.error(
+          error.response?.data?.message || "Error updating order status."
+        );
+      }
     }
   };
 
@@ -398,13 +450,13 @@ const RestaurantDashboard = () => {
       
       // Create CSV content
       const csvContent = [
-        ['Order ID', 'Customer', 'Date', 'Status', 'Total', 'Items'].join(','),
+        ['Order ID', 'Customer', 'Date', 'Status', 'Food Amount', 'Items'].join(','),
         ...response.data.map(order => [
           order._id,
           order.customerName || 'Unknown',
           format(new Date(order.createdAt), 'yyyy-MM-dd'),
           order.status,
-          `₦${order.totalAmount}`,
+          `₦${(order.totalAmount - (order.fee || 0)).toFixed(2)}`,
           order.items.map(item => `${item.name} (${item.quantity})`).join('; ')
         ].join(','))
       ].join('\n');
@@ -891,9 +943,9 @@ const RestaurantDashboard = () => {
                 {['pending', 'confirmed', 'delivered', 'fee requested'].map((status) => (
                   <button
                     key={status}
-                    onClick={() => setActiveTab(status)}
+                    onClick={() => setOrderStatusFilter(status)}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      activeTab === status
+                      orderStatusFilter === status
                         ? 'bg-cheese text-crust'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
@@ -907,7 +959,7 @@ const RestaurantDashboard = () => {
             {/* Orders List */}
             <div className="space-y-4">
               {orders
-                .filter((order) => (order.status || '').toLowerCase() === activeTab)
+                .filter((order) => (order.status || '').toLowerCase() === orderStatusFilter)
                 .slice(0, visibleOrdersCount)
                 .map((order) => (
                   <OrderCard
@@ -919,14 +971,14 @@ const RestaurantDashboard = () => {
                   />
                 ))}
 
-              {orders.filter((order) => (order.status || '').toLowerCase() === activeTab).length === 0 && (
+              {orders.filter((order) => (order.status || '').toLowerCase() === orderStatusFilter).length === 0 && (
                 <div className="text-center py-12 bg-white rounded-xl">
                   <ShoppingBagIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No {activeTab.toLowerCase()} orders found</p>
+                  <p className="text-gray-500">No {orderStatusFilter.toLowerCase()} orders found</p>
                 </div>
               )}
 
-              {orders.filter((order) => (order.status || '').toLowerCase() === activeTab).length > visibleOrdersCount && (
+              {orders.filter((order) => (order.status || '').toLowerCase() === orderStatusFilter).length > visibleOrdersCount && (
                 <button
                   className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 p-3 rounded-lg transition-colors"
                   onClick={handleShowMore}
@@ -1443,55 +1495,74 @@ const RatingCard = ({ rating, onModerate }) => {
 // Enhanced Order Card Component
 const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [fees, setFees] = useState("");
-  const [requestDescription, setRequestDescription] = useState("");
-  const [isRequesting, setIsRequesting] = useState(false);
-  const [isDelivering, setIsDelivering] = useState(false);
-
-  const onRequest = async () => {
-    if (isPending && fees) {
-      setIsRequesting(true);
-      await updateOrderStatus(order._id, requestDescription, fees);
-      setIsRequesting(false);
-    }
-  };
-
-  const markAsDelivered = async () => {
-    if (isConfirmed) {
-      setIsDelivering(true);
-      const token = localStorage.getItem("token");
-      try {
-        const response = await axios.patch(
-          `https://mongobyte.vercel.app/api/v1/orders/deliver/${order._id}`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        toast.success(response.data.message);
-        setIsDelivering(false);
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      } catch (error) {
-        toast.error(
-          error.response?.data?.message || "Error marking order as delivered."
-        );
-        setIsDelivering(false);
-      }
-    }
-  };
+  const [showFeeModal, setShowFeeModal] = useState(false);
 
   const getStatusColor = (status) => {
-    switch (status) {
+    switch ((status || '').toLowerCase()) {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'confirmed': return 'bg-blue-100 text-blue-800';
       case 'delivered': return 'bg-green-100 text-green-800';
       case 'fee requested': return 'bg-purple-100 text-purple-800';
+      case 'completed': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const handleConfirmOrder = () => {
+    setShowFeeModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowFeeModal(false);
+  };
+
+  const getOrderActions = () => {
+    const status = (order.status || '').toLowerCase();
+    
+    if (status === 'pending') {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+          <button
+            onClick={handleConfirmOrder}
+            className="flex items-center justify-center gap-2 py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <CheckCircleIcon className="h-5 w-5" />
+            Confirm Order
+          </button>
+          <button
+            onClick={() => updateOrderStatus(order.customId, 'canceled')}
+            className="flex items-center justify-center gap-2 py-3 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            <XCircleIcon className="h-5 w-5" />
+            Cancel Order
+          </button>
+        </div>
+      );
+    } else if (status === 'confirmed') {
+      return (
+        <button
+          onClick={() => updateOrderStatus(order.customId, 'delivered')}
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
+        >
+          <TruckIcon className="h-5 w-5" />
+          Mark as Delivered
+        </button>
+      );
+    } else if (status === 'fee requested') {
+      return (
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <InformationCircleIcon className="h-5 w-5 text-purple-600" />
+            <span className="font-semibold text-purple-800">Waiting for Customer Approval</span>
+          </div>
+          <p className="text-purple-700 text-sm">
+            You've requested additional fees for this order. The customer has been notified and needs to approve the fee.
+          </p>
+        </div>
+      );
+    }
+    
+    return null;
   };
 
   return (
@@ -1513,13 +1584,20 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
               <p>📅 {format(new Date(order.createdAt), 'PPp')}</p>
               <p>📞 {order.phoneNumber}</p>
               <p>📍 {order.location}</p>
+              {order.recipient && (
+                <p className="text-purple-600 font-medium">🎁 Gift order for: {order.recipient.name}</p>
+              )}
+              {order.requestDescription && (
+                <p className="text-blue-600 italic">💬 "{order.requestDescription}"</p>
+              )}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-gray-900">₦{order.totalPrice?.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-gray-900">₦{(order.totalPrice - (order.fee || 0)).toFixed(2)}</div>
+            <div className="text-xs text-gray-500">Food Amount</div>
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-cheese hover:text-yellow-600 text-sm font-medium flex items-center space-x-1 mt-2"
+              className="text-cheese hover:text-yellow-600 text-sm font-medium flex items-center justify-end space-x-1 mt-2"
             >
               <span>{isOpen ? 'Hide Details' : 'View Details'}</span>
               <EyeIcon className="h-4 w-4" />
@@ -1545,50 +1623,48 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
                     <span className="font-medium">₦{(meal.price * quantity).toFixed(2)}</span>
                   </div>
                 ))}
+                
+                {/* Food Total Summary */}
+                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border-t-2 border-blue-200">
+                  <div>
+                    <span className="font-bold text-blue-900">Food Total</span>
+                    <span className="text-blue-600 text-sm ml-2">(Your earnings from food)</span>
+                  </div>
+                  <span className="font-bold text-blue-900 text-lg">₦{(order.totalPrice - (order.fee || 0)).toFixed(2)}</span>
+                </div>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex space-x-3">
-              {isPending && (
-                <div className="flex-1 space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Request description..."
-                    value={requestDescription}
-                    onChange={(e) => setRequestDescription(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Delivery fee..."
-                    value={fees}
-                    onChange={(e) => setFees(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
-                  />
-                  <button
-                    onClick={onRequest}
-                    disabled={!fees || isRequesting}
-                    className="w-full bg-pepperoni text-white py-3 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
-                  >
-                    {isRequesting ? 'Requesting...' : 'Request Fee'}
-                  </button>
-                </div>
-              )}
-              
-              {isConfirmed && (
-                <button
-                  onClick={markAsDelivered}
-                  disabled={isDelivering}
-                  className="flex-1 bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
-                >
-                  {isDelivering ? 'Marking as Delivered...' : 'Mark as Delivered'}
-                </button>
-              )}
+            {/* Delivery Note */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h5 className="font-semibold text-yellow-800 mb-2">📦 Delivery Information</h5>
+              <p className="text-yellow-700 text-sm">
+                The customer has allocated a transport budget separately. You can request your delivery fee independently 
+                based on the distance and your delivery costs. The food amount shown above is what you earn from the meal sales.
+              </p>
             </div>
+
+            {/* Order Actions */}
+            {getOrderActions()}
+            
           </motion.div>
         )}
       </div>
+
+      {/* Fee Request Modal */}
+      {showFeeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <RestaurantFeeRequest 
+              order={order} 
+              onOrderUpdate={(updatedOrder) => {
+                updateOrderStatus(updatedOrder.customId, updatedOrder.status);
+              }}
+              onClose={handleCloseModal}
+            />
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 };
