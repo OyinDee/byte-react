@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { motion } from 'framer-motion';
 import {
   BanknotesIcon,
-  InformationCircleIcon,
   TruckIcon,
   ArrowPathIcon,
   DocumentTextIcon,
@@ -23,7 +21,6 @@ const RestaurantFeeRequest = ({ order, onOrderUpdate, onClose }) => {
   console.log('Order totalPrice:', order.totalPrice);
   console.log('Order foodAmount:', order.foodAmount);
 
-  const standardFee = 600; // Standard delivery fee
   // Use user's budgeted fee as the maximum without approval
   // Handle undefined/null values with proper fallbacks
   const userBudgetedFee = Number(order.fee) || 600; // Fee budgeted by user for delivery
