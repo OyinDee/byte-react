@@ -31,21 +31,6 @@ const CartPage = () => {
   
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      try {
-        const storedUser = jwtDecode(storedToken);
-        setUser(storedUser.user);
-        fetchUserBalance(storedUser.user.username);
-      } catch (error) {
-        navigate("/login");
-      }
-    } else {
-      navigate("/login");
-    }
-  }, [navigate, fetchUserBalance]);
-
   // Fetch user's current balance
   const fetchUserBalance = useCallback(async (username) => {
     if (!username) return;
@@ -66,6 +51,21 @@ const CartPage = () => {
       console.error("Error fetching user balance:", error);
     }
   }, []);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      try {
+        const storedUser = jwtDecode(storedToken);
+        setUser(storedUser.user);
+        fetchUserBalance(storedUser.user.username);
+      } catch (error) {
+        navigate("/login");
+      }
+    } else {
+      navigate("/login");
+    }
+  }, [navigate, fetchUserBalance]);
 
   const handleRemoveItem = useCallback((restaurantId, mealId) => {
     removeItem(mealId);

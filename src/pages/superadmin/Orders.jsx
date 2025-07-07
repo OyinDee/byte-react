@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
@@ -32,7 +32,7 @@ const Orders = () => {
     revenue: 0
   });
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
@@ -97,11 +97,11 @@ const Orders = () => {
       setLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [isRefreshing]);
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
 
   const updateOrderStatus = async (orderId, status) => {
     try {
