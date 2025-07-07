@@ -32,10 +32,6 @@ const Orders = () => {
     revenue: 0
   });
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
   const fetchOrders = async () => {
     setLoading(true);
     try {
@@ -102,6 +98,10 @@ const Orders = () => {
       setIsRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   const updateOrderStatus = async (orderId, status) => {
     try {

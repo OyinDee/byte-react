@@ -4,7 +4,7 @@ import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { motion } from "framer-motion";
-import { format, subDays, subMonths } from "date-fns";
+import { format } from "date-fns";
 import {
   ShoppingBagIcon,
   CurrencyDollarIcon,
@@ -37,7 +37,7 @@ const RestaurantDashboard = () => {
   const [restaurant, setRestaurant] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState("week");
+  const [dateRange] = useState("week");
   const [visibleOrdersCount, setVisibleOrdersCount] = useState(10);
   const [testimonials, setTestimonials] = useState([]);
   const [ratings, setRatings] = useState([]);
@@ -101,6 +101,32 @@ const RestaurantDashboard = () => {
     }
   }, [dateRange]);
 
+  const fetchOrders = useCallback(async (restaurantId, token) => {
+    try {
+      const response = await axios.get(
+        `https://mongobyte.vercel.app/api/v1/orders/restaurant/${restaurantId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          timeout: 8000 // Add timeout to the axios request to prevent hanging
+        }
+      );
+      const sortedOrders = response.data.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setOrders(sortedOrders);
+      
+      if (isRefreshing) {
+        toast.success("Orders refreshed successfully!");
+        setIsRefreshing(false);
+      }
+    } catch (error) {
+      toast.error(error.message || "Error fetching orders.");
+      setIsRefreshing(false);
+    }
+  }, [isRefreshing]);
+
   useEffect(() => {
     const fetchRestaurantAndOrders = async () => {
       const token = localStorage.getItem("token");
@@ -139,7 +165,7 @@ const RestaurantDashboard = () => {
     };
 
     fetchRestaurantAndOrders();
-  }, [dateRange, fetchDashboardStats]);
+  }, [dateRange, fetchDashboardStats, fetchOrders]);
 
   const handleWithdrawal = async () => {
     toast.info("Processing withdrawal request...");
@@ -169,32 +195,6 @@ const RestaurantDashboard = () => {
       toast.error(
         error.response?.data?.message || "Error processing withdrawal."
       );
-    }
-  };
-
-  const fetchOrders = async (restaurantId, token) => {
-    try {
-      const response = await axios.get(
-        `https://mongobyte.vercel.app/api/v1/orders/restaurant/${restaurantId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          timeout: 8000 // Add timeout to the axios request to prevent hanging
-        }
-      );
-      const sortedOrders = response.data.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
-      setOrders(sortedOrders);
-      
-      if (isRefreshing) {
-        toast.success("Orders refreshed successfully!");
-        setIsRefreshing(false);
-      }
-    } catch (error) {
-      toast.error(error.message || "Error fetching orders.");
-      setIsRefreshing(false);
     }
   };
 

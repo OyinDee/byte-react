@@ -44,10 +44,10 @@ const CartPage = () => {
     } else {
       navigate("/login");
     }
-  }, [navigate]);
+  }, [navigate, fetchUserBalance]);
 
   // Fetch user's current balance
-  const fetchUserBalance = async (username) => {
+  const fetchUserBalance = useCallback(async (username) => {
     if (!username) return;
     
     try {
@@ -65,7 +65,7 @@ const CartPage = () => {
     } catch (error) {
       console.error("Error fetching user balance:", error);
     }
-  };
+  }, []);
 
   const handleRemoveItem = useCallback((restaurantId, mealId) => {
     removeItem(mealId);

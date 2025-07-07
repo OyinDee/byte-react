@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { motion } from 'framer-motion';
 import {
   BanknotesIcon,
   CheckCircleIcon,
@@ -17,11 +16,7 @@ const UserFeeApproval = ({ order, onOrderUpdate, onClose }) => {
   const [decision, setDecision] = useState(null);
   const [userBalance, setUserBalance] = useState(0);
 
-  useEffect(() => {
-    fetchUserBalance();
-  }, []);
-
-  const fetchUserBalance = async () => {
+  const fetchUserBalance = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const byteUser = JSON.parse(localStorage.getItem('byteUser'));
@@ -36,7 +31,11 @@ const UserFeeApproval = ({ order, onOrderUpdate, onClose }) => {
     } catch (error) {
       console.error('Error fetching balance:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchUserBalance();
+  }, [fetchUserBalance]);
 
   const handleFeeResponse = async (action) => {
     setLoading(true);
@@ -78,8 +77,6 @@ const UserFeeApproval = ({ order, onOrderUpdate, onClose }) => {
   };
 
   const originalAmount = order.totalPrice - order.fee;
-  const originalFee = 600; // Standard delivery fee
-  const additionalFee = order.fee - originalFee;
   const canAfford = userBalance >= order.totalPrice;
 
   return (
