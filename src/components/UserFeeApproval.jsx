@@ -140,13 +140,9 @@ const UserFeeApproval = ({ order, onOrderUpdate, onClose }) => {
             <span className="text-gray-600">Food Items:</span>
             <span className="font-medium">₦{originalAmount.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Standard Delivery Fee:</span>
-            <span className="font-medium">₦{originalFee.toFixed(2)}</span>
-          </div>
           <div className="flex justify-between items-center text-orange-600 font-medium">
             <span>Additional Fee Requested:</span>
-            <span>₦{additionalFee.toFixed(2)}</span>
+            <span>₦{order.totalPrice.toFixed(2)-originalAmount.toFixed(2)}</span>
           </div>
           <div className="flex justify-between items-center pt-2 border-t border-gray-300 text-lg font-bold">
             <span className="text-gray-800">New Total:</span>

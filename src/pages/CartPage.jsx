@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { FaTrashAlt, FaShoppingBag, FaMapMarkerAlt, FaStickyNote, FaWallet, FaCreditCard, FaGift, FaUserFriends } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import { jwtDecode } from 'jwt-decode';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +17,7 @@ const CartPage = () => {
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [currentCheckoutData, setCurrentCheckoutData] = useState(null);
+  const [userBalance, setUserBalance] = useState(0);
   
   // Order for another user states
   const [isOrderingForOther, setIsOrderingForOther] = useState(false);
@@ -35,6 +37,7 @@ const CartPage = () => {
       try {
         const storedUser = jwtDecode(storedToken);
         setUser(storedUser.user);
+        fetchUserBalance(storedUser.user.username);
       } catch (error) {
         navigate("/login");
       }
@@ -42,6 +45,27 @@ const CartPage = () => {
       navigate("/login");
     }
   }, [navigate]);
+
+  // Fetch user's current balance
+  const fetchUserBalance = async (username) => {
+    if (!username) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`https://mongobyte.vercel.app/api/v1/users/balance/${username}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUserBalance(data.balance || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching user balance:", error);
+    }
+  };
 
   const handleRemoveItem = useCallback((restaurantId, mealId) => {
     removeItem(mealId);
@@ -187,6 +211,9 @@ const CartPage = () => {
       orderDetails.nearestLandmark = user.nearestLandmark || "";
     }
     
+    // Fetch latest user balance before showing payment modal
+    await fetchUserBalance(user.username);
+    
     setCurrentCheckoutData({
       restaurantId,
       itemsForRestaurant,
@@ -194,22 +221,25 @@ const CartPage = () => {
       orderDetails
     });
     setShowPaymentModal(true);
-  }, [cart, fee, note, totalAmountPerRestaurant, user, isOrderingForOther, recipientInfo, orderForUsername, overrideDeliveryInfo]);
+  }, [cart, fee, note, totalAmountPerRestaurant, user, isOrderingForOther, recipientInfo, orderForUsername, overrideDeliveryInfo, fetchUserBalance]);
 
   const processWalletPayment = useCallback(async () => {
     if (!currentCheckoutData) return;
 
     const { totalAmount, orderDetails } = currentCheckoutData;
-    const byteUser = JSON.parse(localStorage.getItem("byteUser"));
-    const userBalance = byteUser?.byteBalance || 0;
-
+    
+    // Use the fetched real-time balance instead of localStorage
     if (userBalance < totalAmount) {
       toast.error("Insufficient balance. Please add funds to your wallet or pay with card!");
       return;
     }
 
     setIsCheckoutLoading(true);
-    const loadingToast = toast.loading("Processing your order...");
+    toast.info("Processing your order...", {
+      autoClose: false,
+      isLoading: true,
+      toastId: "order-processing"
+    });
 
     try {
       const token = localStorage.getItem('token');
@@ -233,20 +263,16 @@ const CartPage = () => {
       setShowPaymentModal(false);
       setCurrentCheckoutData(null);
       
-      if (loadingToast) {
-        toast.dismiss(loadingToast);
-      }
+      toast.dismiss("order-processing");
       toast.success("Order placed successfully!");
 
     } catch (error) {
-      if (loadingToast) {
-        toast.dismiss(loadingToast);
-      }
+      toast.dismiss("order-processing");
       toast.error(error.message || "Something went wrong.");
     } finally {
       setIsCheckoutLoading(false);
     }
-  }, [currentCheckoutData, clearCart, setNote]);
+  }, [currentCheckoutData, clearCart, setNote, userBalance]);
 
   const processCardPayment = useCallback(async () => {
     if (!currentCheckoutData) return;
@@ -254,7 +280,11 @@ const CartPage = () => {
     const { totalAmount, orderDetails } = currentCheckoutData;
     
     setIsCheckoutLoading(true);
-    const loadingToast = toast.loading("Redirecting to payment...");
+    toast.info("Redirecting to payment...", {
+      autoClose: false,
+      isLoading: true,
+      toastId: "payment-processing"
+    });
 
     try {
       // Initialize Paystack payment
@@ -307,31 +337,22 @@ const CartPage = () => {
               setShowPaymentModal(false);
               setCurrentCheckoutData(null);
               
-              if (loadingToast) {
-                toast.dismiss(loadingToast);
-              }
-              toast.success("Payment successful! Order placed successfully!");
-            } catch (error) {
-              if (loadingToast) {
-                toast.dismiss(loadingToast);
-              }
+              toast.dismiss("payment-processing");
+              toast.success("Payment successful! Order placed successfully!");            } catch (error) {
+              toast.dismiss("payment-processing");
               toast.error(error.message || "Order creation failed after payment.");
             }
           },
           onClose: function() {
-            if (loadingToast) {
-              toast.dismiss(loadingToast);
-            }
+            toast.dismiss("payment-processing");
             toast.info("Payment cancelled");
-        }
+          }
       });
 
       handler.openIframe();
 
     } catch (error) {
-      if (loadingToast) {
-        toast.dismiss(loadingToast);
-      }
+      toast.dismiss("payment-processing");
       toast.error("Payment initialization failed. Please try again.");
     } finally {
       setIsCheckoutLoading(false);
@@ -342,7 +363,18 @@ const CartPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4 pt-16 md:pt-24 pb-24 md:pb-6">
-      <ToastContainer />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div
@@ -747,10 +779,10 @@ const CartPage = () => {
                   <div className="flex-1 text-left">
                     <h3 className="font-bold text-gray-800">Pay from Wallet</h3>
                     <p className="text-sm text-gray-600">
-                      Balance: ₦{JSON.parse(localStorage.getItem("byteUser") || '{}')?.byteBalance || 0}
+                      Balance: ₦{userBalance.toFixed(2)}
                     </p>
                   </div>
-                  {JSON.parse(localStorage.getItem("byteUser") || '{}')?.byteBalance >= currentCheckoutData.totalAmount ? (
+                  {userBalance >= currentCheckoutData.totalAmount ? (
                     <div className="text-green-500 font-semibold">✓ Available</div>
                   ) : (
                     <div className="text-red-500 font-semibold text-xs">Insufficient</div>

@@ -15,12 +15,6 @@ const RestaurantFeeRequest = ({ order, onOrderUpdate, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [deliveryLoading, setDeliveryLoading] = useState(false);
 
-  // Debug logging
-  console.log('Order data in RestaurantFeeRequest:', order);
-  console.log('Order fee:', order.fee);
-  console.log('Order totalPrice:', order.totalPrice);
-  console.log('Order foodAmount:', order.foodAmount);
-
   // Use user's budgeted fee as the maximum without approval
   // Handle undefined/null values with proper fallbacks
   const userBudgetedFee = Number(order.fee) || 600; // Fee budgeted by user for delivery
@@ -30,65 +24,33 @@ const RestaurantFeeRequest = ({ order, onOrderUpdate, onClose }) => {
   const handleConfirmOrder = async () => {
     setLoading(true);
     
-    const requestData = {};
-    
-    if (additionalFee && parseFloat(additionalFee) > 0) {
-      requestData.additionalFee = parseFloat(additionalFee);
-    }
-    
-    if (requestDescription.trim()) {
-      requestData.requestDescription = requestDescription.trim();
-    }
-
-    // Early return for fees exceeding the permitted limit
-    const feeValue = parseFloat(additionalFee) || 0;
-    if (feeValue > userBudgetedFee) {
-      toast.info('Fee request sent to customer for approval!');
-      
-      // Update order status and save requested fee amount
-      onOrderUpdate({ 
-        ...order, 
-        status: 'Fee Requested',
-        requestedFee: feeValue,
-        requestDescription: requestDescription.trim() || null
-      });
-      
-      onClose();
-      setLoading(false);
-      return;
-    }
+    const requestData = {
+      additionalFee: parseFloat(additionalFee) || 0,
+      requestDescription: requestDescription.trim() || "Order confirmed by restaurant"
+    };
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `https://mongobyte.vercel.app/api/v1/orders/${order.customId}/confirm`, 
-        requestData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-
-      if (response.status === 200) {
-        toast.success('Order confirmed successfully!');
-        onOrderUpdate({ ...order, status: 'Confirmed' });
-        onClose();
-      }
+      // Log the request data for debugging
+      console.log('PAYMENT CONFIRMATION - FeeRequest Component - Request Body:', requestData);
+      console.log('PAYMENT CONFIRMATION - FeeRequest Component - Order ID:', order.customId);
+      
+      // Instead of making our own API call, pass the data to the parent component
+      // to make a single API call with the correct fee amount
+      onOrderUpdate({
+        ...order,
+        status: 'Confirmed',  // Let the backend decide the actual status
+        additionalFee: parseFloat(additionalFee) || 0,
+        requestDescription: requestDescription.trim() || "Order confirmed by restaurant"
+      });
+      
+      // Close the modal
+      onClose();
+      
+      // Show a toast indicating the request is being processed
+      toast.info("Processing order confirmation...");
+      setLoading(false);
     } catch (error) {
-        console.log(error);
-      if (error.response?.status === 400) {
-        if (error.response.data.message.includes('Insufficient balance')) {
-          toast.error('Order cancelled due to insufficient customer balance.');
-          onOrderUpdate({ ...order, status: 'Canceled' });
-          onClose();
-        } else {
-          toast.error(error.response.data.message || 'Error confirming order');
-        }
-      } else {
-        toast.error('Error confirming order: ' + (error.response?.data?.message || error.message));
-      }
-    } finally {
+      toast.error("Error preparing order confirmation");
       setLoading(false);
     }
   };
@@ -113,7 +75,6 @@ const RestaurantFeeRequest = ({ order, onOrderUpdate, onClose }) => {
         onClose();
       }
     } catch (error) {
-      console.log(error);
       toast.error('Error marking order as delivered: ' + (error.response?.data?.message || error.message));
     } finally {
       setDeliveryLoading(false);

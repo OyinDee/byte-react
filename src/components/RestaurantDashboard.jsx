@@ -25,7 +25,8 @@ import {
   FlagIcon,
   XCircleIcon,
   TruckIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  ArrowPathIcon
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import LoadingPage from "./Loader";
@@ -40,6 +41,7 @@ const RestaurantDashboard = () => {
   const [visibleOrdersCount, setVisibleOrdersCount] = useState(10);
   const [testimonials, setTestimonials] = useState([]);
   const [ratings, setRatings] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [ratingStats, setRatingStats] = useState({
     averageRating: 0,
     totalRatings: 0,
@@ -178,21 +180,21 @@ const RestaurantDashboard = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          timeout: 8000 // Add timeout to the axios request to prevent hanging
         }
       );
       const sortedOrders = response.data.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
       setOrders(sortedOrders);
-      // Log for debugging (fee information is hidden from restaurant view)
-      console.log('Orders fetched for restaurant:', sortedOrders.map(order => ({
-        ...order,
-        foodAmount: order.totalPrice - (order.fee || 0),
-        totalPrice: undefined, // Hide total price for clarity
-        fee: undefined // Hide fee amount from restaurant
-      })));
+      
+      if (isRefreshing) {
+        toast.success("Orders refreshed successfully!");
+        setIsRefreshing(false);
+      }
     } catch (error) {
-      toast.error("Error fetching orders.");
+      toast.error(error.message || "Error fetching orders.");
+      setIsRefreshing(false);
     }
   };
 
@@ -360,28 +362,28 @@ const RestaurantDashboard = () => {
     const token = localStorage.getItem("token");
     try {
       // For confirming order with or without additional fee
-      if (newStatus.toLowerCase() === 'confirmed') {
+      if (newStatus.toLowerCase() === 'confirmed' || newStatus.toLowerCase() === 'fee requested') {
+        // Format request body to match exactly what the backend expects
+        // Let the backend determine if this becomes a fee request or direct confirmation
+        const requestBody = {
+          additionalFee: additionalData.additionalFee || 0, 
+          requestDescription: additionalData.requestDescription || "Order confirmed by restaurant"
+        };
+          
+        console.log('PAYMENT CONFIRMATION - Request Body:', requestBody);
+        console.log('PAYMENT CONFIRMATION - Order ID:', orderCustomId);
+        console.log('PAYMENT CONFIRMATION - Headers:', { 
+          Authorization: `Bearer ${token.substring(0, 10)}...`, 
+          'Content-Type': 'application/json' 
+        });
+        
         await axios.post(
-          `https://mongobyte.vercel.app/api/v1/orders/${orderCustomId}/confirm`,
-          additionalData,
+          `http://localhost:8080/api/v1/orders/${orderCustomId}/confirm`,
+          requestBody,
           {
             headers: {
               Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-      } 
-      // For fee request specifically
-      else if (newStatus.toLowerCase() === 'fee requested') {
-        await axios.post(
-          `https://mongobyte.vercel.app/api/v1/orders/${orderCustomId}/confirm`,
-          {
-            additionalFee: additionalData.additionalFee,
-            requestDescription: additionalData.requestDescription
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json' // Explicitly set content type
             },
           }
         );
@@ -394,6 +396,7 @@ const RestaurantDashboard = () => {
           {
             headers: {
               Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
             },
           }
         );
@@ -939,20 +942,47 @@ const RestaurantDashboard = () => {
           <div className="space-y-6">
             {/* Order Status Filters */}
             <div className="bg-white p-4 rounded-xl shadow-sm">
-              <div className="flex flex-wrap gap-2">
-                {['pending', 'confirmed', 'delivered', 'fee requested'].map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => setOrderStatusFilter(status)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      orderStatusFilter === status
-                        ? 'bg-cheese text-crust'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {status.charAt(0).toUpperCase() + status.slice(1)} ({orders.filter(order => (order.status || '').toLowerCase() === status).length})
-                  </button>
-                ))}
+              <div className="flex flex-wrap gap-2 justify-between">
+                <div className="flex flex-wrap gap-2">
+                  {['pending', 'confirmed', 'delivered', 'fee requested'].map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => setOrderStatusFilter(status)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        orderStatusFilter === status
+                          ? 'bg-cheese text-crust'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {status.charAt(0).toUpperCase() + status.slice(1)} ({orders.filter(order => (order.status || '').toLowerCase() === status).length})
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    setIsRefreshing(true);
+                    toast.info("Refreshing orders...");
+                    const token = localStorage.getItem("token");
+                    const decodedToken = jwtDecode(token);
+                    const restaurantCustomId = decodedToken.restaurant.customId;
+                    
+                    // Set a timeout to ensure the spinner stops even if the request hangs
+                    const timeoutId = setTimeout(() => {
+                      if (isRefreshing) {
+                        setIsRefreshing(false);
+                        toast.warn("Refresh timeout - please try again later");
+                      }
+                    }, 10000); // 10 second timeout
+                    
+                    fetchOrders(restaurantCustomId, token)
+                      .finally(() => clearTimeout(timeoutId)); // Clear timeout if request completes
+                  }}
+                  disabled={isRefreshing}
+                  className="px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-70"
+                >
+                  <ArrowPathIcon className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`} />
+                  {isRefreshing ? "Refreshing..." : "Refresh Orders"}
+                </button>
               </div>
             </div>
 
@@ -1658,7 +1688,11 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
             <RestaurantFeeRequest 
               order={order} 
               onOrderUpdate={(updatedOrder) => {
-                updateOrderStatus(updatedOrder.customId, updatedOrder.status);
+                // Pass along the fee and description from the fee request form
+                updateOrderStatus(updatedOrder.customId, updatedOrder.status, {
+                  additionalFee: updatedOrder.additionalFee,
+                  requestDescription: updatedOrder.requestDescription
+                });
               }}
               onClose={handleCloseModal}
             />

@@ -21,6 +21,7 @@ const Orders = () => {
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [expanded, setExpanded] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -90,11 +91,15 @@ const Orders = () => {
       };
 
       setStats(stats);
+      if (isRefreshing) {
+        toast.success("Orders refreshed successfully!");
+      }
     } catch (error) {
       console.error("Error fetching orders:", error);
       toast.error("Failed to load orders");
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -206,11 +211,16 @@ const Orders = () => {
           </div>
           
           <button 
-            onClick={fetchOrders} 
-            className="mt-4 md:mt-0 flex items-center gap-2 bg-cheese hover:bg-yellow-500 text-crust py-2 px-4 rounded-lg transition-colors shadow-md"
+            onClick={() => {
+              setIsRefreshing(true);
+              toast.info("Refreshing orders...");
+              fetchOrders();
+            }}
+            disabled={isRefreshing || loading}
+            className="mt-4 md:mt-0 flex items-center gap-2 bg-cheese hover:bg-yellow-500 text-crust py-2 px-4 rounded-lg transition-colors shadow-md disabled:opacity-70"
           >
-            <ArrowPathIcon className="w-5 h-5" />
-            Refresh
+            <ArrowPathIcon className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`} />
+            {isRefreshing ? "Refreshing..." : "Refresh"}
           </button>
         </div>
 

@@ -15,9 +15,13 @@ import {
   FaCheck,
   FaTimes,
   FaShoppingBag,
-  FaUtensils
+  FaUtensils,
+  FaSyncAlt
 } from 'react-icons/fa';
 import 'react-toastify/dist/ReactToastify.css';
+
+// Add custom animation class for slow spin
+import './order-history.css';
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
@@ -28,6 +32,7 @@ const OrderHistory = () => {
   const [hasMoreOrders, setHasMoreOrders] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showFeeApprovalModal, setShowFeeApprovalModal] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const ordersPerPage = 10;
 
@@ -164,6 +169,32 @@ const OrderHistory = () => {
             Order History
           </h1>
           <p className="text-gray-600 font-sans">Track all your delicious orders</p>
+          
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              setIsRefreshing(true);
+              const refreshToast = toast.loading("Refreshing orders...");
+              fetchOrderHistory(false)
+                .then(() => {
+                  toast.dismiss(refreshToast);
+                  toast.success("Orders refreshed successfully!");
+                })
+                .catch((error) => {
+                  toast.dismiss(refreshToast);
+                  toast.error("Failed to refresh orders. Please try again.");
+                })
+                .finally(() => {
+                  setIsRefreshing(false);
+                });
+            }}
+            disabled={isRefreshing}
+            className="mt-4 flex items-center gap-2 bg-pepperoni text-white px-4 py-2 rounded-full mx-auto shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-70"
+          >
+            <FaSyncAlt className={isRefreshing ? "refresh-spin" : ""} />
+            <span>{isRefreshing ? "Refreshing..." : "Refresh Orders"}</span>
+          </motion.button>
         </motion.div>
 
         {orders.length === 0 ? (
