@@ -67,15 +67,40 @@ const CartPage = () => {
     }
   }, [navigate, fetchUserBalance]);
 
-  const handleRemoveItem = useCallback((restaurantId, mealId) => {
-    removeItem(mealId);
-    toast.success("Item removed from cart!");
+  const handleRemoveItem = useCallback((restaurantId, mealId, isRequired) => {
+    if (isRequired) {
+      // Show warning when trying to remove required items
+      const confirmRemove = window.confirm(
+        "This is a required item (like a takeaway container) necessary for your order. Are you sure you want to remove it? Your order may be affected."
+      );
+      if (confirmRemove) {
+        removeItem(mealId);
+        toast.warning("Required item removed. You may need to select an alternative.");
+      }
+    } else {
+      removeItem(mealId);
+      toast.success("Item removed from cart!");
+    }
   }, [removeItem]);
 
   const handleClearCart = useCallback((restaurantId) => {
-    clearCart();
-    toast.success("Cart cleared successfully!");
-  }, [clearCart]);
+    // Check if there are any required items in the cart
+    const items = cart.get(restaurantId) || [];
+    const hasRequiredItems = items.some(item => item.meal && item.meal.required);
+    
+    if (hasRequiredItems) {
+      const confirmClear = window.confirm(
+        "Your cart contains required items (like takeaway containers) necessary for your order. Are you sure you want to clear your cart?"
+      );
+      if (confirmClear) {
+        clearCart();
+        toast.warning("Cart cleared including required items.");
+      }
+    } else {
+      clearCart();
+      toast.success("Cart cleared successfully!");
+    }
+  }, [clearCart, cart]);
 
   const totalAmountPerRestaurant = useCallback((items = [], fee = 0) => {
     if (!Array.isArray(items)) return parseFloat(fee || 0);
@@ -90,7 +115,13 @@ const CartPage = () => {
 
   // Utility to check if all items are add-ons
   const isOnlyAddOns = (items) => {
-    return Array.isArray(items) && items.length > 0 && items.every(item => item.meal && item.meal.tag === 'add-on');
+    return Array.isArray(items) && 
+           items.length > 0 && 
+           items.every(item => 
+             item.meal && 
+             item.meal.tag === 'add-on' && 
+             !item.meal.required // Exclude required items from this check
+           );
   };
 
   // Handle user lookup for ordering for others
@@ -603,7 +634,14 @@ const CartPage = () => {
 
                             {/* Meal Details */}
                             <div className="flex-1">
-                              <h3 className="text-lg font-bold text-crust">{meal.name}</h3>
+                              <h3 className="text-lg font-bold text-crust">
+                                {meal.name}
+                                {meal.required && (
+                                  <span className="ml-2 text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
+                                    Required
+                                  </span>
+                                )}
+                              </h3>
                               <p className="text-sm text-gray-600 mb-2">
                                 Quantity: {quantity} {meal.per || "meal"}(s)
                               </p>
@@ -614,7 +652,7 @@ const CartPage = () => {
                             <motion.button
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
-                              onClick={() => handleRemoveItem(restaurantId, meal.customId)}
+                              onClick={() => handleRemoveItem(restaurantId, meal.customId, meal.required)}
                               className="bg-red-100 hover:bg-red-200 text-red-600 p-3 rounded-xl transition-all duration-300"
                             >
                               <FaTrashAlt />

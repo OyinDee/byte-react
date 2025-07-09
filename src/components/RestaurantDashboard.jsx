@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { format, parseISO, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import {
   ShoppingBagIcon,
   CurrencyDollarIcon,
@@ -26,22 +26,51 @@ import {
   XCircleIcon,
   TruckIcon,
   InformationCircleIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  BellIcon,
+  AdjustmentsHorizontalIcon,
+  CalendarIcon,
+  RectangleStackIcon
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
+import { Line, Bar, Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import LoadingPage from "./Loader";
 import RestaurantFeeRequest from "./RestaurantFeeRequest";
+
+// Register ChartJS components
+ChartJS.register(
+  ArcElement, 
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [restaurant, setRestaurant] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [dateRange] = useState("week");
+  const [dateRange, setDateRange] = useState("week");
+  const [dateRangeLabel, setDateRangeLabel] = useState("This Week");
   const [visibleOrdersCount, setVisibleOrdersCount] = useState(10);
   const [testimonials, setTestimonials] = useState([]);
   const [ratings, setRatings] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
+  const [notificationFilter, setNotificationFilter] = useState('all');
+  const [withdrawalHistory, setWithdrawalHistory] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
+  const [selectedMenuItem, setSelectedMenuItem] = useState(null);
+  const [showMenuItemModal, setShowMenuItemModal] = useState(false);
+  const notificationsPanelRef = useRef(null);
   const [ratingStats, setRatingStats] = useState({
     averageRating: 0,
     totalRatings: 0,
@@ -84,6 +113,15 @@ const RestaurantDashboard = () => {
     }
   });
   const [orderStatusFilter, setOrderStatusFilter] = useState('pending');
+  
+  // Date range options for reports and dashboard
+  const dateRangeOptions = [
+    { value: 'today', label: 'Today' },
+    { value: 'yesterday', label: 'Yesterday' },
+    { value: 'week', label: 'This Week' },
+    { value: 'month', label: 'This Month' },
+    { value: 'custom', label: 'Custom Range' }
+  ];
 
   // Move fetchDashboardStats definition above useEffect
   const fetchDashboardStats = useCallback(async (restaurantId, token) => {
@@ -388,7 +426,20 @@ const RestaurantDashboard = () => {
           }
         );
       }
-      // For other status updates (delivered, canceled, etc.)
+      // For marking an order as delivered
+      else if (newStatus.toLowerCase() === 'delivered') {
+        await axios.patch(
+          `https://mongobyte.vercel.app/api/v1/orders/deliver/${orderCustomId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+          }
+        );
+      }
+      // For other status updates (canceled, etc.)
       else {
         await axios.post(
           `https://mongobyte.vercel.app/api/v1/orders/${orderCustomId}/status`,
@@ -944,7 +995,7 @@ const RestaurantDashboard = () => {
             <div className="bg-white p-4 rounded-xl shadow-sm">
               <div className="flex flex-wrap gap-2 justify-between">
                 <div className="flex flex-wrap gap-2">
-                  {['pending', 'confirmed', 'delivered', 'fee requested'].map((status) => (
+                  {['pending', 'confirmed', 'delivered', 'fee requested', 'canceled'].map((status) => (
                     <button
                       key={status}
                       onClick={() => setOrderStatusFilter(status)}
@@ -1534,6 +1585,7 @@ const OrderCard = ({ order, isPending, isConfirmed, updateOrderStatus }) => {
       case 'delivered': return 'bg-green-100 text-green-800';
       case 'fee requested': return 'bg-purple-100 text-purple-800';
       case 'completed': return 'bg-green-100 text-green-800';
+      case 'canceled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };

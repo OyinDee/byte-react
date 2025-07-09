@@ -97,7 +97,7 @@ export const CartProvider = ({ children }) => {
       if (existingItem) {
         existingItem.quantity += quantity;
       } else {
-        items.push({ meal, quantity });
+        items.push({ meal, quantity, isRequired: meal.required || false });
       }
 
       newCart.set(restaurantId, items);

@@ -259,6 +259,24 @@ const RestaurantPage = () => {
 const MealCard = ({ meal, restaurantId, hideImage, index }) => {
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [restaurant, setRestaurant] = useState(null);
+
+  // Fetch restaurant data to get all the meals for required items check
+  useEffect(() => {
+    if (restaurantId) {
+      const fetchRestaurantData = async () => {
+        try {
+          const response = await axios.get(
+            `https://mongobyte.vercel.app/api/v1/users/restdetails/${restaurantId}`
+          );
+          setRestaurant(response.data);
+        } catch (error) {
+          console.error("Error fetching restaurant details:", error);
+        }
+      };
+      fetchRestaurantData();
+    }
+  }, [restaurantId]);
 
   const handleIncrease = () => {
     setQuantity((prev) => prev + 1);
@@ -269,8 +287,30 @@ const MealCard = ({ meal, restaurantId, hideImage, index }) => {
   };
 
   const handleAddToCart = () => {
+    // First add the selected item to cart
     addToCart({ ...meal, restaurantId }, quantity);
-    toast.success(`${meal.name} (x${quantity}) added to cart!`, {
+    
+    // If the meal is not a required item itself, check for required items
+    if (!meal.required && restaurant && restaurant.meals) {
+      const requiredItems = restaurant.meals.filter(item => item.required && item.availability);
+      
+      if (requiredItems.length > 0) {
+        // Auto-add required items (with quantity 1)
+        requiredItems.forEach(requiredItem => {
+          addToCart({ ...requiredItem, restaurantId }, 1);
+          toast.info(`${requiredItem.name} was automatically added to your cart (required for your order)`, {
+            position: "top-right",
+            autoClose: 5000,
+          });
+        });
+      }
+    }
+    
+    const message = meal.required 
+      ? `${meal.name} (x${quantity}) added to cart as a required item!`
+      : `${meal.name} (x${quantity}) added to cart!`;
+      
+    toast.success(message, {
       position: "top-right",
       autoClose: 3000,
     });
@@ -315,6 +355,13 @@ const MealCard = ({ meal, restaurantId, hideImage, index }) => {
             <div className={`absolute top-3 left-3 ${badge.color} text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg`}>
               <badge.icon className="text-xs" />
               {badge.text}
+            </div>
+          )}
+          
+          {/* Required Badge */}
+          {meal.required && (
+            <div className="absolute top-3 right-3 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
+              <span>Required</span>
             </div>
           )}
 
@@ -405,7 +452,11 @@ const MealCard = ({ meal, restaurantId, hideImage, index }) => {
             }`}
           >
             <FaShoppingCart />
-            {meal.availability ? "Add to Cart" : "Unavailable"}
+            {meal.availability 
+              ? meal.required 
+                ? "Add Required Item" 
+                : "Add to Cart" 
+              : "Unavailable"}
           </motion.button>
         </div>
       </div>

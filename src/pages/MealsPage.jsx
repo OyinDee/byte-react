@@ -23,6 +23,7 @@ const MealsPage = () => {
     per: "", 
     imageUrl: "",
     availability: true,
+    required: false,
   });
   const [selectedImage, setSelectedImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +56,7 @@ const MealsPage = () => {
       per: meal.per.toLowerCase() || "",  
       imageUrl: meal.imageUrl || "",  
       availability: meal.availability,
+      required: meal.required || false,
     });
     setSelectedImage(null);  
     setEditingMealId(meal._id);
@@ -162,6 +164,7 @@ const MealsPage = () => {
         per: "",
         imageUrl: "",
         availability: true,
+        required: false,
       });
       setSelectedImage(null);
     } catch (error) {
@@ -238,6 +241,7 @@ const MealsPage = () => {
                       per: "",
                       imageUrl: "",
                       availability: true,
+                      required: false,
                     });
                     setSelectedImage(null);
                   }}
@@ -346,6 +350,33 @@ const MealsPage = () => {
                       <option value="true">Available</option>
                       <option value="false">Not Available</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Required Item
+                    </label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-xl flex items-center">
+                      <input
+                        type="checkbox"
+                        id="required-checkbox"
+                        name="required"
+                        checked={form.required}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            required: e.target.checked,
+                          }))
+                        }
+                        className="h-5 w-5 text-pepperoni border-gray-300 rounded focus:ring-pepperoni"
+                      />
+                      <label htmlFor="required-checkbox" className="ml-2 block text-sm text-gray-700">
+                        Mark as required item (e.g., takeaway containers)
+                      </label>
+                    </div>
+                    <small className="text-gray-500 text-xs mt-1 block">
+                      Required items will be automatically added to the customer's cart
+                    </small>
                   </div>
                 </div>
 
@@ -457,6 +488,13 @@ const MealsPage = () => {
                         {meal.tag}
                       </span>
                     </div>
+                    {meal.required && (
+                      <div className="absolute bottom-3 left-3">
+                        <span className="px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-full">
+                          Required
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-6">
