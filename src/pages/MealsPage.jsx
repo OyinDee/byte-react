@@ -59,7 +59,7 @@ const MealsPage = () => {
       required: meal.required || false,
     });
     setSelectedImage(null);  
-    setEditingMealId(meal._id);
+    setEditingMealId(meal.customId);
     setIsEditing(true);
   };
 
@@ -178,7 +178,7 @@ const MealsPage = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `https://mongobyte.vercel.app/api/v1/meals/${meal._id}`,
+        `https://mongobyte.vercel.app/api/v1/meals/${meal.customId}`,
         { availability: !meal.availability },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -543,7 +543,7 @@ const MealsPage = () => {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => handleDelete(meal._id)}
+                        onClick={() => handleDelete(meal.customId)}
                         className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all duration-300"
                       >
                         <FaTrash />
