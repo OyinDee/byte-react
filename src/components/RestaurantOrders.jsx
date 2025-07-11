@@ -419,9 +419,11 @@ const RestaurantOrders = () => {
                           <span>Food Amount:</span>
                           <span className="font-bold text-green-600">₦{foodAmount.toLocaleString()}</span>
                         </div>
-                        <div className="text-xs text-blue-600 mt-2">
-                          * Set your delivery fee and any other fee(takeaways and all that) when confirming the order
-                        </div>
+                        {order.status?.toLowerCase() === 'pending' && (
+                          <div className="text-xs text-blue-600 mt-2">
+                            * Set your delivery fee and any other fee(takeaways and all that) when confirming the order
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -453,9 +455,16 @@ const RestaurantOrders = () => {
                         <div className="flex-1 bg-orange-50 border border-orange-200 rounded-lg p-3">
                           <div className="flex items-center gap-2 text-orange-800">
                             <ExclamationTriangleIcon className="w-4 h-4" />
-                            <span className="text-sm font-medium">
-                              Waiting for customer to approve delivery fee request
-                            </span>
+                            <div className="flex-1">
+                              <span className="text-sm font-medium block">
+                                Waiting for customer to approve delivery fee request
+                              </span>
+                              {order.requestedFee && (
+                                <span className="text-xs text-orange-700 mt-1 block">
+                                  Requested amount: ₦{order.requestedFee.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       )}

@@ -278,27 +278,55 @@ const OrderHistory = () => {
 
                     {/* Order Summary */}
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                      <div className="bg-gray-50 rounded-xl p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <FaMoneyBillWave className="text-green-600 text-sm" />
-                          <span className="text-sm text-gray-600 font-sans">Total</span>
-                        </div>
-                        <span className="text-lg font-bold text-crust">₦{order.totalPrice}</span>
-                      </div>
-                      <div className="bg-gray-50 rounded-xl p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <FaClock className="text-blue-600 text-sm" />
-                          <span className="text-sm text-gray-600 font-sans">Fee</span>
-                        </div>
-                        <span className="text-lg font-bold text-crust">₦{order.fee}</span>
-                      </div>
-                      <div className="bg-gray-50 rounded-xl p-3 col-span-2 md:col-span-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <FaUtensils className="text-orange-600 text-sm" />
-                          <span className="text-sm text-gray-600 font-sans">Items</span>
-                        </div>
-                        <span className="text-lg font-bold text-crust">{order.meals ? order.meals.length : 0}</span>
-                      </div>
+                      {order.status === "Fee Requested" ? (
+                        <>
+                          <div className="bg-gray-50 rounded-xl p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FaUtensils className="text-green-600 text-sm" />
+                              <span className="text-sm text-gray-600 font-sans">Meal Total</span>
+                            </div>
+                            <span className="text-lg font-bold text-crust">₦{order.foodAmount || (order.totalPrice - order.fee)}</span>
+                          </div>
+                          <div className="bg-blue-50 rounded-xl p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FaClock className="text-blue-600 text-sm" />
+                              <span className="text-sm text-gray-600 font-sans">Your Allocated Fee</span>
+                            </div>
+                            <span className="text-lg font-bold text-crust">₦{order.fee}</span>
+                          </div>
+                          <div className="bg-orange-50 rounded-xl p-3 col-span-2 md:col-span-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FaMoneyBillWave className="text-orange-600 text-sm" />
+                              <span className="text-sm text-gray-600 font-sans">Restaurant Requested</span>
+                            </div>
+                            <span className="text-lg font-bold text-crust">₦{order.requestedFee || 0}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="bg-gray-50 rounded-xl p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FaMoneyBillWave className="text-green-600 text-sm" />
+                              <span className="text-sm text-gray-600 font-sans">Total</span>
+                            </div>
+                            <span className="text-lg font-bold text-crust">₦{order.totalPrice}</span>
+                          </div>
+                          <div className="bg-gray-50 rounded-xl p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FaClock className="text-blue-600 text-sm" />
+                              <span className="text-sm text-gray-600 font-sans">Fee</span>
+                            </div>
+                            <span className="text-lg font-bold text-crust">₦{order.fee}</span>
+                          </div>
+                          <div className="bg-gray-50 rounded-xl p-3 col-span-2 md:col-span-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FaUtensils className="text-orange-600 text-sm" />
+                              <span className="text-sm text-gray-600 font-sans">Items</span>
+                            </div>
+                            <span className="text-lg font-bold text-crust">{order.meals ? order.meals.length : 0}</span>
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {/* Expand Button */}
