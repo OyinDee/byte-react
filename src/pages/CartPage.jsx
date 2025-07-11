@@ -249,7 +249,7 @@ const CartPage = () => {
     
     // First, refresh user profile to get the most current data
     const freshUserData = await refreshUserProfile();
-    const currentUserData = freshUserData || user;
+    let finalUserData = freshUserData || user;
     
     // Check if ordering for another user and validate recipient
     if (isOrderingForOther) {
@@ -268,8 +268,8 @@ const CartPage = () => {
       }
     } else {
       // Regular order validation with the most recent user data      
-      if (!currentUserData.location || currentUserData.location === "" || 
-          !currentUserData.nearestLandmark || currentUserData.nearestLandmark === "") {
+      if (!finalUserData.location || finalUserData.location === "" || 
+          !finalUserData.nearestLandmark || finalUserData.nearestLandmark === "") {
         toast.error("Complete profile setup to proceed with the order.");
         // Redirect to profile page to complete setup
         navigate('/user/profile');
@@ -289,18 +289,6 @@ const CartPage = () => {
     
     const totalAmount = totalAmountPerRestaurant(itemsForRestaurant, fee);
     
-    // Get the most current user data
-    let currentUserData = user;
-    const byteUser = localStorage.getItem("byteUser");
-    if (byteUser) {
-      try {
-        const parsedUser = JSON.parse(byteUser);
-        currentUserData = { ...currentUserData, ...parsedUser };
-      } catch (error) {
-        console.error("Error parsing byteUser from localStorage:", error);
-      }
-    }
-    
     // Build order details with conditional recipient info
     const orderDetails = {
       restaurantCustomId: restaurantId,
@@ -309,7 +297,7 @@ const CartPage = () => {
         quantity,
       })),
       totalPrice: totalAmount,
-      user: currentUserData._id,
+      user: finalUserData._id,
       note: isOrderingForOther 
         ? `Gift order for @${orderForUsername}. ${note}`.trim()
         : note,
@@ -323,13 +311,13 @@ const CartPage = () => {
       orderDetails.phoneNumber = overrideDeliveryInfo.phoneNumber || recipientInfo.phoneNumber;
       orderDetails.nearestLandmark = overrideDeliveryInfo.nearestLandmark || recipientInfo.nearestLandmark || "";
     } else {
-      orderDetails.location = currentUserData.location;
-      orderDetails.phoneNumber = currentUserData.phoneNumber;
-      orderDetails.nearestLandmark = currentUserData.nearestLandmark || "";
+      orderDetails.location = finalUserData.location;
+      orderDetails.phoneNumber = finalUserData.phoneNumber;
+      orderDetails.nearestLandmark = finalUserData.nearestLandmark || "";
     }
     
     // Fetch latest user balance before showing payment modal
-    await fetchUserBalance(user.username);
+    await fetchUserBalance(finalUserData.username);
     
     setCurrentCheckoutData({
       restaurantId,
@@ -338,7 +326,7 @@ const CartPage = () => {
       orderDetails
     });
     setShowPaymentModal(true);
-  }, [cart, fee, note, totalAmountPerRestaurant, user, isOrderingForOther, recipientInfo, orderForUsername, overrideDeliveryInfo, fetchUserBalance, navigate]);
+  }, [cart, fee, note, totalAmountPerRestaurant, user, isOrderingForOther, recipientInfo, orderForUsername, overrideDeliveryInfo, fetchUserBalance, navigate, refreshUserProfile]);
 
   const processWalletPayment = useCallback(async () => {
     if (!currentCheckoutData) return;
@@ -404,24 +392,16 @@ const CartPage = () => {
     });
 
     try {
-      // Get most current user data for email
-      let currentUserData = user;
-      const byteUser = localStorage.getItem("byteUser");
-      if (byteUser) {
-        try {
-          const parsedUser = JSON.parse(byteUser);
-          currentUserData = { ...currentUserData, ...parsedUser };
-        } catch (error) {
-          console.error("Error parsing byteUser from localStorage:", error);
-        }
-      }
+      // Refresh profile data to get the most current info
+      const freshUserData = await refreshUserProfile();
+      const finalUserData = freshUserData || user;
       
       // Initialize Paystack payment
       const paystackKey = "pk_test_4b8fb38e6c1bf4a0e5c92eb74f11b71f78cfac28"; // Your Paystack public key
       
       const handler = window.PaystackPop.setup({
         key: paystackKey,
-        email: currentUserData.email,
+        email: finalUserData.email,
         amount: totalAmount * 100, // Paystack expects amount in kobo (multiply by 100)
         currency: 'NGN',
         ref: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -486,7 +466,7 @@ const CartPage = () => {
     } finally {
       setIsCheckoutLoading(false);
     }
-  }, [currentCheckoutData, user, clearCart, setNote]);
+  }, [currentCheckoutData, user, clearCart, setNote, refreshUserProfile]);
 
   if (!user) return null;
 
