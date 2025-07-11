@@ -98,6 +98,16 @@ const CartPage = () => {
 
     window.addEventListener('userProfileUpdated', handleProfileUpdate);
     
+    // Load Paystack script if not already loaded
+    if (!window.PaystackPop) {
+      const script = document.createElement('script');
+      script.src = 'https://js.paystack.co/v1/inline.js';
+      script.async = true;
+      script.onload = () => console.log('Paystack script loaded successfully');
+      script.onerror = () => console.error('Failed to load Paystack script');
+      document.body.appendChild(script);
+    }
+    
     return () => {
       window.removeEventListener('userProfileUpdated', handleProfileUpdate);
     };
@@ -340,10 +350,14 @@ const CartPage = () => {
     }
 
     setIsCheckoutLoading(true);
+    
+    // Use a unique ID for the toast to avoid conflicts
+    const toastId = "order-processing-" + Date.now();
+    
     toast.info("Processing your order...", {
       autoClose: false,
       isLoading: true,
-      toastId: "order-processing"
+      toastId: toastId
     });
 
     try {
@@ -368,11 +382,21 @@ const CartPage = () => {
       setShowPaymentModal(false);
       setCurrentCheckoutData(null);
       
-      toast.dismiss("order-processing");
+      // Only dismiss the toast if it exists
+      if (toast.isActive(toastId)) {
+        toast.dismiss(toastId);
+      }
+      
       toast.success("Order placed successfully!");
 
     } catch (error) {
-      toast.dismiss("order-processing");
+      console.error("Wallet payment error:", error);
+      
+      // Only dismiss the toast if it exists
+      if (toast.isActive(toastId)) {
+        toast.dismiss(toastId);
+      }
+      
       toast.error(error.message || "Something went wrong.");
     } finally {
       setIsCheckoutLoading(false);
@@ -385,16 +409,25 @@ const CartPage = () => {
     const { totalAmount, orderDetails } = currentCheckoutData;
     
     setIsCheckoutLoading(true);
+    
+    // Use a unique ID for the toast to ensure we can reference it later
+    const toastId = "payment-processing-" + Date.now();
+    
     toast.info("Redirecting to payment...", {
       autoClose: false,
       isLoading: true,
-      toastId: "payment-processing"
+      toastId: toastId
     });
 
     try {
       // Refresh profile data to get the most current info
       const freshUserData = await refreshUserProfile();
       const finalUserData = freshUserData || user;
+      
+      // Verify that PaystackPop is available in the window object
+      if (!window.PaystackPop) {
+        throw new Error("Paystack integration is not available. Please check your internet connection.");
+      }
       
       // Initialize Paystack payment
       const paystackKey = "pk_test_4b8fb38e6c1bf4a0e5c92eb74f11b71f78cfac28"; // Your Paystack public key
@@ -421,6 +454,16 @@ const CartPage = () => {
         },          callback: async function(response) {
             // Payment successful, now create the order
             try {
+              // Clear the processing toast first to avoid toast conflicts
+              toast.dismiss(toastId);
+              
+              const successToastId = "payment-success-" + Date.now();
+              toast.info("Payment successful! Creating your order...", {
+                autoClose: false,
+                isLoading: true,
+                toastId: successToastId
+              });
+              
               const token = localStorage.getItem('token');
               const orderResponse = await fetch("https://mongobyte.vercel.app/api/v1/orders/create", {
                 method: "POST",
@@ -446,23 +489,34 @@ const CartPage = () => {
               setShowPaymentModal(false);
               setCurrentCheckoutData(null);
               
-              toast.dismiss("payment-processing");
-              toast.success("Payment successful! Order placed successfully!");            } catch (error) {
-              toast.dismiss("payment-processing");
+              toast.dismiss(successToastId);
+              toast.success("Payment successful! Order placed successfully!");
+            } catch (error) {
+              console.error("Order creation error:", error);
+              toast.dismiss(toastId);
               toast.error(error.message || "Order creation failed after payment.");
             }
           },
           onClose: function() {
-            toast.dismiss("payment-processing");
-            toast.info("Payment cancelled");
+            // Only dismiss the toast if it exists
+            if (toast.isActive(toastId)) {
+              toast.dismiss(toastId);
+              toast.info("Payment cancelled");
+            }
           }
       });
 
       handler.openIframe();
 
     } catch (error) {
-      toast.dismiss("payment-processing");
-      toast.error("Payment initialization failed. Please try again.");
+      console.error("Paystack error:", error);
+      
+      // Only dismiss the toast if it exists
+      if (toast.isActive(toastId)) {
+        toast.dismiss(toastId);
+      }
+      
+      toast.error(error.message || "Payment initialization failed. Please try again.");
     } finally {
       setIsCheckoutLoading(false);
     }
