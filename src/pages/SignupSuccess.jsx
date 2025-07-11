@@ -56,7 +56,7 @@ const SignUpSuccess = () => {
 
       {/* Verification Form */}
       <div className="text-accentwhite relative z-10 flex items-center justify-center min-h-screen">
-        <div className="bg-white bg-opacity-20 backdrop-blur-xs p-8 rounded-lg shadow-lg w-full max-w-md text-center">
+        <div className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-lg shadow-lg w-full max-w-md text-center">
           <h2 className="text-2xl font-bold mb-6">Sign Up Successful!</h2>
           <p className="mb-4">
             Congratulations! Your account has been created.
@@ -103,12 +103,15 @@ const SignUpSuccess = () => {
             </button>
           </form>
 
-          <div className="mt-4">
+          <div className="mt-6 border-t border-white/20 pt-4">
+            <p className="mb-4 text-sm">
+              Entered the wrong email address? No worries! You can go back to sign up again with the correct email.
+            </p>
             <a
               href="/signup"
-              className="w-full text-white py-2 rounded-lg hover:bg-gray-800 transition"
+              className="inline-block bg-white/20 hover:bg-white/30 text-white py-2 px-6 rounded-lg transition"
             >
-              Go back
+              ← Go Back to Sign Up
             </a>
           </div>
         </div>

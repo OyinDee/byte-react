@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from "../context/cartContext";
 import UserLookup from "../components/UserLookup";
+import axios from "axios";
 
 const CartPage = () => {
   const { cart, removeItem, clearCart } = useCart();
@@ -31,6 +32,38 @@ const CartPage = () => {
   
   const navigate = useNavigate();
 
+  // Fetch fresh user profile data from the server
+  const refreshUserProfile = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    
+    try {
+      const response = await axios.get(
+        "https://mongobyte.vercel.app/api/v1/users/getProfile",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      
+      // Update user state with fresh data
+      const freshUserData = response.data.user;
+      setUser(freshUserData);
+      
+      // Update localStorage with latest user data
+      localStorage.setItem("byteUser", JSON.stringify(freshUserData));
+      
+      // Also update user balance with fresh data
+      setUserBalance(freshUserData.byteBalance || 0);
+      
+      console.log("Profile refreshed with latest data");
+      
+      return freshUserData;
+    } catch (error) {
+      console.error("Error refreshing user profile:", error);
+      return null;
+    }
+  }, []);
+
   // Fetch user's current balance
   const fetchUserBalance = useCallback(async (username) => {
     if (!username) return;
@@ -52,20 +85,85 @@ const CartPage = () => {
     }
   }, []);
 
+  // Listen for profile updates from the Profile component
+  useEffect(() => {
+    const handleProfileUpdate = (event) => {
+      const updatedUser = event.detail;
+      console.log("Profile updated, refreshing user data:", updatedUser);
+      setUser(prevUser => ({
+        ...prevUser,
+        ...updatedUser
+      }));
+    };
+
+    window.addEventListener('userProfileUpdated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('userProfileUpdated', handleProfileUpdate);
+    };
+  }, []);
+
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
       try {
+        // First, decode the token to get basic user data
         const storedUser = jwtDecode(storedToken);
         setUser(storedUser.user);
-        fetchUserBalance(storedUser.user.username);
+        
+        // Then, refresh the profile data from the server
+        (async () => {
+          // Show loading toast for better user experience
+          const loadingToast = toast.loading("Refreshing profile data...");
+          
+          // Refresh profile from server
+          const freshUserData = await refreshUserProfile();
+          
+          if (freshUserData) {
+            // If we got fresh data, fetch the balance too
+            await fetchUserBalance(freshUserData.username);
+            toast.update(loadingToast, {
+              render: "Profile data updated!",
+              type: "success",
+              isLoading: false,
+              autoClose: 2000,
+              closeButton: true
+            });
+          } else {
+            // If server refresh failed, fall back to localStorage
+            const byteUser = localStorage.getItem("byteUser");
+            if (byteUser) {
+              try {
+                const parsedUser = JSON.parse(byteUser);
+                // Merge JWT user with localStorage user
+                setUser(prevUser => ({
+                  ...prevUser,
+                  ...parsedUser
+                }));
+                
+                // Also fetch balance for this user
+                await fetchUserBalance(parsedUser.username || storedUser.user.username);
+              } catch (error) {
+                console.error("Error parsing byteUser from localStorage:", error);
+              }
+            }
+            
+            toast.update(loadingToast, {
+              render: "Using cached profile data",
+              type: "info",
+              isLoading: false,
+              autoClose: 2000,
+              closeButton: true
+            });
+          }
+        })();
       } catch (error) {
         navigate("/login");
       }
     } else {
       navigate("/login");
     }
-  }, [navigate, fetchUserBalance]);
+  }, [navigate, fetchUserBalance, refreshUserProfile]);
 
   const handleRemoveItem = useCallback((restaurantId, mealId, isRequired) => {
     if (isRequired) {
@@ -180,6 +278,10 @@ const CartPage = () => {
       return;
     }
     
+    // First, refresh user profile to get the most current data
+    const freshUserData = await refreshUserProfile();
+    let finalUserData = freshUserData || user;
+    
     // Check if ordering for another user and validate recipient
     if (isOrderingForOther) {
       if (!recipientInfo || !orderForUsername) {
@@ -196,9 +298,12 @@ const CartPage = () => {
         return;
       }
     } else {
-      // Regular order validation
-      if (user.location === "" || user.nearestLandmark === "") {
+      // Regular order validation with the most recent user data      
+      if (!finalUserData.location || finalUserData.location === "" || 
+          !finalUserData.nearestLandmark || finalUserData.nearestLandmark === "") {
         toast.error("Complete profile setup to proceed with the order.");
+        // Redirect to profile page to complete setup
+        navigate('/user/profile');
         return;
       }
     }
@@ -223,11 +328,13 @@ const CartPage = () => {
         quantity,
       })),
       totalPrice: totalAmount,
-      user: user._id,
       note: isOrderingForOther 
         ? `Gift order for @${orderForUsername}. ${note}`.trim()
         : note,
       fee: parseFloat(fee) || 1000,
+      location: "",
+      phoneNumber: "",
+      nearestLandmark: ""
     };
 
     // Add delivery information based on order type
@@ -237,13 +344,13 @@ const CartPage = () => {
       orderDetails.phoneNumber = overrideDeliveryInfo.phoneNumber || recipientInfo.phoneNumber;
       orderDetails.nearestLandmark = overrideDeliveryInfo.nearestLandmark || recipientInfo.nearestLandmark || "";
     } else {
-      orderDetails.location = user.location;
-      orderDetails.phoneNumber = user.phoneNumber;
-      orderDetails.nearestLandmark = user.nearestLandmark || "";
+      orderDetails.location = finalUserData.location;
+      orderDetails.phoneNumber = finalUserData.phoneNumber;
+      orderDetails.nearestLandmark = finalUserData.nearestLandmark || "";
     }
     
     // Fetch latest user balance before showing payment modal
-    await fetchUserBalance(user.username);
+    await fetchUserBalance(finalUserData.username);
     
     setCurrentCheckoutData({
       restaurantId,
@@ -252,7 +359,7 @@ const CartPage = () => {
       orderDetails
     });
     setShowPaymentModal(true);
-  }, [cart, fee, note, totalAmountPerRestaurant, user, isOrderingForOther, recipientInfo, orderForUsername, overrideDeliveryInfo, fetchUserBalance]);
+  }, [cart, fee, note, totalAmountPerRestaurant, user, isOrderingForOther, recipientInfo, orderForUsername, overrideDeliveryInfo, fetchUserBalance, navigate, refreshUserProfile]);
 
   const processWalletPayment = useCallback(async () => {
     if (!currentCheckoutData) return;
@@ -266,10 +373,14 @@ const CartPage = () => {
     }
 
     setIsCheckoutLoading(true);
+    
+    // Use a unique ID for the toast to avoid conflicts
+    const toastId = "order-processing-" + Date.now();
+    
     toast.info("Processing your order...", {
       autoClose: false,
       isLoading: true,
-      toastId: "order-processing"
+      toastId: toastId
     });
 
     try {
@@ -280,7 +391,18 @@ const CartPage = () => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ ...orderDetails, paymentMethod: 'wallet' }),
+        body: JSON.stringify({
+          meals: orderDetails.meals,
+          note: orderDetails.note,
+          totalPrice: orderDetails.totalPrice,
+          location: orderDetails.location,
+          phoneNumber: orderDetails.phoneNumber,
+          restaurantCustomId: orderDetails.restaurantCustomId,
+          nearestLandmark: orderDetails.nearestLandmark,
+          fee: orderDetails.fee,
+          ...(orderDetails.orderForUsername && { orderForUsername: orderDetails.orderForUsername }),
+          paymentMethod: 'wallet'
+        }),
       });
 
       const responseData = await response.json();
@@ -294,118 +416,53 @@ const CartPage = () => {
       setShowPaymentModal(false);
       setCurrentCheckoutData(null);
       
-      toast.dismiss("order-processing");
+      // Only dismiss the toast if it exists
+      if (toast.isActive(toastId)) {
+        toast.dismiss(toastId);
+      }
+      
       toast.success("Order placed successfully!");
 
     } catch (error) {
-      toast.dismiss("order-processing");
+      console.error("Wallet payment error:", error);
+      
+      // Only dismiss the toast if it exists
+      if (toast.isActive(toastId)) {
+        toast.dismiss(toastId);
+      }
+      
       toast.error(error.message || "Something went wrong.");
     } finally {
       setIsCheckoutLoading(false);
     }
   }, [currentCheckoutData, clearCart, setNote, userBalance]);
 
-  const processCardPayment = useCallback(async () => {
-    if (!currentCheckoutData) return;
+  // Render a toast container at the component level to manage toasts
+  // This ensures toasts are properly mounted and unmounted with the component
+  const renderToastContainer = () => (
+    <ToastContainer
+      position="top-right"
+      autoClose={5000}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="light"
+    />
+  );
 
-    const { totalAmount, orderDetails } = currentCheckoutData;
-    
-    setIsCheckoutLoading(true);
-    toast.info("Redirecting to payment...", {
-      autoClose: false,
-      isLoading: true,
-      toastId: "payment-processing"
-    });
+  if (!user) return renderToastContainer();
 
-    try {
-      // Initialize Paystack payment
-      const paystackKey = "pk_test_4b8fb38e6c1bf4a0e5c92eb74f11b71f78cfac28"; // Your Paystack public key
-      
-      const handler = window.PaystackPop.setup({
-        key: paystackKey,
-        email: user.email,
-        amount: totalAmount * 100, // Paystack expects amount in kobo (multiply by 100)
-        currency: 'NGN',
-        ref: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        metadata: {
-          custom_fields: [
-            {
-              display_name: "Order Type",
-              variable_name: "order_type",
-              value: "food_delivery"
-            },
-            {
-              display_name: "Restaurant ID",
-              variable_name: "restaurant_id", 
-              value: orderDetails.restaurantCustomId
-            }
-          ]
-        },          callback: async function(response) {
-            // Payment successful, now create the order
-            try {
-              const token = localStorage.getItem('token');
-              const orderResponse = await fetch("https://mongobyte.vercel.app/api/v1/orders/create", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({ 
-                  ...orderDetails, 
-                  paymentMethod: 'card',
-                  paymentReference: response.reference 
-                }),
-              });
-
-              const orderData = await orderResponse.json();
-
-              if (!orderResponse.ok) {
-                throw new Error(orderData.message || "Failed to place the order.");
-              }
-
-              clearCart();
-              setNote('');
-              setShowPaymentModal(false);
-              setCurrentCheckoutData(null);
-              
-              toast.dismiss("payment-processing");
-              toast.success("Payment successful! Order placed successfully!");            } catch (error) {
-              toast.dismiss("payment-processing");
-              toast.error(error.message || "Order creation failed after payment.");
-            }
-          },
-          onClose: function() {
-            toast.dismiss("payment-processing");
-            toast.info("Payment cancelled");
-          }
-      });
-
-      handler.openIframe();
-
-    } catch (error) {
-      toast.dismiss("payment-processing");
-      toast.error("Payment initialization failed. Please try again.");
-    } finally {
-      setIsCheckoutLoading(false);
-    }
-  }, [currentCheckoutData, user, clearCart, setNote]);
-
-  if (!user) return null;
+  // Check if profile is incomplete for rendering warning if needed
+  const isProfileIncomplete = !user.location || user.location === "" || 
+                              !user.nearestLandmark || user.nearestLandmark === "";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4 pt-16 md:pt-24 pb-24 md:pb-6">
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+      {renderToastContainer()}
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div
@@ -419,6 +476,35 @@ const CartPage = () => {
           </h1>
           <p className="text-gray-600 font-sans">Review your delicious selections</p>
         </motion.div>
+
+        {/* Profile Incomplete Warning */}
+        {!isOrderingForOther && isProfileIncomplete && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-lg shadow-md"
+          >
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  Your profile is incomplete. Please 
+                  <button 
+                    onClick={() => navigate('/user/profile')} 
+                    className="font-medium underline text-yellow-800 hover:text-yellow-900 ml-1"
+                  >
+                    complete your profile
+                  </button> 
+                  to place an order.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {cart.size === 0 ? (
           <motion.div
@@ -827,23 +913,19 @@ const CartPage = () => {
                   )}
                 </motion.button>
 
-                {/* Card Payment Option */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={processCardPayment}
-                  disabled={isCheckoutLoading}
-                  className="w-full p-4 border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all flex items-center gap-4"
+                {/* Card Payment Option - Coming Soon */}
+                <motion.div
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl bg-gray-50 opacity-60 cursor-not-allowed flex items-center gap-4"
                 >
-                  <div className="bg-blue-100 p-3 rounded-full">
-                    <FaCreditCard className="text-blue-600 text-xl" />
+                  <div className="bg-gray-200 p-3 rounded-full">
+                    <FaCreditCard className="text-gray-500 text-xl" />
                   </div>
                   <div className="flex-1 text-left">
-                    <h3 className="font-bold text-gray-800">Pay with Card</h3>
-                    <p className="text-sm text-gray-600">Secure payment via Paystack</p>
+                    <h3 className="font-bold text-gray-600">Pay with Card</h3>
+                    <p className="text-sm text-gray-500">Coming Soon - We're working on it!</p>
                   </div>
-                  <div className="text-blue-500 font-semibold">→</div>
-                </motion.button>
+                  <div className="text-gray-400 font-semibold">🚧</div>
+                </motion.div>
 
                 {/* Cancel Button */}
                 <motion.button

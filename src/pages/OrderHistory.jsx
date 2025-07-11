@@ -38,12 +38,11 @@ const OrderHistory = () => {
 
   const fetchOrderHistory = async (isLoadMore = false) => {
     const token = localStorage.getItem('token');
-    const byteUser = JSON.parse(localStorage.getItem('byteUser'));
 
-    if (token && byteUser?.username) {
+    if (token) {
       try {
         const response = await axios.get(
-          `https://mongobyte.vercel.app/api/v1/users/orders/${byteUser.username}`,
+          `https://mongobyte.vercel.app/api/v1/orders/order-history`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 

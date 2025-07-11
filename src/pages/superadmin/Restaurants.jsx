@@ -19,7 +19,7 @@ import {
 } from "@heroicons/react/24/outline";
 import LoadingPage from "../../components/Loader";
 import { toast } from "react-toastify";
-import { FaUpload, FaCamera, FaCheckCircle } from "react-icons/fa";
+import { FaUpload, FaCheckCircle } from "react-icons/fa";
 
 const Restaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
