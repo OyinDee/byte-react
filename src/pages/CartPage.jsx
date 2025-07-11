@@ -85,7 +85,7 @@ const CartPage = () => {
     }
   }, []);
 
-  // Listen for profile updates from the Profile component
+  // Listen for profile updates from the Profile component and load Paystack
   useEffect(() => {
     const handleProfileUpdate = (event) => {
       const updatedUser = event.detail;
@@ -99,17 +99,22 @@ const CartPage = () => {
     window.addEventListener('userProfileUpdated', handleProfileUpdate);
     
     // Load Paystack script if not already loaded
-    if (!window.PaystackPop) {
-      const script = document.createElement('script');
-      script.src = 'https://js.paystack.co/v1/inline.js';
-      script.async = true;
-      script.onload = () => console.log('Paystack script loaded successfully');
-      script.onerror = () => console.error('Failed to load Paystack script');
-      document.body.appendChild(script);
+    let paystackScript = null;
+    if (!window.PaystackPop && typeof document !== 'undefined') {
+      paystackScript = document.createElement('script');
+      paystackScript.src = 'https://js.paystack.co/v1/inline.js';
+      paystackScript.async = true;
+      paystackScript.onload = () => console.log('Paystack script loaded successfully');
+      paystackScript.onerror = () => console.error('Failed to load Paystack script');
+      document.body.appendChild(paystackScript);
     }
     
     return () => {
       window.removeEventListener('userProfileUpdated', handleProfileUpdate);
+      // Clean up script if component unmounts before script loads
+      if (paystackScript && document.body.contains(paystackScript)) {
+        document.body.removeChild(paystackScript);
+      }
     };
   }, []);
 
@@ -425,14 +430,14 @@ const CartPage = () => {
       const finalUserData = freshUserData || user;
       
       // Verify that PaystackPop is available in the window object
-      if (!window.PaystackPop) {
-        throw new Error("Paystack integration is not available. Please check your internet connection.");
+      if (typeof window.PaystackPop !== 'function' && typeof window.PaystackPop !== 'object') {
+        throw new Error("Paystack integration is not available. Please refresh the page and try again.");
       }
       
       // Initialize Paystack payment
       const paystackKey = "pk_test_4b8fb38e6c1bf4a0e5c92eb74f11b71f78cfac28"; // Your Paystack public key
       
-      const handler = window.PaystackPop.setup({
+      const paystackConfig = {
         key: paystackKey,
         email: finalUserData.email,
         amount: totalAmount * 100, // Paystack expects amount in kobo (multiply by 100)
@@ -451,62 +456,76 @@ const CartPage = () => {
               value: orderDetails.restaurantCustomId
             }
           ]
-        },          callback: async function(response) {
-            // Payment successful, now create the order
-            try {
-              // Clear the processing toast first to avoid toast conflicts
-              toast.dismiss(toastId);
-              
-              const successToastId = "payment-success-" + Date.now();
-              toast.info("Payment successful! Creating your order...", {
-                autoClose: false,
-                isLoading: true,
-                toastId: successToastId
-              });
-              
-              const token = localStorage.getItem('token');
-              const orderResponse = await fetch("https://mongobyte.vercel.app/api/v1/orders/create", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({ 
-                  ...orderDetails, 
-                  paymentMethod: 'card',
-                  paymentReference: response.reference 
-                }),
-              });
-
-              const orderData = await orderResponse.json();
-
-              if (!orderResponse.ok) {
-                throw new Error(orderData.message || "Failed to place the order.");
-              }
-
-              clearCart();
-              setNote('');
-              setShowPaymentModal(false);
-              setCurrentCheckoutData(null);
-              
-              toast.dismiss(successToastId);
-              toast.success("Payment successful! Order placed successfully!");
-            } catch (error) {
-              console.error("Order creation error:", error);
-              toast.dismiss(toastId);
-              toast.error(error.message || "Order creation failed after payment.");
-            }
-          },
-          onClose: function() {
-            // Only dismiss the toast if it exists
+        },
+        callback: async function(response) {
+          try {
+            // Clear the processing toast first to avoid toast conflicts
             if (toast.isActive(toastId)) {
               toast.dismiss(toastId);
-              toast.info("Payment cancelled");
             }
-          }
-      });
+            
+            const successToastId = "payment-success-" + Date.now();
+            toast.info("Payment successful! Creating your order...", {
+              autoClose: false,
+              isLoading: true,
+              toastId: successToastId
+            });
+            
+            const token = localStorage.getItem('token');
+            const orderResponse = await fetch("https://mongobyte.vercel.app/api/v1/orders/create", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify({ 
+                ...orderDetails, 
+                paymentMethod: 'card',
+                paymentReference: response.reference 
+              }),
+            });
 
-      handler.openIframe();
+            const orderData = await orderResponse.json();
+
+            if (!orderResponse.ok) {
+              throw new Error(orderData.message || "Failed to place the order.");
+            }
+
+            clearCart();
+            setNote('');
+            setShowPaymentModal(false);
+            setCurrentCheckoutData(null);
+            
+            if (toast.isActive(successToastId)) {
+              toast.dismiss(successToastId);
+            }
+            toast.success("Payment successful! Order placed successfully!");
+          } catch (error) {
+            console.error("Order creation error:", error);
+            if (toast.isActive(toastId)) {
+              toast.dismiss(toastId);
+            }
+            toast.error(error.message || "Order creation failed after payment.");
+          }
+        },
+        onClose: function() {
+          // Only dismiss the toast if it exists
+          if (toast.isActive(toastId)) {
+            toast.dismiss(toastId);
+            toast.info("Payment cancelled");
+          }
+          setIsCheckoutLoading(false);
+        }
+      };
+
+      // Handle possible Paystack initialization error
+      try {
+        const handler = window.PaystackPop.setup(paystackConfig);
+        handler.openIframe();
+      } catch (paystackError) {
+        console.error("Paystack setup error:", paystackError);
+        throw new Error("Unable to initialize payment. Please try again later.");
+      }
 
     } catch (error) {
       console.error("Paystack error:", error);
@@ -517,12 +536,28 @@ const CartPage = () => {
       }
       
       toast.error(error.message || "Payment initialization failed. Please try again.");
-    } finally {
       setIsCheckoutLoading(false);
     }
   }, [currentCheckoutData, user, clearCart, setNote, refreshUserProfile]);
 
-  if (!user) return null;
+  // Render a toast container at the component level to manage toasts
+  // This ensures toasts are properly mounted and unmounted with the component
+  const renderToastContainer = () => (
+    <ToastContainer
+      position="top-right"
+      autoClose={5000}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="light"
+    />
+  );
+
+  if (!user) return renderToastContainer();
 
   // Check if profile is incomplete for rendering warning if needed
   const isProfileIncomplete = !user.location || user.location === "" || 
@@ -530,18 +565,7 @@ const CartPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4 pt-16 md:pt-24 pb-24 md:pb-6">
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+      {renderToastContainer()}
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div
