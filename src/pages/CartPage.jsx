@@ -85,7 +85,7 @@ const CartPage = () => {
     }
   }, []);
 
-  // Listen for profile updates from the Profile component and load Paystack
+  // Listen for profile updates from the Profile component
   useEffect(() => {
     const handleProfileUpdate = (event) => {
       const updatedUser = event.detail;
@@ -98,23 +98,8 @@ const CartPage = () => {
 
     window.addEventListener('userProfileUpdated', handleProfileUpdate);
     
-    // Load Paystack script if not already loaded
-    let paystackScript = null;
-    if (!window.PaystackPop && typeof document !== 'undefined') {
-      paystackScript = document.createElement('script');
-      paystackScript.src = 'https://js.paystack.co/v1/inline.js';
-      paystackScript.async = true;
-      paystackScript.onload = () => console.log('Paystack script loaded successfully');
-      paystackScript.onerror = () => console.error('Failed to load Paystack script');
-      document.body.appendChild(paystackScript);
-    }
-    
     return () => {
       window.removeEventListener('userProfileUpdated', handleProfileUpdate);
-      // Clean up script if component unmounts before script loads
-      if (paystackScript && document.body.contains(paystackScript)) {
-        document.body.removeChild(paystackScript);
-      }
     };
   }, []);
 
@@ -312,11 +297,13 @@ const CartPage = () => {
         quantity,
       })),
       totalPrice: totalAmount,
-      user: finalUserData._id,
       note: isOrderingForOther 
         ? `Gift order for @${orderForUsername}. ${note}`.trim()
         : note,
       fee: parseFloat(fee) || 1000,
+      location: "",
+      phoneNumber: "",
+      nearestLandmark: ""
     };
 
     // Add delivery information based on order type
@@ -373,7 +360,18 @@ const CartPage = () => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ ...orderDetails, paymentMethod: 'wallet' }),
+        body: JSON.stringify({
+          meals: orderDetails.meals,
+          note: orderDetails.note,
+          totalPrice: orderDetails.totalPrice,
+          location: orderDetails.location,
+          phoneNumber: orderDetails.phoneNumber,
+          restaurantCustomId: orderDetails.restaurantCustomId,
+          nearestLandmark: orderDetails.nearestLandmark,
+          fee: orderDetails.fee,
+          ...(orderDetails.orderForUsername && { orderForUsername: orderDetails.orderForUsername }),
+          paymentMethod: 'wallet'
+        }),
       });
 
       const responseData = await response.json();
@@ -407,138 +405,6 @@ const CartPage = () => {
       setIsCheckoutLoading(false);
     }
   }, [currentCheckoutData, clearCart, setNote, userBalance]);
-
-  const processCardPayment = useCallback(async () => {
-    if (!currentCheckoutData) return;
-
-    const { totalAmount, orderDetails } = currentCheckoutData;
-    
-    setIsCheckoutLoading(true);
-    
-    // Use a unique ID for the toast to ensure we can reference it later
-    const toastId = "payment-processing-" + Date.now();
-    
-    toast.info("Redirecting to payment...", {
-      autoClose: false,
-      isLoading: true,
-      toastId: toastId
-    });
-
-    try {
-      // Refresh profile data to get the most current info
-      const freshUserData = await refreshUserProfile();
-      const finalUserData = freshUserData || user;
-      
-      // Verify that PaystackPop is available in the window object
-      if (typeof window.PaystackPop !== 'function' && typeof window.PaystackPop !== 'object') {
-        throw new Error("Paystack integration is not available. Please refresh the page and try again.");
-      }
-      
-      // Initialize Paystack payment
-      const paystackKey = "pk_test_4b8fb38e6c1bf4a0e5c92eb74f11b71f78cfac28"; // Your Paystack public key
-      
-      const paystackConfig = {
-        key: paystackKey,
-        email: finalUserData.email,
-        amount: totalAmount * 100, // Paystack expects amount in kobo (multiply by 100)
-        currency: 'NGN',
-        ref: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        metadata: {
-          custom_fields: [
-            {
-              display_name: "Order Type",
-              variable_name: "order_type",
-              value: "food_delivery"
-            },
-            {
-              display_name: "Restaurant ID",
-              variable_name: "restaurant_id", 
-              value: orderDetails.restaurantCustomId
-            }
-          ]
-        },
-        callback: async function(response) {
-          try {
-            // Clear the processing toast first to avoid toast conflicts
-            if (toast.isActive(toastId)) {
-              toast.dismiss(toastId);
-            }
-            
-            const successToastId = "payment-success-" + Date.now();
-            toast.info("Payment successful! Creating your order...", {
-              autoClose: false,
-              isLoading: true,
-              toastId: successToastId
-            });
-            
-            const token = localStorage.getItem('token');
-            const orderResponse = await fetch("https://mongobyte.vercel.app/api/v1/orders/create", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-              },
-              body: JSON.stringify({ 
-                ...orderDetails, 
-                paymentMethod: 'card',
-                paymentReference: response.reference 
-              }),
-            });
-
-            const orderData = await orderResponse.json();
-
-            if (!orderResponse.ok) {
-              throw new Error(orderData.message || "Failed to place the order.");
-            }
-
-            clearCart();
-            setNote('');
-            setShowPaymentModal(false);
-            setCurrentCheckoutData(null);
-            
-            if (toast.isActive(successToastId)) {
-              toast.dismiss(successToastId);
-            }
-            toast.success("Payment successful! Order placed successfully!");
-          } catch (error) {
-            console.error("Order creation error:", error);
-            if (toast.isActive(toastId)) {
-              toast.dismiss(toastId);
-            }
-            toast.error(error.message || "Order creation failed after payment.");
-          }
-        },
-        onClose: function() {
-          // Only dismiss the toast if it exists
-          if (toast.isActive(toastId)) {
-            toast.dismiss(toastId);
-            toast.info("Payment cancelled");
-          }
-          setIsCheckoutLoading(false);
-        }
-      };
-
-      // Handle possible Paystack initialization error
-      try {
-        const handler = window.PaystackPop.setup(paystackConfig);
-        handler.openIframe();
-      } catch (paystackError) {
-        console.error("Paystack setup error:", paystackError);
-        throw new Error("Unable to initialize payment. Please try again later.");
-      }
-
-    } catch (error) {
-      console.error("Paystack error:", error);
-      
-      // Only dismiss the toast if it exists
-      if (toast.isActive(toastId)) {
-        toast.dismiss(toastId);
-      }
-      
-      toast.error(error.message || "Payment initialization failed. Please try again.");
-      setIsCheckoutLoading(false);
-    }
-  }, [currentCheckoutData, user, clearCart, setNote, refreshUserProfile]);
 
   // Render a toast container at the component level to manage toasts
   // This ensures toasts are properly mounted and unmounted with the component
@@ -1009,23 +875,19 @@ const CartPage = () => {
                   )}
                 </motion.button>
 
-                {/* Card Payment Option */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={processCardPayment}
-                  disabled={isCheckoutLoading}
-                  className="w-full p-4 border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all flex items-center gap-4"
+                {/* Card Payment Option - Coming Soon */}
+                <motion.div
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl bg-gray-50 opacity-60 cursor-not-allowed flex items-center gap-4"
                 >
-                  <div className="bg-blue-100 p-3 rounded-full">
-                    <FaCreditCard className="text-blue-600 text-xl" />
+                  <div className="bg-gray-200 p-3 rounded-full">
+                    <FaCreditCard className="text-gray-500 text-xl" />
                   </div>
                   <div className="flex-1 text-left">
-                    <h3 className="font-bold text-gray-800">Pay with Card</h3>
-                    <p className="text-sm text-gray-600">Secure payment via Paystack</p>
+                    <h3 className="font-bold text-gray-600">Pay with Card</h3>
+                    <p className="text-sm text-gray-500">Coming Soon - We're working on it!</p>
                   </div>
-                  <div className="text-blue-500 font-semibold">→</div>
-                </motion.button>
+                  <div className="text-gray-400 font-semibold">🚧</div>
+                </motion.div>
 
                 {/* Cancel Button */}
                 <motion.button
