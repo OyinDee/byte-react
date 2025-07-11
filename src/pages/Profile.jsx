@@ -410,7 +410,7 @@ const Profile = () => {
               </p>
               {!user?.location && (
                 <p className="text-pepperoni text-sm mt-2">
-                  Add location for faster delivery
+                  Add location for faster delivery; click on edit profile!
                 </p>
               )}
             </motion.div>
@@ -426,7 +426,7 @@ const Profile = () => {
               </p>
               {!user?.nearestLandmark && (
                 <p className="text-pepperoni text-sm mt-2">
-                  Help us locate you easily
+                  Help us locate you easily; click on edit profile!
                 </p>
               )}
             </motion.div>

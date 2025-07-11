@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from "../context/cartContext";
 import UserLookup from "../components/UserLookup";
+import axios from "axios";
 
 const CartPage = () => {
   const { cart, removeItem, clearCart } = useCart();
@@ -30,6 +31,38 @@ const CartPage = () => {
   });
   
   const navigate = useNavigate();
+
+  // Fetch fresh user profile data from the server
+  const refreshUserProfile = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    
+    try {
+      const response = await axios.get(
+        "https://mongobyte.vercel.app/api/v1/users/getProfile",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      
+      // Update user state with fresh data
+      const freshUserData = response.data.user;
+      setUser(freshUserData);
+      
+      // Update localStorage with latest user data
+      localStorage.setItem("byteUser", JSON.stringify(freshUserData));
+      
+      // Also update user balance with fresh data
+      setUserBalance(freshUserData.byteBalance || 0);
+      
+      console.log("Profile refreshed with latest data");
+      
+      return freshUserData;
+    } catch (error) {
+      console.error("Error refreshing user profile:", error);
+      return null;
+    }
+  }, []);
 
   // Fetch user's current balance
   const fetchUserBalance = useCallback(async (username) => {
@@ -74,31 +107,63 @@ const CartPage = () => {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
       try {
+        // First, decode the token to get basic user data
         const storedUser = jwtDecode(storedToken);
         setUser(storedUser.user);
-        fetchUserBalance(storedUser.user.username);
         
-        // Also check if there's updated user data in localStorage
-        const byteUser = localStorage.getItem("byteUser");
-        if (byteUser) {
-          try {
-            const parsedUser = JSON.parse(byteUser);
-            // Merge JWT user with potentially more up-to-date localStorage user
-            setUser(prevUser => ({
-              ...prevUser,
-              ...parsedUser
-            }));
-          } catch (error) {
-            console.error("Error parsing byteUser from localStorage:", error);
+        // Then, refresh the profile data from the server
+        (async () => {
+          // Show loading toast for better user experience
+          const loadingToast = toast.loading("Refreshing profile data...");
+          
+          // Refresh profile from server
+          const freshUserData = await refreshUserProfile();
+          
+          if (freshUserData) {
+            // If we got fresh data, fetch the balance too
+            await fetchUserBalance(freshUserData.username);
+            toast.update(loadingToast, {
+              render: "Profile data updated!",
+              type: "success",
+              isLoading: false,
+              autoClose: 2000,
+              closeButton: true
+            });
+          } else {
+            // If server refresh failed, fall back to localStorage
+            const byteUser = localStorage.getItem("byteUser");
+            if (byteUser) {
+              try {
+                const parsedUser = JSON.parse(byteUser);
+                // Merge JWT user with localStorage user
+                setUser(prevUser => ({
+                  ...prevUser,
+                  ...parsedUser
+                }));
+                
+                // Also fetch balance for this user
+                await fetchUserBalance(parsedUser.username || storedUser.user.username);
+              } catch (error) {
+                console.error("Error parsing byteUser from localStorage:", error);
+              }
+            }
+            
+            toast.update(loadingToast, {
+              render: "Using cached profile data",
+              type: "info",
+              isLoading: false,
+              autoClose: 2000,
+              closeButton: true
+            });
           }
-        }
+        })();
       } catch (error) {
         navigate("/login");
       }
     } else {
       navigate("/login");
     }
-  }, [navigate, fetchUserBalance]);
+  }, [navigate, fetchUserBalance, refreshUserProfile]);
 
   const handleRemoveItem = useCallback((restaurantId, mealId) => {
     removeItem(mealId);
@@ -182,6 +247,10 @@ const CartPage = () => {
       return;
     }
     
+    // First, refresh user profile to get the most current data
+    const freshUserData = await refreshUserProfile();
+    const currentUserData = freshUserData || user;
+    
     // Check if ordering for another user and validate recipient
     if (isOrderingForOther) {
       if (!recipientInfo || !orderForUsername) {
@@ -198,20 +267,7 @@ const CartPage = () => {
         return;
       }
     } else {
-      // First check localStorage for the most up-to-date user profile
-      let currentUserData = user;
-      const byteUser = localStorage.getItem("byteUser");
-      
-      if (byteUser) {
-        try {
-          const parsedUser = JSON.parse(byteUser);
-          currentUserData = { ...currentUserData, ...parsedUser };
-        } catch (error) {
-          console.error("Error parsing byteUser from localStorage:", error);
-        }
-      }
-      
-      // Regular order validation with the most recent user data
+      // Regular order validation with the most recent user data      
       if (!currentUserData.location || currentUserData.location === "" || 
           !currentUserData.nearestLandmark || currentUserData.nearestLandmark === "") {
         toast.error("Complete profile setup to proceed with the order.");
