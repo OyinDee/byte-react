@@ -4,10 +4,11 @@ import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
-import { BanknotesIcon } from "@heroicons/react/24/outline";
+import { BanknotesIcon, ChartBarIcon, ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import LoadingPage from "./Loader";
+import RestaurantOrders from "./RestaurantOrders";
 
 // Register ChartJS components
 ChartJS.register(
@@ -43,8 +44,8 @@ const RestaurantDashboard = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // UI State Management
-  const [dateRangeLabel, setDateRangeLabel] = useState('This Week');
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
   
   // Financial Data
   const [isLoadingRevenue, setIsLoadingRevenue] = useState(false);
@@ -295,16 +296,6 @@ const RestaurantDashboard = () => {
         );
         setRestaurant(restaurantResponse.data);
         
-        // Update date range label
-        switch(dateRange) {
-          case 'today': setDateRangeLabel('Today'); break;
-          case 'yesterday': setDateRangeLabel('Yesterday'); break;
-          case 'week': setDateRangeLabel('This Week'); break;
-          case 'month': setDateRangeLabel('This Month'); break;
-          case 'all': setDateRangeLabel('All Time'); break;
-          default: setDateRangeLabel('This Week');
-        }
-        
         // Fetch all data in parallel
         await Promise.all([
           fetchOrders(restaurantCustomId, token),
@@ -493,78 +484,110 @@ const RestaurantDashboard = () => {
           </motion.div>
         )}
 
-        {/* Date Range Selector */}
+        {/* Navigation Tabs */}
         <div className="bg-white p-4 rounded-xl shadow-lg mb-8">
-          <div className="flex flex-wrap gap-4">
-            {dateRangeOptions.map(option => (
+          <div className="flex flex-wrap gap-2">
+            {[
+              { key: 'overview', label: 'Overview', icon: <ChartBarIcon className="w-4 h-4" /> },
+              { key: 'orders', label: 'Orders', icon: <ShoppingBagIcon className="w-4 h-4" /> }
+            ].map(tab => (
               <button
-                key={option.value}
-                onClick={() => handleDateRangeChange(option.value)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  dateRange === option.value
-                    ? "bg-cheese text-crust"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                  activeTab === tab.key
+                    ? 'bg-cheese text-crust'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {option.label}
+                {tab.icon}
+                {tab.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Dashboard Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Total Revenue Card */}
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h3 className="text-lg font-semibold text-gray-700">Total Revenue</h3>
-            {isLoadingRevenue ? (
-              <div className="flex items-center justify-center h-12">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cheese"></div>
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Date Range Selector */}
+            <div className="bg-white p-4 rounded-xl shadow-lg mb-8">
+              <div className="flex flex-wrap gap-4">
+                {dateRangeOptions.map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => handleDateRangeChange(option.value)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      dateRange === option.value
+                        ? "bg-cheese text-crust"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
               </div>
-            ) : (
-              <div>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  ₦{dashboardStats.totalRevenue.toLocaleString()}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">{dateRangeLabel}</p>
-              </div>
-            )}
-          </div>
+            </div>
 
-          {/* Total Orders Card */}
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h3 className="text-lg font-semibold text-gray-700">Total Orders</h3>
-            {isLoadingRevenue ? (
-              <div className="flex items-center justify-center h-12">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cheese"></div>
+            {/* Dashboard Stats Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {/* Total Revenue Card */}
+              <div className="bg-white p-6 rounded-xl shadow-lg">
+                <h3 className="text-lg font-semibold text-gray-700">Total Revenue</h3>
+                {isLoadingRevenue ? (
+                  <div className="flex items-center justify-center h-12">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cheese"></div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">
+                      ₦{dashboardStats.totalRevenue.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">{dateRangeOptions.find(o => o.value === dateRange)?.label}</p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {dashboardStats.totalOrders}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">{dateRangeLabel}</p>
-              </div>
-            )}
-          </div>
 
-          {/* Average Order Value Card */}
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h3 className="text-lg font-semibold text-gray-700">Average Order Value</h3>
-            {isLoadingRevenue ? (
-              <div className="flex items-center justify-center h-12">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cheese"></div>
+              {/* Total Orders Card */}
+              <div className="bg-white p-6 rounded-xl shadow-lg">
+                <h3 className="text-lg font-semibold text-gray-700">Total Orders</h3>
+                {isLoadingRevenue ? (
+                  <div className="flex items-center justify-center h-12">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cheese"></div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">
+                      {dashboardStats.totalOrders}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">{dateRangeOptions.find(o => o.value === dateRange)?.label}</p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  ₦{dashboardStats.avgOrderValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">{dateRangeLabel}</p>
+
+              {/* Average Order Value Card */}
+              <div className="bg-white p-6 rounded-xl shadow-lg">
+                <h3 className="text-lg font-semibold text-gray-700">Average Order Value</h3>
+                {isLoadingRevenue ? (
+                  <div className="flex items-center justify-center h-12">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cheese"></div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">
+                      ₦{dashboardStats.avgOrderValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">{dateRangeOptions.find(o => o.value === dateRange)?.label}</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
+
+        {activeTab === 'orders' && (
+          <RestaurantOrders />
+        )}
         </div>
         </div>
   )
