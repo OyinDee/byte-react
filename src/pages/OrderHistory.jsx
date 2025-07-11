@@ -41,20 +41,21 @@ const OrderHistory = () => {
 
     if (token) {
       try {
+        const currentPage = isLoadMore ? page : 1;
         const response = await axios.get(
-          `https://mongobyte.vercel.app/api/v1/orders/order-history`,
+          `https://mongobyte.vercel.app/api/v1/users/my-orders?page=${currentPage}&limit=${ordersPerPage}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        const sortedOrders = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        const paginatedOrders = sortedOrders.slice(0, page * ordersPerPage);
+        const { orders: newOrders, pagination } = response.data;
+        
         if (isLoadMore) {
-          setOrders((prevOrders) => [...prevOrders, ...paginatedOrders.slice(prevOrders.length)]);
+          setOrders((prevOrders) => [...prevOrders, ...newOrders]);
         } else {
-          setOrders(paginatedOrders);
+          setOrders(newOrders);
         }
 
-        setHasMoreOrders(paginatedOrders.length < sortedOrders.length);
+        setHasMoreOrders(pagination.currentPage < pagination.totalPages);
       } catch (error) {
         handleAxiosError(error, 'Failed to load order history.');
       } finally {

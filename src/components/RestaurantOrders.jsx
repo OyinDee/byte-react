@@ -206,7 +206,7 @@ const RestaurantOrders = () => {
     }
   };
 
-  // Filter orders based on status
+  // Filter and sort orders based on status
   const filteredOrders = orders.filter(order => {
     if (orderFilter === 'all') return true;
     if (orderFilter === 'pending') return order.status?.toLowerCase() === 'pending';
@@ -215,6 +215,13 @@ const RestaurantOrders = () => {
     if (orderFilter === 'delivered') return order.status?.toLowerCase() === 'delivered';
     if (orderFilter === 'cancelled') return ['canceled', 'cancelled'].includes(order.status?.toLowerCase());
     return true;
+  }).sort((a, b) => {
+    // For pending orders, show oldest first (FIFO)
+    // For all other statuses, show latest first
+    if (orderFilter === 'pending') {
+      return new Date(a.createdAt || a.orderDate) - new Date(b.createdAt || b.orderDate);
+    }
+    return new Date(b.createdAt || b.orderDate) - new Date(a.createdAt || a.orderDate);
   });
 
   // Get filter counts
@@ -401,27 +408,19 @@ const RestaurantOrders = () => {
                       </div>
                     </div>
 
-                    {/* Pricing Breakdown */}
+                    {/* Order Value */}
                     <div className="bg-blue-50 rounded-lg p-4 mb-4">
                       <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
                         <BanknotesIcon className="w-4 h-4" />
-                        Pricing Breakdown
+                        Order Value
                       </h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span>Food Amount (Your Revenue):</span>
+                          <span>Food Amount:</span>
                           <span className="font-bold text-green-600">₦{foodAmount.toLocaleString()}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Delivery & Service Fee:</span>
-                          <span>₦{(order.fee || 0).toLocaleString()}</span>
-                        </div>
-                        <div className="border-t border-blue-200 pt-2 flex justify-between font-bold">
-                          <span>Customer Paid Total:</span>
-                          <span>₦{order.totalPrice.toLocaleString()}</span>
-                        </div>
                         <div className="text-xs text-blue-600 mt-2">
-                          * You receive the full amount and handle delivery costs
+                          * Set your delivery fee and any other fee(takeaways and all that) when confirming the order
                         </div>
                       </div>
                     </div>
@@ -429,25 +428,14 @@ const RestaurantOrders = () => {
                     {/* Action Buttons */}
                     <div className="flex flex-wrap gap-3">
                       {order.status?.toLowerCase() === 'pending' && (
-                        <>
-                          <button
-                            onClick={() => confirmOrder(order.customId)}
-                            disabled={isConfirming}
-                            className="flex-1 md:flex-none bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                          >
-                            <CheckCircleIcon className="w-4 h-4" />
-                            {isConfirming ? 'Confirming...' : 'Confirm Order'}
-                          </button>
-                          
-                          <button
-                            onClick={() => handleConfirmWithFee(order)}
-                            disabled={isConfirming}
-                            className="flex-1 md:flex-none bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                          >
-                            <CurrencyDollarIcon className="w-4 h-4" />
-                            Confirm with Fee
-                          </button>
-                        </>
+                        <button
+                          onClick={() => handleConfirmWithFee(order)}
+                          disabled={isConfirming}
+                          className="flex-1 md:flex-none bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          <CurrencyDollarIcon className="w-4 h-4" />
+                          {isConfirming ? 'Processing...' : 'Confirm with Delivery Fee'}
+                        </button>
                       )}
                       
                       {order.status?.toLowerCase() === 'confirmed' && (
@@ -466,7 +454,7 @@ const RestaurantOrders = () => {
                           <div className="flex items-center gap-2 text-orange-800">
                             <ExclamationTriangleIcon className="w-4 h-4" />
                             <span className="text-sm font-medium">
-                              Waiting for customer to approve additional fee of ₦{(order.fee || 0).toLocaleString()}
+                              Waiting for customer to approve delivery fee request
                             </span>
                           </div>
                         </div>
@@ -515,34 +503,34 @@ const RestaurantOrders = () => {
             >
               <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Request Additional Fee
+                  Request Delivery Fee
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Current delivery fee: ₦{(selectedOrder.fee || 0).toLocaleString()}
+                  Set your delivery fee for this order
                 </p>
                 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Additional Fee Amount (₦)
+                      Delivery Fee Amount (₦)
                     </label>
                     <input
                       type="number"
                       value={additionalFee}
                       onChange={(e) => setAdditionalFee(e.target.value)}
-                      placeholder="Enter additional fee amount"
+                      placeholder="Enter delivery fee amount"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent"
                     />
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Reason for Additional Fee (Optional)
+                      Delivery Notes (Optional)
                     </label>
                     <textarea
                       value={feeDescription}
                       onChange={(e) => setFeeDescription(e.target.value)}
-                      placeholder="e.g., Extra distance delivery, special packaging..."
+                      placeholder="e.g., Long distance delivery, special handling required..."
                       rows="3"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cheese focus:border-transparent resize-none"
                     />
@@ -566,7 +554,7 @@ const RestaurantOrders = () => {
                     disabled={isConfirming || !additionalFee || parseFloat(additionalFee) <= 0}
                     className="flex-1 bg-cheese hover:bg-yellow-500 text-crust px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
                   >
-                    {isConfirming ? 'Processing...' : 'Request Fee'}
+                    {isConfirming ? 'Processing...' : 'Set Delivery Fee'}
                   </button>
                 </div>
               </div>
