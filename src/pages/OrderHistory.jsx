@@ -47,7 +47,30 @@ const OrderHistory = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        const { orders: newOrders, pagination } = response.data;
+        // Handle the API response structure: { success: true, data: { orders: [...], pagination: {...} } }
+        let newOrders = [];
+        let paginationInfo = { currentPage: 1, totalPages: 1, totalItems: 0 };
+
+        if (response.data && response.data.success && response.data.data) {
+          // Expected structure: { success: true, data: { orders: [...], pagination: {...} } }
+          const responseData = response.data.data;
+          newOrders = responseData.orders || [];
+          paginationInfo = responseData.pagination || paginationInfo;
+        } 
+        // Fallback for direct structure: { orders: [...], pagination: {...} }
+        else if (response.data && response.data.orders) {
+          newOrders = response.data.orders || [];
+          paginationInfo = response.data.pagination || paginationInfo;
+        }
+        // Fallback: if response.data is directly an array of orders
+        else if (Array.isArray(response.data)) {
+          newOrders = response.data;
+          paginationInfo = { 
+            currentPage: 1, 
+            totalPages: 1, 
+            totalItems: response.data.length 
+          };
+        }
         
         if (isLoadMore) {
           setOrders((prevOrders) => [...prevOrders, ...newOrders]);
@@ -55,7 +78,12 @@ const OrderHistory = () => {
           setOrders(newOrders);
         }
 
-        setHasMoreOrders(pagination.currentPage < pagination.totalPages);
+        // Safe pagination handling
+        const hasMore = paginationInfo && 
+                       paginationInfo.currentPage && 
+                       paginationInfo.totalPages && 
+                       paginationInfo.currentPage < paginationInfo.totalPages;
+        setHasMoreOrders(hasMore);
       } catch (error) {
         handleAxiosError(error, 'Failed to load order history.');
       } finally {
@@ -197,7 +225,7 @@ const OrderHistory = () => {
           </motion.button>
         </motion.div>
 
-        {orders.length === 0 ? (
+        {orders && orders.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -212,7 +240,7 @@ const OrderHistory = () => {
         ) : (
           <div className="space-y-4">
             <AnimatePresence>
-              {orders.map((order, index) => (
+              {orders && orders.map((order, index) => (
                 <motion.div
                   key={order._id}
                   initial={{ opacity: 0, y: 20 }}
@@ -269,7 +297,7 @@ const OrderHistory = () => {
                           <FaUtensils className="text-orange-600 text-sm" />
                           <span className="text-sm text-gray-600 font-sans">Items</span>
                         </div>
-                        <span className="text-lg font-bold text-crust">{order.meals.length}</span>
+                        <span className="text-lg font-bold text-crust">{order.meals ? order.meals.length : 0}</span>
                       </div>
                     </div>
 
@@ -303,7 +331,7 @@ const OrderHistory = () => {
                             Meal Details
                           </h4>
                           <div className="space-y-3">
-                            {order.meals.map((mealDetail, index) => (
+                            {order.meals && order.meals.map((mealDetail, index) => (
                               <div key={mealDetail.meal._id} className="bg-white rounded-xl p-4 border border-gray-200">
                                 <div className="flex justify-between items-start">
                                   <div>
