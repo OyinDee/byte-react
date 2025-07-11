@@ -7,7 +7,6 @@ import {
   BuildingStorefrontIcon,
   CurrencyDollarIcon,
   ArrowRightOnRectangleIcon,
-  PlusCircleIcon,
 } from "@heroicons/react/24/outline";
 
 const SuperAdminNavbar = () => {

@@ -9,10 +9,7 @@ import {
   ArrowPathIcon,
   MagnifyingGlassIcon,
   BuildingStorefrontIcon,
-  UserIcon,
-  CalendarIcon,
-  InformationCircleIcon,
-  ExclamationTriangleIcon
+  InformationCircleIcon
 } from "@heroicons/react/24/outline";
 import LoadingPage from "../../components/Loader";
 import { toast } from "react-toastify";

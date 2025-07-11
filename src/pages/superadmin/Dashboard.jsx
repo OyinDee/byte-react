@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
-  ChartBarIcon, 
   UsersIcon, 
   BuildingStorefrontIcon, 
   ShoppingBagIcon,
@@ -13,14 +12,11 @@ import {
   CheckCircleIcon,
   ClockIcon,
   CurrencyDollarIcon,
-  ArrowTrendingUpIcon,
-  PresentationChartLineIcon,
   ArrowPathIcon,
   PlusCircleIcon,
   TruckIcon,
   XCircleIcon
 } from "@heroicons/react/24/outline";
-import { Line, Doughnut, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -93,12 +89,7 @@ const SuperAdminDashboard = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [universities, setUniversities] = useState([]);
 
-  useEffect(() => {
-    fetchDashboardData();
-    fetchUniversities();
-  }, [dateRange, refreshKey]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
@@ -116,7 +107,12 @@ const SuperAdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange]);
+
+  useEffect(() => {
+    fetchDashboardData();
+    fetchUniversities();
+  }, [dateRange, refreshKey, fetchDashboardData]);
 
   const fetchUniversities = async () => {
     try {
@@ -129,62 +125,6 @@ const SuperAdminDashboard = () => {
 
   const handleRefresh = () => {
     setRefreshKey(prevKey => prevKey + 1);
-  };
-
-  // Custom styles for the charts
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          font: {
-            family: "'Inter', sans-serif",
-            weight: 500
-          }
-        }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleFont: {
-          family: "'Inter', sans-serif",
-          size: 14,
-          weight: 600
-        },
-        bodyFont: {
-          family: "'Inter', sans-serif",
-          size: 12
-        },
-        padding: 12,
-        cornerRadius: 8,
-        caretSize: 6
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
-          drawBorder: false
-        },
-        ticks: {
-          font: {
-            family: "'Inter', sans-serif",
-          }
-        }
-      },
-      x: {
-        grid: {
-          display: false
-        },
-        ticks: {
-          font: {
-            family: "'Inter', sans-serif",
-          }
-        }
-      }
-    }
   };
 
   if (loading) {
