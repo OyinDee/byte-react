@@ -52,6 +52,24 @@ const CartPage = () => {
     }
   }, []);
 
+  // Listen for profile updates from the Profile component
+  useEffect(() => {
+    const handleProfileUpdate = (event) => {
+      const updatedUser = event.detail;
+      console.log("Profile updated, refreshing user data:", updatedUser);
+      setUser(prevUser => ({
+        ...prevUser,
+        ...updatedUser
+      }));
+    };
+
+    window.addEventListener('userProfileUpdated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('userProfileUpdated', handleProfileUpdate);
+    };
+  }, []);
+
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
@@ -59,6 +77,21 @@ const CartPage = () => {
         const storedUser = jwtDecode(storedToken);
         setUser(storedUser.user);
         fetchUserBalance(storedUser.user.username);
+        
+        // Also check if there's updated user data in localStorage
+        const byteUser = localStorage.getItem("byteUser");
+        if (byteUser) {
+          try {
+            const parsedUser = JSON.parse(byteUser);
+            // Merge JWT user with potentially more up-to-date localStorage user
+            setUser(prevUser => ({
+              ...prevUser,
+              ...parsedUser
+            }));
+          } catch (error) {
+            console.error("Error parsing byteUser from localStorage:", error);
+          }
+        }
       } catch (error) {
         navigate("/login");
       }
@@ -165,9 +198,25 @@ const CartPage = () => {
         return;
       }
     } else {
-      // Regular order validation
-      if (user.location === "" || user.nearestLandmark === "") {
+      // First check localStorage for the most up-to-date user profile
+      let currentUserData = user;
+      const byteUser = localStorage.getItem("byteUser");
+      
+      if (byteUser) {
+        try {
+          const parsedUser = JSON.parse(byteUser);
+          currentUserData = { ...currentUserData, ...parsedUser };
+        } catch (error) {
+          console.error("Error parsing byteUser from localStorage:", error);
+        }
+      }
+      
+      // Regular order validation with the most recent user data
+      if (!currentUserData.location || currentUserData.location === "" || 
+          !currentUserData.nearestLandmark || currentUserData.nearestLandmark === "") {
         toast.error("Complete profile setup to proceed with the order.");
+        // Redirect to profile page to complete setup
+        navigate('/user/profile');
         return;
       }
     }
@@ -184,6 +233,18 @@ const CartPage = () => {
     
     const totalAmount = totalAmountPerRestaurant(itemsForRestaurant, fee);
     
+    // Get the most current user data
+    let currentUserData = user;
+    const byteUser = localStorage.getItem("byteUser");
+    if (byteUser) {
+      try {
+        const parsedUser = JSON.parse(byteUser);
+        currentUserData = { ...currentUserData, ...parsedUser };
+      } catch (error) {
+        console.error("Error parsing byteUser from localStorage:", error);
+      }
+    }
+    
     // Build order details with conditional recipient info
     const orderDetails = {
       restaurantCustomId: restaurantId,
@@ -192,7 +253,7 @@ const CartPage = () => {
         quantity,
       })),
       totalPrice: totalAmount,
-      user: user._id,
+      user: currentUserData._id,
       note: isOrderingForOther 
         ? `Gift order for @${orderForUsername}. ${note}`.trim()
         : note,
@@ -206,9 +267,9 @@ const CartPage = () => {
       orderDetails.phoneNumber = overrideDeliveryInfo.phoneNumber || recipientInfo.phoneNumber;
       orderDetails.nearestLandmark = overrideDeliveryInfo.nearestLandmark || recipientInfo.nearestLandmark || "";
     } else {
-      orderDetails.location = user.location;
-      orderDetails.phoneNumber = user.phoneNumber;
-      orderDetails.nearestLandmark = user.nearestLandmark || "";
+      orderDetails.location = currentUserData.location;
+      orderDetails.phoneNumber = currentUserData.phoneNumber;
+      orderDetails.nearestLandmark = currentUserData.nearestLandmark || "";
     }
     
     // Fetch latest user balance before showing payment modal
@@ -221,7 +282,7 @@ const CartPage = () => {
       orderDetails
     });
     setShowPaymentModal(true);
-  }, [cart, fee, note, totalAmountPerRestaurant, user, isOrderingForOther, recipientInfo, orderForUsername, overrideDeliveryInfo, fetchUserBalance]);
+  }, [cart, fee, note, totalAmountPerRestaurant, user, isOrderingForOther, recipientInfo, orderForUsername, overrideDeliveryInfo, fetchUserBalance, navigate]);
 
   const processWalletPayment = useCallback(async () => {
     if (!currentCheckoutData) return;
@@ -287,12 +348,24 @@ const CartPage = () => {
     });
 
     try {
+      // Get most current user data for email
+      let currentUserData = user;
+      const byteUser = localStorage.getItem("byteUser");
+      if (byteUser) {
+        try {
+          const parsedUser = JSON.parse(byteUser);
+          currentUserData = { ...currentUserData, ...parsedUser };
+        } catch (error) {
+          console.error("Error parsing byteUser from localStorage:", error);
+        }
+      }
+      
       // Initialize Paystack payment
       const paystackKey = "pk_test_4b8fb38e6c1bf4a0e5c92eb74f11b71f78cfac28"; // Your Paystack public key
       
       const handler = window.PaystackPop.setup({
         key: paystackKey,
-        email: user.email,
+        email: currentUserData.email,
         amount: totalAmount * 100, // Paystack expects amount in kobo (multiply by 100)
         currency: 'NGN',
         ref: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -361,6 +434,10 @@ const CartPage = () => {
 
   if (!user) return null;
 
+  // Check if profile is incomplete for rendering warning if needed
+  const isProfileIncomplete = !user.location || user.location === "" || 
+                              !user.nearestLandmark || user.nearestLandmark === "";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4 pt-16 md:pt-24 pb-24 md:pb-6">
       <ToastContainer
@@ -388,6 +465,35 @@ const CartPage = () => {
           </h1>
           <p className="text-gray-600 font-sans">Review your delicious selections</p>
         </motion.div>
+
+        {/* Profile Incomplete Warning */}
+        {!isOrderingForOther && isProfileIncomplete && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-lg shadow-md"
+          >
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  Your profile is incomplete. Please 
+                  <button 
+                    onClick={() => navigate('/user/profile')} 
+                    className="font-medium underline text-yellow-800 hover:text-yellow-900 ml-1"
+                  >
+                    complete your profile
+                  </button> 
+                  to place an order.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {cart.size === 0 ? (
           <motion.div
