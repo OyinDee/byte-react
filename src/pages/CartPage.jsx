@@ -173,7 +173,7 @@ const CartPage = () => {
   const handleClearCart = useCallback((restaurantId) => {
     clearCart();
     toast.success("Cart cleared successfully!");
-  }, [clearCart, cart]);
+  }, [clearCart]);
 
   const totalAmountPerRestaurant = useCallback((items = [], fee = 0) => {
     if (!Array.isArray(items)) return parseFloat(fee || 0);

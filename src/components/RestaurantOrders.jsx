@@ -123,7 +123,7 @@ const RestaurantOrders = () => {
     setIsDelivering(true);
     
     try {
-      const response = await axios.patch(
+      await axios.patch(
         `https://mongobyte.vercel.app/api/v1/orders/deliver/${orderId}`
       );
 
