@@ -36,7 +36,7 @@ const LoadingPage = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-crust via-crust/95 to-pepperoni overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-10 left-10 w-32 h-32 border border-cheese rounded-full animate-pulse"></div>
@@ -50,7 +50,7 @@ const LoadingPage = () => {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative z-10 flex flex-col items-center text-center p-8 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl max-w-md mx-4"
+        className="relative z-10 flex flex-col items-center text-center p-8 rounded-3xl bg-black/80 backdrop-blur-md border border-gray-800 shadow-2xl max-w-md mx-4"
       >
         {/* Logo Container */}
         <motion.div 
@@ -208,10 +208,10 @@ const LoadingPage = () => {
 
       {/* Ambient lighting effect */}
       <motion.div
-        className="absolute inset-0 bg-gradient-radial from-cheese/5 via-transparent to-transparent"
+        className="absolute inset-0 bg-gradient-radial from-cheese/10 via-transparent to-transparent"
         animate={{
           scale: [1, 1.2, 1],
-          opacity: [0.3, 0.6, 0.3]
+          opacity: [0.2, 0.4, 0.2]
         }}
         transition={{
           duration: 4,
