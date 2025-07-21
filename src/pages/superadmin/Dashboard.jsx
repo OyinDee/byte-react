@@ -88,6 +88,14 @@ const SuperAdminDashboard = () => {
   const [dateRange, setDateRange] = useState("week");
   const [refreshKey, setRefreshKey] = useState(0);
   const [universities, setUniversities] = useState([]);
+  const [topCustomers, setTopCustomers] = useState([]);
+  const [editLandmarksId, setEditLandmarksId] = useState(null);
+  const [landmarksInput, setLandmarksInput] = useState("");
+  const [isUpdatingLandmarks, setIsUpdatingLandmarks] = useState(false);
+  const [universitiesList, setUniversitiesList] = useState([]);
+  const [editUniLandmarksId, setEditUniLandmarksId] = useState(null);
+  const [uniLandmarksInput, setUniLandmarksInput] = useState("");
+  const [isUpdatingUniLandmarks, setIsUpdatingUniLandmarks] = useState(false);
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
@@ -109,9 +117,35 @@ const SuperAdminDashboard = () => {
     }
   }, [dateRange]);
 
+  // Fetch top customers
+  const fetchTopCustomers = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        "https://mongobyte.vercel.app/api/v1/superadmin/top-customers",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTopCustomers(response.data.customers || []);
+    } catch (error) {
+      console.error("Error fetching top customers:", error);
+    }
+  }, []);
+
+  // Fetch all universities for management section
+  const fetchUniversitiesList = useCallback(async () => {
+    try {
+      const response = await axios.get("https://mongobyte.vercel.app/api/v1/universities");
+      setUniversitiesList(response.data.data || []);
+    } catch (error) {
+      setUniversitiesList([]);
+    }
+  }, []);
+
   useEffect(() => {
     fetchDashboardData();
     fetchUniversities();
+    fetchTopCustomers();
+    fetchUniversitiesList();
   }, [dateRange, refreshKey, fetchDashboardData]);
 
   const fetchUniversities = async () => {
@@ -125,6 +159,75 @@ const SuperAdminDashboard = () => {
 
   const handleRefresh = () => {
     setRefreshKey(prevKey => prevKey + 1);
+  };
+
+  // Update nearest landmarks
+  const handleEditLandmarks = (restaurant) => {
+    setEditLandmarksId(restaurant._id);
+    setLandmarksInput((restaurant.nearestLandmarks || []).join(", "));
+  };
+
+  const handleCancelEditLandmarks = () => {
+    setEditLandmarksId(null);
+    setLandmarksInput("");
+  };
+
+  const handleSaveLandmarks = async (restaurantId) => {
+    setIsUpdatingLandmarks(true);
+    try {
+      const token = localStorage.getItem("token");
+      const landmarksArr = landmarksInput.split(",").map(l => l.trim()).filter(Boolean);
+      await axios.put(
+        `https://mongobyte.vercel.app/api/v1/superadmin/restaurants/${restaurantId}/nearest-landmarks`,
+        { nearestLandmarks: landmarksArr },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Landmarks updated!");
+      setEditLandmarksId(null);
+      setLandmarksInput("");
+      fetchDashboardData();
+    } catch (error) {
+      toast.error("Failed to update landmarks");
+    } finally {
+      setIsUpdatingLandmarks(false);
+    }
+  };
+
+  // University landmark editing
+  const handleEditUniLandmarks = async (uni) => {
+    setEditUniLandmarksId(uni._id);
+    setUniLandmarksInput('');
+    try {
+      const response = await axios.get(`https://mongobyte.vercel.app/api/v1/universities/${uni._id}/landmarks`);
+      const fetchedLandmarks = response.data.landmarks || [];
+      setUniLandmarksInput(fetchedLandmarks.join(", "));
+    } catch (error) {
+      setUniLandmarksInput('');
+    }
+  };
+  const handleSaveUniLandmarks = async (universityId) => {
+    setIsUpdatingUniLandmarks(true);
+    try {
+      const token = localStorage.getItem("token");
+      const landmarksArr = uniLandmarksInput.split(",").map(l => l.trim()).filter(Boolean);
+      await axios.put(
+        `https://mongobyte.vercel.app/api/v1/superadmin/universities/${universityId}/nearest-landmarks`,
+        { nearestLandmarks: landmarksArr },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Landmarks updated!");
+      setEditUniLandmarksId(null);
+      setUniLandmarksInput("");
+      fetchUniversitiesList();
+    } catch (error) {
+      toast.error("Failed to update landmarks");
+    } finally {
+      setIsUpdatingUniLandmarks(false);
+    }
+  };
+  const handleCancelEditUniLandmarks = () => {
+    setEditUniLandmarksId(null);
+    setUniLandmarksInput("");
   };
 
   if (loading) {
@@ -459,12 +562,12 @@ const SuperAdminDashboard = () => {
             )}
           </motion.div>
           
-          {/* Top Restaurants Table */}
+          {/* Top Restaurants Table (with Landmarks Edit) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.9 }}
-            className="bg-white p-6 rounded-xl shadow-md"
+            className="bg-white p-6 rounded-xl shadow-md mt-12"
           >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-gray-900">Top Restaurants</h3>
@@ -475,7 +578,6 @@ const SuperAdminDashboard = () => {
                 View All
               </Link>
             </div>
-            
             {dashboardData.topRestaurants.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 No restaurant data available
@@ -523,6 +625,159 @@ const SuperAdminDashboard = () => {
             )}
           </motion.div>
         </div>
+
+        {/* Top Customers Table */}
+        <div className="mt-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 1.0 }}
+            className="bg-white p-6 rounded-xl shadow-md"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-gray-900">Top Customers</h3>
+            </div>
+            {topCustomers.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No top customers found
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Spent</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {topCustomers.map((customer) => (
+                      <tr key={customer.userId} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{customer.username}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">{customer.email}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">₦{customer.totalSpent?.toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
+        </div>
+
+        {/* Universities Management Section */}
+        <div className="mt-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 1.1 }}
+            className="bg-white p-6 rounded-xl shadow-md"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-gray-900">Universities</h3>
+            </div>
+            {universitiesList.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No universities found
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Landmarks</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {universitiesList.map((uni) => (
+                      <tr key={uni._id} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{uni.name}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">{uni.state}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm">
+                          {uni.isActive ? (
+                            <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs font-medium">Active</span>
+                          ) : (
+                            <span className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full text-xs font-medium">Inactive</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-700">
+                          {editUniLandmarksId === uni._id ? (
+                            <>
+                              <input
+                                type="text"
+                                value={uniLandmarksInput}
+                                onChange={e => setUniLandmarksInput(e.target.value)}
+                                className="w-48 px-2 py-1 border border-orange-200 rounded-lg text-sm"
+                                placeholder="Comma separated..."
+                                disabled={isUpdatingUniLandmarks}
+                              />
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  onClick={() => handleSaveUniLandmarks(uni._id)}
+                                  className="px-3 py-1 bg-pepperoni text-white rounded-lg text-xs font-medium hover:bg-red-700 transition-colors disabled:opacity-60"
+                                  disabled={isUpdatingUniLandmarks}
+                                >
+                                  {isUpdatingUniLandmarks ? 'Saving...' : 'Save'}
+                                </button>
+                                <button
+                                  onClick={handleCancelEditUniLandmarks}
+                                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
+                                  disabled={isUpdatingUniLandmarks}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => handleEditUniLandmarks(uni)}
+                              className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-200 transition-colors"
+                            >
+                              View Landmarks
+                            </button>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm">
+                          {editUniLandmarksId === uni._id ? (
+                            <div className="flex gap-2">
+                              <button
+                                // onClick={() => handleSaveUniLandmarks(uni._id)}
+                                className="px-3 py-1 bg-pepperoni text-white rounded-lg text-xs font-medium hover:bg-red-700 transition-colors disabled:opacity-60"
+                                disabled={isUpdatingUniLandmarks}
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={handleCancelEditUniLandmarks}
+                                className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
+                                disabled={isUpdatingUniLandmarks}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleEditUniLandmarks(uni)}
+                              className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-200 transition-colors"
+                            >
+                              Edit Landmarks
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
+        </div>
+        {/* More admin features will be added below */}
       </div>
     </div>
   );

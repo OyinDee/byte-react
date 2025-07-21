@@ -37,6 +37,8 @@ const Profile = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const navigate = useNavigate();
   const { universities } = useUniversities();
+  const [universityLandmarks, setUniversityLandmarks] = useState([]);
+  const [landmarksLoading, setLandmarksLoading] = useState(false);
 
   // Utility function to safely get university name
   const getUniversityName = (university, universities, fallback = "University") => {
@@ -89,6 +91,28 @@ const Profile = () => {
     };
     fetchUser();
   }, []);
+
+  // Fetch university landmarks when university changes
+  useEffect(() => {
+    const fetchLandmarks = async () => {
+      if (!selectedUniversity) {
+        setUniversityLandmarks([]);
+        return;
+      }
+      setLandmarksLoading(true);
+      try {
+        const response = await axios.get(
+          `https://mongobyte.vercel.app/api/v1/universities/${selectedUniversity}/landmarks`
+        );
+        setUniversityLandmarks(response.data.landmarks || []);
+      } catch (error) {
+        setUniversityLandmarks([]);
+      } finally {
+        setLandmarksLoading(false);
+      }
+    };
+    fetchLandmarks();
+  }, [selectedUniversity]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -429,6 +453,30 @@ const Profile = () => {
                   Help us locate you easily; click on edit profile!
                 </p>
               )}
+              {/* University Landmark Selector */}
+              {selectedUniversity && (
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Choose a landmark from your university:
+                  </label>
+                  {landmarksLoading ? (
+                    <div className="text-gray-500 text-sm">Loading landmarks...</div>
+                  ) : universityLandmarks.length > 0 ? (
+                    <select
+                      className="w-full p-3 border border-orange-300 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-transparent font-sans"
+                      value={nearestLandmark}
+                      onChange={e => setNearestLandmark(e.target.value)}
+                    >
+                      <option value="">Select a landmark...</option>
+                      {universityLandmarks.map((lm, idx) => (
+                        <option key={idx} value={lm}>{lm}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="text-gray-500 text-sm">No landmarks found for your university.</div>
+                  )}
+                </div>
+              )}
             </motion.div>
           </div>
         </motion.div>
@@ -563,6 +611,27 @@ const Profile = () => {
               </div>
               
               <div className="p-6 space-y-6">
+                {/* University (move to top) */}
+                <div>
+                  <label className="block text-sm font-semibold text-crust mb-2 flex items-center gap-2">
+                    <FaUniversity className="text-pepperoni" />
+                    University
+                  </label>
+                  <select
+                    value={selectedUniversity}
+                    onChange={e => {
+                      setSelectedUniversity(e.target.value);
+                      setNearestLandmark("");
+                    }}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent hover:border-cheese transition-colors"
+                  >
+                    <option value="">Select your university</option>
+                    {universities.map((university) => (
+                      <option key={university._id} value={university._id}>{university.name}</option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Profile Picture Upload */}
                 <div>
                   <label className="block text-sm font-semibold text-crust mb-3">Profile Picture</label>
@@ -626,39 +695,29 @@ const Profile = () => {
                   />
                 </div>
 
-                {/* Nearest Landmark */}
+                {/* Nearest Landmark (dropdown if university selected) */}
                 <div>
                   <label className="block text-sm font-semibold text-crust mb-2">Nearest Landmark</label>
-                  <input
-                    type="text"
-                    value={nearestLandmark}
-                    onChange={(e) => setNearestLandmark(e.target.value)}
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent hover:border-cheese transition-colors"
-                    placeholder="Nearby landmark..."
-                  />
-                </div>
-
-                {/* University */}
-                <div>
-                  <label className="block text-sm font-semibold text-crust mb-2 flex items-center gap-2">
-                    <FaUniversity className="text-pepperoni" />
-                    University
-                  </label>
-                  <select
-                    value={selectedUniversity}
-                    onChange={(e) => setSelectedUniversity(e.target.value)}
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent hover:border-cheese transition-colors"
-                  >
-                    <option value="">Select your university</option>
-                    {universities.map((university) => (
-                      <option key={university._id} value={university._id}>
-                        {university.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Changing your university will filter restaurants available to you
-                  </div>
+                  {selectedUniversity && universityLandmarks.length > 0 ? (
+                    <select
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent hover:border-cheese transition-colors"
+                      value={nearestLandmark}
+                      onChange={e => setNearestLandmark(e.target.value)}
+                    >
+                      <option value="">Select a landmark...</option>
+                      {universityLandmarks.map((lm, idx) => (
+                        <option key={idx} value={lm}>{lm}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={nearestLandmark}
+                      onChange={(e) => setNearestLandmark(e.target.value)}
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cheese focus:border-transparent hover:border-cheese transition-colors"
+                      placeholder="Nearby landmark..."
+                    />
+                  )}
                 </div>
 
                 {/* Action Buttons */}

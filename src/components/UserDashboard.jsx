@@ -91,102 +91,32 @@ const CombinedPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-yellow-50">
       <main className="container mx-auto px-4 py-6 pt-16 md:pt-24 pb-24 md:pb-8 lg:px-8 lg:py-8">
         
-        {/* Hero Section */}
-        <section className="mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: -30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-12"
-          >
-            {/* Main Hero */}
-            <div className="relative bg-gradient-to-r from-pepperoni via-red-600 to-orange-600 rounded-3xl p-8 md:p-12 mb-8 overflow-hidden shadow-2xl">
-              {/* Background Pattern */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-4 left-4 text-6xl">🍕</div>
-                <div className="absolute top-8 right-8 text-4xl">🍔</div>
-                <div className="absolute bottom-4 left-8 text-5xl">🍟</div>
-                <div className="absolute bottom-8 right-4 text-3xl">🥤</div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-8xl opacity-5">🍽️</div>
-              </div>
-              
-              <div className="relative z-10">
-                <motion.h1 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2, duration: 0.6 }}
-                  className="text-4xl md:text-6xl font-bold text-white mb-4 font-secondary"
-                >
-                  Welcome back, <span className="text-cheese">{user?.username || 'Foodie'}</span>! 👋
-                </motion.h1>
-
-                <motion.p 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.6 }}
-                  className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto font-sans leading-relaxed"
-                >
-                  Ready to satisfy those cravings? Let's discover something absolutely delicious! 🤤
-                </motion.p>
-                
-                {/* Quick Action Buttons */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6, duration: 0.6 }}
-                  className="flex flex-wrap justify-center gap-4 mt-8"
-                >
-                  <motion.button
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate('/user/cart')}
-                    className="bg-white text-pepperoni px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
-                  >
-                    <FaUtensils />
-                    View Cart
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate('/user/orders')}
-                    className="bg-cheese text-crust px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
-                  >
-                    <FaClock />
-                    Order History
-                  </motion.button>
-                </motion.div>
-              </div>
+        {/* Hero Section removed as requested. */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.4, duration: 0.6 }}
+          className="max-w-3xl mx-auto mb-16"
+        >
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <FaSearch className="h-6 w-6 text-gray-400" />
             </div>
-          </motion.div>
-
-
-          {/* Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.4, duration: 0.6 }}
-            className="max-w-3xl mx-auto"
-          >
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <FaSearch className="h-6 w-6 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search restaurants or meals... "
-                className="block w-full pl-12 pr-4 py-5 border-2 border-orange-200 rounded-3xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-4 focus:ring-pepperoni/20 focus:border-pepperoni text-lg shadow-xl transition-all duration-300 font-sans"
-              />
-              <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
-                {/* Find Food button removed as per user request */}
-              </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search restaurants or meals... "
+              className="block w-full pl-12 pr-4 py-5 border-2 border-orange-200 rounded-3xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-4 focus:ring-pepperoni/20 focus:border-pepperoni text-lg shadow-xl transition-all duration-300 font-sans"
+            />
+            <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+              {/* Find Food button removed as per user request */}
             </div>
-          </motion.div>
-        </section>
+          </div>
+        </motion.div>
 
         {/* Restaurants Section */}
-        <section>
+        <section id="restaurant-list">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
