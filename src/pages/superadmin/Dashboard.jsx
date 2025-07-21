@@ -181,7 +181,12 @@ const SuperAdminDashboard = () => {
       await axios.put(
         `https://mongobyte.vercel.app/api/v1/superadmin/universities/${universityId}/nearest-landmarks`,
         { nearestLandmarks: landmarksArr },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
       );
       toast.success("Landmarks updated!");
       setEditUniLandmarksId(null);
