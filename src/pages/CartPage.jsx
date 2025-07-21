@@ -30,6 +30,16 @@ const CartPage = () => {
     nearestLandmark: ''
   });
   
+  // Add new state for external recipient
+  const [isOrderingForExternal, setIsOrderingForExternal] = useState(false);
+  const [externalRecipient, setExternalRecipient] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    location: '',
+    nearestLandmark: '',
+  });
+  
   const navigate = useNavigate();
 
   // Fetch fresh user profile data from the server
@@ -238,12 +248,12 @@ const CartPage = () => {
     });
   };
 
-  const toggleOrderType = (forOther) => {
-    setIsOrderingForOther(forOther);
-    if (!forOther) {
-      // Reset all gift order states when switching back to self
-      handleClearUserSelection();
-    }
+  // Update toggleOrderType to handle external
+  const toggleOrderType = (type) => {
+    setIsOrderingForOther(type === 'other');
+    setIsOrderingForExternal(type === 'external');
+    if (type !== 'other') handleClearUserSelection();
+    if (type !== 'external') setExternalRecipient({ name: '', phone: '', email: '', location: '', nearestLandmark: '' });
   };
 
   const handleCheckout = useCallback(async (restaurantId) => {
@@ -251,11 +261,56 @@ const CartPage = () => {
       toast.error("You need to log in first.");
       return;
     }
-    
+
     // First, refresh user profile to get the most current data
     const freshUserData = await refreshUserProfile();
     let finalUserData = freshUserData || user;
-    
+
+    const itemsForRestaurant = cart.get(restaurantId) || [];
+    if (itemsForRestaurant.length === 0) {
+      toast.error("No items to checkout.");
+      return;
+    }
+    if (isOnlyAddOns(itemsForRestaurant)) {
+      toast.error("You cannot place an order with only add-ons in your cart. Please add a main meal.");
+      return;
+    }
+
+    const totalAmount = totalAmountPerRestaurant(itemsForRestaurant, fee);
+
+    // External recipient flow
+    if (isOrderingForExternal) {
+      // Validate required fields
+      if (!externalRecipient.name.trim() || !externalRecipient.phone.trim() || !externalRecipient.location.trim()) {
+        toast.error("Please provide recipient's name, phone, and delivery location.");
+        return;
+      }
+      setCurrentCheckoutData({
+        restaurantId,
+        itemsForRestaurant,
+        totalAmount,
+        orderDetails: {
+          meals: itemsForRestaurant.map(({ meal, quantity }) => ({
+            mealId: meal.customId,
+            quantity,
+          })),
+          note,
+          totalPrice: totalAmount,
+          fee: parseFloat(fee) || 1000,
+          location: externalRecipient.location,
+          phoneNumber: externalRecipient.phone,
+          nearestLandmark: externalRecipient.nearestLandmark,
+          recipientName: externalRecipient.name,
+          recipientPhone: externalRecipient.phone,
+          recipientEmail: externalRecipient.email,
+          restaurantCustomId: restaurantId,
+        },
+        isExternal: true,
+      });
+      setShowPaymentModal(true);
+      return;
+    }
+
     // Check if ordering for another user and validate recipient
     if (isOrderingForOther) {
       if (!recipientInfo || !orderForUsername) {
@@ -281,18 +336,6 @@ const CartPage = () => {
         return;
       }
     }
-    
-    const itemsForRestaurant = cart.get(restaurantId) || [];
-    if (itemsForRestaurant.length === 0) {
-      toast.error("No items to checkout.");
-      return;
-    }
-    if (isOnlyAddOns(itemsForRestaurant)) {
-      toast.error("You cannot place an order with only add-ons in your cart. Please add a main meal.");
-      return;
-    }
-    
-    const totalAmount = totalAmountPerRestaurant(itemsForRestaurant, fee);
     
     // Build order details with conditional recipient info
     const orderDetails = {
@@ -333,12 +376,12 @@ const CartPage = () => {
       orderDetails
     });
     setShowPaymentModal(true);
-  }, [cart, fee, note, totalAmountPerRestaurant, user, isOrderingForOther, recipientInfo, orderForUsername, overrideDeliveryInfo, fetchUserBalance, navigate, refreshUserProfile]);
+  }, [cart, fee, note, totalAmountPerRestaurant, user, isOrderingForOther, recipientInfo, orderForUsername, overrideDeliveryInfo, fetchUserBalance, navigate, refreshUserProfile, isOrderingForExternal, externalRecipient]);
 
   const processWalletPayment = useCallback(async () => {
     if (!currentCheckoutData) return;
 
-    const { totalAmount, orderDetails } = currentCheckoutData;
+    const { totalAmount, orderDetails, isExternal } = currentCheckoutData;
     
     // Use the fetched real-time balance instead of localStorage
     if (userBalance < totalAmount) {
@@ -359,27 +402,51 @@ const CartPage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch("https://mongobyte.vercel.app/api/v1/orders/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          meals: orderDetails.meals,
-          note: orderDetails.note,
-          totalPrice: orderDetails.totalPrice,
-          location: orderDetails.location,
-          phoneNumber: orderDetails.phoneNumber,
-          restaurantCustomId: orderDetails.restaurantCustomId,
-          nearestLandmark: orderDetails.nearestLandmark,
-          fee: orderDetails.fee,
-          ...(orderDetails.orderForUsername && { orderForUsername: orderDetails.orderForUsername }),
-          paymentMethod: 'wallet'
-        }),
-      });
+      let response, responseData;
+      if (isExternal) {
+        response = await fetch("https://mongobyte.vercel.app/api/v1/orders/gift-external", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            recipientName: orderDetails.recipientName,
+            recipientPhone: orderDetails.recipientPhone,
+            recipientEmail: orderDetails.recipientEmail,
+            location: orderDetails.location,
+            nearestLandmark: orderDetails.nearestLandmark,
+            meals: orderDetails.meals,
+            note: orderDetails.note,
+            totalPrice: orderDetails.totalPrice,
+            fee: orderDetails.fee,
+            restaurantCustomId: orderDetails.restaurantCustomId,
+            paymentMethod: 'wallet',
+          }),
+        });
+      } else {
+        response = await fetch("https://mongobyte.vercel.app/api/v1/orders/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            meals: orderDetails.meals,
+            note: orderDetails.note,
+            totalPrice: orderDetails.totalPrice,
+            location: orderDetails.location,
+            phoneNumber: orderDetails.phoneNumber,
+            restaurantCustomId: orderDetails.restaurantCustomId,
+            nearestLandmark: orderDetails.nearestLandmark,
+            fee: orderDetails.fee,
+            ...(orderDetails.orderForUsername && { orderForUsername: orderDetails.orderForUsername }),
+            paymentMethod: 'wallet'
+          }),
+        });
+      }
 
-      const responseData = await response.json();
+      responseData = await response.json();
 
       if (!response.ok) {
         throw new Error(responseData.message || "Failed to place the order.");
@@ -513,20 +580,20 @@ const CartPage = () => {
                 Who are you ordering for?
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => toggleOrderType(false)}
+                  onClick={() => toggleOrderType('self')}
                   className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                    !isOrderingForOther 
+                    !isOrderingForOther && !isOrderingForExternal
                       ? 'border-blue-500 bg-blue-50 text-blue-700' 
                       : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${!isOrderingForOther ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                      <FaShoppingBag className={!isOrderingForOther ? 'text-blue-600' : 'text-gray-500'} />
+                    <div className={`p-2 rounded-full ${!isOrderingForOther && !isOrderingForExternal ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                      <FaShoppingBag className={!isOrderingForOther && !isOrderingForExternal ? 'text-blue-600' : 'text-gray-500'} />
                     </div>
                     <div className="text-left">
                       <h4 className="font-bold">Order for Myself</h4>
@@ -538,9 +605,9 @@ const CartPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => toggleOrderType(true)}
+                  onClick={() => toggleOrderType('other')}
                   className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                    isOrderingForOther 
+                    isOrderingForOther
                       ? 'border-purple-500 bg-purple-50 text-purple-700' 
                       : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                   }`}
@@ -550,8 +617,28 @@ const CartPage = () => {
                       <FaGift className={isOrderingForOther ? 'text-purple-600' : 'text-gray-500'} />
                     </div>
                     <div className="text-left">
-                      <h4 className="font-bold">Order for Someone Else</h4>
-                      <p className="text-sm opacity-75">Send food to a friend</p>
+                      <h4 className="font-bold">Order for Another User</h4>
+                      <p className="text-sm opacity-75">Send food to a friend (Byte user)</p>
+                    </div>
+                  </div>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => toggleOrderType('external')}
+                  className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                    isOrderingForExternal
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-full ${isOrderingForExternal ? 'bg-green-100' : 'bg-gray-100'}`}>
+                      <FaUserFriends className={isOrderingForExternal ? 'text-green-600' : 'text-gray-500'} />
+                    </div>
+                    <div className="text-left">
+                      <h4 className="font-bold">Order for Someone Not on Byte</h4>
+                      <p className="text-sm opacity-75">Send food to anyone, even if they’re not a user</p>
                     </div>
                   </div>
                 </motion.button>
@@ -636,6 +723,87 @@ const CartPage = () => {
                 </motion.div>
               )}
             </motion.div>
+            {/* External Recipient Form */}
+            {isOrderingForExternal && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border-2 border-green-200 mt-6"
+              >
+                <h4 className="text-lg font-bold text-crust mb-4 flex items-center gap-2">
+                  <FaUserFriends className="text-green-600" />
+                  Recipient Information (Not a Byte user)
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Recipient Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={externalRecipient.name}
+                      onChange={e => setExternalRecipient(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Enter recipient's full name"
+                      className="w-full p-3 border border-green-300 rounded-xl focus:ring-2 focus:ring-green-400 focus:border-transparent font-sans"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Recipient Phone *
+                    </label>
+                    <input
+                      type="tel"
+                      value={externalRecipient.phone}
+                      onChange={e => setExternalRecipient(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="Enter recipient's phone number"
+                      className="w-full p-3 border border-green-300 rounded-xl focus:ring-2 focus:ring-green-400 focus:border-transparent font-sans"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Recipient Email (optional)
+                    </label>
+                    <input
+                      type="email"
+                      value={externalRecipient.email}
+                      onChange={e => setExternalRecipient(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="Enter recipient's email (optional)"
+                      className="w-full p-3 border border-green-300 rounded-xl focus:ring-2 focus:ring-green-400 focus:border-transparent font-sans"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Delivery Location *
+                    </label>
+                    <input
+                      type="text"
+                      value={externalRecipient.location}
+                      onChange={e => setExternalRecipient(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="Enter delivery location"
+                      className="w-full p-3 border border-green-300 rounded-xl focus:ring-2 focus:ring-green-400 focus:border-transparent font-sans"
+                      required
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Nearest Landmark
+                    </label>
+                    <input
+                      type="text"
+                      value={externalRecipient.nearestLandmark}
+                      onChange={e => setExternalRecipient(prev => ({ ...prev, nearestLandmark: e.target.value }))}
+                      placeholder="Enter nearest landmark (optional)"
+                      className="w-full p-3 border border-green-300 rounded-xl focus:ring-2 focus:ring-green-400 focus:border-transparent font-sans"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">The recipient does not need a Byte account. They will be contacted for delivery.</p>
+              </motion.div>
+            )}
             {Array.from(cart.entries()).map(([restaurantId, items], index) => (
               <motion.div
                 key={restaurantId}
