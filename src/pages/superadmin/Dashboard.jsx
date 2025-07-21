@@ -89,9 +89,7 @@ const SuperAdminDashboard = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [universities, setUniversities] = useState([]);
   const [topCustomers, setTopCustomers] = useState([]);
-  const [editLandmarksId, setEditLandmarksId] = useState(null);
-  const [landmarksInput, setLandmarksInput] = useState("");
-  const [isUpdatingLandmarks, setIsUpdatingLandmarks] = useState(false);
+  // Removed unused restaurant-level landmark editing state
   const [universitiesList, setUniversitiesList] = useState([]);
   const [editUniLandmarksId, setEditUniLandmarksId] = useState(null);
   const [uniLandmarksInput, setUniLandmarksInput] = useState("");
@@ -146,7 +144,7 @@ const SuperAdminDashboard = () => {
     fetchUniversities();
     fetchTopCustomers();
     fetchUniversitiesList();
-  }, [dateRange, refreshKey, fetchDashboardData]);
+  }, [dateRange, refreshKey, fetchDashboardData, fetchTopCustomers, fetchUniversitiesList]);
 
   const fetchUniversities = async () => {
     try {
@@ -161,37 +159,7 @@ const SuperAdminDashboard = () => {
     setRefreshKey(prevKey => prevKey + 1);
   };
 
-  // Update nearest landmarks
-  const handleEditLandmarks = (restaurant) => {
-    setEditLandmarksId(restaurant._id);
-    setLandmarksInput((restaurant.nearestLandmarks || []).join(", "));
-  };
-
-  const handleCancelEditLandmarks = () => {
-    setEditLandmarksId(null);
-    setLandmarksInput("");
-  };
-
-  const handleSaveLandmarks = async (restaurantId) => {
-    setIsUpdatingLandmarks(true);
-    try {
-      const token = localStorage.getItem("token");
-      const landmarksArr = landmarksInput.split(",").map(l => l.trim()).filter(Boolean);
-      await axios.put(
-        `https://mongobyte.vercel.app/api/v1/superadmin/restaurants/${restaurantId}/nearest-landmarks`,
-        { nearestLandmarks: landmarksArr },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("Landmarks updated!");
-      setEditLandmarksId(null);
-      setLandmarksInput("");
-      fetchDashboardData();
-    } catch (error) {
-      toast.error("Failed to update landmarks");
-    } finally {
-      setIsUpdatingLandmarks(false);
-    }
-  };
+  // Removed unused restaurant-level landmark editing handlers
 
   // University landmark editing
   const handleEditUniLandmarks = async (uni) => {

@@ -23,14 +23,13 @@ const CombinedPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Get user info from localStorage
     const byteUser = localStorage.getItem('byteUser');
     if (byteUser) {
-      setUser(JSON.parse(byteUser));
+      // setUser(JSON.parse(byteUser)); // This line was removed as per the edit hint
     }
 
     AOS.init({ duration: 1000, once: true });
