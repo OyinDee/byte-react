@@ -94,6 +94,9 @@ const SuperAdminDashboard = () => {
   const [editUniLandmarksId, setEditUniLandmarksId] = useState(null);
   const [uniLandmarksInput, setUniLandmarksInput] = useState("");
   const [isUpdatingUniLandmarks, setIsUpdatingUniLandmarks] = useState(false);
+  const [viewLandmarks, setViewLandmarks] = useState([]);
+  const [viewLandmarksUni, setViewLandmarksUni] = useState(null);
+  const [showLandmarksModal, setShowLandmarksModal] = useState(false);
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
@@ -108,7 +111,7 @@ const SuperAdminDashboard = () => {
       
       setDashboardData(response.data);
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      // console.error("Error fetching dashboard data:", error);
       toast.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
@@ -125,7 +128,7 @@ const SuperAdminDashboard = () => {
       );
       setTopCustomers(response.data.customers || []);
     } catch (error) {
-      console.error("Error fetching top customers:", error);
+      // console.error("Error fetching top customers:", error);
     }
   }, []);
 
@@ -151,7 +154,7 @@ const SuperAdminDashboard = () => {
       const response = await axios.get("https://mongobyte.vercel.app/api/v1/universities");
       setUniversities(response.data.data);
     } catch (error) {
-      console.error("Error fetching universities:", error);
+      // console.error("Error fetching universities:", error);
     }
   };
 
@@ -161,7 +164,24 @@ const SuperAdminDashboard = () => {
 
   // Removed unused restaurant-level landmark editing handlers
 
-  // University landmark editing
+  // View landmarks (read-only)
+  const handleViewLandmarks = async (uni) => {
+    setViewLandmarksUni(uni);
+    setShowLandmarksModal(true);
+    try {
+      const response = await axios.get(`https://mongobyte.vercel.app/api/v1/universities/${uni._id}/landmarks`);
+      setViewLandmarks(response.data.landmarks || []);
+    } catch (error) {
+      setViewLandmarks([]);
+    }
+  };
+  const handleCloseLandmarksModal = () => {
+    setShowLandmarksModal(false);
+    setViewLandmarksUni(null);
+    setViewLandmarks([]);
+  };
+
+  // Edit landmarks (edit input)
   const handleEditUniLandmarks = async (uni) => {
     setEditUniLandmarksId(uni._id);
     setUniLandmarksInput('');
@@ -679,6 +699,12 @@ const SuperAdminDashboard = () => {
                           )}
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-700">
+                          <button
+                            onClick={() => handleViewLandmarks(uni)}
+                            className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-200 transition-colors mr-2"
+                          >
+                            View Landmarks
+                          </button>
                           {editUniLandmarksId === uni._id ? (
                             <>
                               <input
@@ -709,38 +735,14 @@ const SuperAdminDashboard = () => {
                           ) : (
                             <button
                               onClick={() => handleEditUniLandmarks(uni)}
-                              className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-200 transition-colors"
-                            >
-                              View Landmarks
-                            </button>
-                          )}
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap text-sm">
-                          {editUniLandmarksId === uni._id ? (
-                            <div className="flex gap-2">
-                              <button
-                                // onClick={() => handleSaveUniLandmarks(uni._id)}
-                                className="px-3 py-1 bg-pepperoni text-white rounded-lg text-xs font-medium hover:bg-red-700 transition-colors disabled:opacity-60"
-                                disabled={isUpdatingUniLandmarks}
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={handleCancelEditUniLandmarks}
-                                className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
-                                disabled={isUpdatingUniLandmarks}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => handleEditUniLandmarks(uni)}
-                              className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-200 transition-colors"
+                              className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-200 transition-colors"
                             >
                               Edit Landmarks
                             </button>
                           )}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm">
+                          {/* Actions column, can add more actions here if needed */}
                         </td>
                       </tr>
                     ))}
@@ -749,6 +751,28 @@ const SuperAdminDashboard = () => {
               </div>
             )}
           </motion.div>
+          {/* Landmarks Modal */}
+          {showLandmarksModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+                <div className="bg-orange-100 p-6 text-crust flex justify-between items-center">
+                  <h2 className="text-xl font-bold">Landmarks for {viewLandmarksUni?.name}</h2>
+                  <button onClick={handleCloseLandmarksModal} className="text-xl font-bold text-pepperoni">&times;</button>
+                </div>
+                <div className="p-6">
+                  {viewLandmarks.length === 0 ? (
+                    <div className="text-gray-500">No landmarks found.</div>
+                  ) : (
+                    <ul className="list-disc pl-5 space-y-1">
+                      {viewLandmarks.map((lm, idx) => (
+                        <li key={idx} className="text-gray-800">{lm}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         {/* More admin features will be added below */}
       </div>
