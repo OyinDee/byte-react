@@ -58,7 +58,7 @@ const FundPage = () => {
       setFee(0);
       setTotal(0);
     } else {
-      const calculatedFee = inputAmount * 0.05;
+      const calculatedFee = inputAmount * 0.10;
       const calculatedTotal = inputAmount + calculatedFee;
       setAmount(inputAmount);
       setFee(calculatedFee);
@@ -264,7 +264,7 @@ const FundPage = () => {
                             <span className="font-bold text-crust">₦{amount.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-600 font-sans">Processing Fee (5%):</span>
+                            <span className="text-gray-600 font-sans">Processing Fee (10%):</span>
                             <span className="font-bold text-orange-600">₦{fee.toFixed(2)}</span>
                           </div>
                           <hr className="border-gray-300" />

@@ -453,30 +453,6 @@ const Profile = () => {
                   Help us locate you easily; click on edit profile!
                 </p>
               )}
-              {/* University Landmark Selector */}
-              {selectedUniversity && (
-                <div className="mt-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Choose a landmark from your university:
-                  </label>
-                  {landmarksLoading ? (
-                    <div className="text-gray-500 text-sm">Loading landmarks...</div>
-                  ) : universityLandmarks.length > 0 ? (
-                    <select
-                      className="w-full p-3 border border-orange-300 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-transparent font-sans"
-                      value={nearestLandmark}
-                      onChange={e => setNearestLandmark(e.target.value)}
-                    >
-                      <option value="">Select a landmark...</option>
-                      {universityLandmarks.map((lm, idx) => (
-                        <option key={idx} value={lm}>{lm}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <div className="text-gray-500 text-sm">No landmarks found for your university.</div>
-                  )}
-                </div>
-              )}
             </motion.div>
           </div>
         </motion.div>
