@@ -44,7 +44,7 @@ serviceWorkerRegistration.register({
   onUpdate: (registration) => {
     toast.info(
       <div className="space-y-2">
-        <p>A new version of Byte is available!</p>
+        <p>A new version of Byte! is available!</p>
         <button
           className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
           onClick={() => waitForSWActivation(registration)}

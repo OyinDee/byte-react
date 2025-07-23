@@ -454,7 +454,7 @@ const Orders = () => {
                       <div>
                         <h4 className="font-medium text-gray-900 mb-2">Payment Information</h4>
                         <div className="bg-white rounded-lg shadow-sm p-3">
-                          <p><span className="text-gray-500">Method:</span> Byte Balance</p>
+                          <p><span className="text-gray-500">Method:</span> Byte! Balance</p>
                           <p><span className="text-gray-500">Subtotal:</span> ₦{order.totalAmount?.toLocaleString() || 0}</p>
                           <p><span className="text-gray-500">Delivery Fee:</span> ₦{order.fee?.toLocaleString() || 0}</p>
                           <p className="font-medium"><span className="text-gray-500">Total:</span> ₦{order.totalAmount?.toLocaleString() || 0}</p>

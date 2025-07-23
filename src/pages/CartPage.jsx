@@ -618,7 +618,7 @@ const CartPage = () => {
                     </div>
                     <div className="text-left">
                       <h4 className="font-bold">Order for Another User</h4>
-                      <p className="text-sm opacity-75">Send food to a friend (Byte user)</p>
+                      <p className="text-sm opacity-75">Send food to a Byte! user</p>
                     </div>
                   </div>
                 </motion.button>
@@ -734,7 +734,7 @@ const CartPage = () => {
               >
                 <h4 className="text-lg font-bold text-crust mb-4 flex items-center gap-2">
                   <FaUserFriends className="text-green-600" />
-                  Recipient Information (Not a Byte user)
+                  Recipient Information (Not a Byte! user)
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -801,7 +801,7 @@ const CartPage = () => {
                     />
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">The recipient does not need a Byte account. They will be contacted for delivery.</p>
+                <p className="text-xs text-gray-500 mt-2">The recipient does not need a Byte! account. They will be contacted for delivery.</p>
               </motion.div>
             )}
             {Array.from(cart.entries()).map(([restaurantId, items], index) => (
