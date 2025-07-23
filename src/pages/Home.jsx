@@ -1,6 +1,7 @@
 import Landing from "../components/Landing";
 import Footer from "../components/Footer";
 import { Helmet } from 'react-helmet';
+// eslint-disable-next-line no-unused-vars
 import { BRAND_NAME } from "../utils/brandAssets";
 
 const Home = () => {
