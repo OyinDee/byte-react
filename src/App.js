@@ -31,6 +31,7 @@ import AdminLogin from "./pages/AdminLogin";
 import MealsPage from "./pages/MealsPage";
 import OrderHistory from './pages/OrderHistory';
 import AdminNotifs from "./pages/AdminNotifs";
+import AboutByte from "./pages/AboutByte";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -50,37 +51,35 @@ function App() {
                 <ScrollToTop />
                 <NavbarWrapper />
                 <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signupsuccess" element={<SignUpSuccess />} />
-              <Route path="/forgot-password" element={<ResetPassword />} />
-              
-              {/* User Routes */}
-              <Route path="/user" element={<PrivateRoute element={<UserDashboard />} />} />
-              <Route path="/user/notifs" element={<PrivateRoute element={<Notifications />} />} />
-              <Route path="/user/profile" element={<PrivateRoute element={<Profile />} />} />
-              <Route path="/user/cart" element={<PrivateRoute element={<CartPage />} />} />
-              <Route path="/user/fund/callback" element={<PrivateRoute element={<CallbackPage />} />} />
-              <Route path="/user/fund" element={<PrivateRoute element={<Fund />} />} />
-              <Route path="/user/orderhistory" element={<PrivateRoute element={<OrderHistory />} />} />
-              <Route path="/user/checkrestaurant/:id" element={<RestaurantPage />} />
-              
-              {/* Restaurant Routes */}
-              <Route path="/restaurant/dashboard" element={<PrivateRoute element={<RestaurantDashboard />} />} />
-              <Route path="/restaurant/notifications" element={<PrivateRoute element={<AdminNotifs />} />} />
-              <Route path="/restaurant/menu" element={<PrivateRoute element={<MealsPage />} />} />
-              <Route path="/restaurant/login" element={<AdminLogin />} />
-              <Route path="/restaurant/signup" element={<PrivateRoute element={<RestaurantSignup />} allowedRoles={['superadmin']} />} />
-              
-              {/* SuperAdmin Routes */}
-              <Route path="/superadmin/dashboard" element={<PrivateRoute element={<SuperAdminDashboard />} allowedRoles={['superadmin']} />} />
-              <Route path="/superadmin/orders" element={<PrivateRoute element={<SuperAdminOrders />} allowedRoles={['superadmin']} />} />
-              <Route path="/superadmin/restaurants" element={<PrivateRoute element={<SuperAdminRestaurants />} allowedRoles={['superadmin']} />} />
-              <Route path="/superadmin/withdrawals" element={<PrivateRoute element={<SuperAdminWithdrawals />} allowedRoles={['superadmin']} />} />
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/signup" element={<SignUp />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signupsuccess" element={<SignUpSuccess />} />
+                  <Route path="/forgot-password" element={<ResetPassword />} />
+                  {/* User Routes */}
+                  <Route path="/user" element={<PrivateRoute element={<UserDashboard />} />} />
+                  <Route path="/user/notifs" element={<PrivateRoute element={<Notifications />} />} />
+                  <Route path="/user/profile" element={<PrivateRoute element={<Profile />} />} />
+                  <Route path="/user/cart" element={<PrivateRoute element={<CartPage />} />} />
+                  <Route path="/user/fund/callback" element={<PrivateRoute element={<CallbackPage />} />} />
+                  <Route path="/user/fund" element={<PrivateRoute element={<Fund />} />} />
+                  <Route path="/user/orderhistory" element={<PrivateRoute element={<OrderHistory />} />} />
+                  <Route path="/user/checkrestaurant/:id" element={<RestaurantPage />} />
+                  {/* Restaurant Routes */}
+                  <Route path="/restaurant/dashboard" element={<PrivateRoute element={<RestaurantDashboard />} />} />
+                  <Route path="/restaurant/notifications" element={<PrivateRoute element={<AdminNotifs />} />} />
+                  <Route path="/restaurant/menu" element={<PrivateRoute element={<MealsPage />} />} />
+                  <Route path="/restaurant/login" element={<AdminLogin />} />
+                  <Route path="/restaurant/signup" element={<PrivateRoute element={<RestaurantSignup />} allowedRoles={['superadmin']} />} />
+                  {/* SuperAdmin Routes */}
+                  <Route path="/superadmin/dashboard" element={<PrivateRoute element={<SuperAdminDashboard />} allowedRoles={['superadmin']} />} />
+                  <Route path="/superadmin/orders" element={<PrivateRoute element={<SuperAdminOrders />} allowedRoles={['superadmin']} />} />
+                  <Route path="/superadmin/restaurants" element={<PrivateRoute element={<SuperAdminRestaurants />} allowedRoles={['superadmin']} />} />
+                  <Route path="/superadmin/withdrawals" element={<PrivateRoute element={<SuperAdminWithdrawals />} allowedRoles={['superadmin']} />} />
+                  {/* Byte SEO Landing Page */}
+                  <Route path="/about-byte" element={<AboutByte />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
             <ToastContainer 
               position="top-right"
               autoClose={5000}
