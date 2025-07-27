@@ -1,7 +1,7 @@
 {
-    "name": "Byte! - Food Ordering App",
-    "short_name": "Byte!",
-    "description": "Order food, discover restaurants, and enjoy exclusive offers with Byte! Your go-to food ordering app.",
+    "name": "BYTE!",
+    "short_name": "BYTE!",
+    "description": "Your go-to food ordering app!",
     "start_url": "/",
     "display": "standalone",
     "orientation" :"portrait-primary", 
@@ -11,25 +11,25 @@
         {
             "src": "/Images/Logo 8.jpg",
             "sizes": "192x192",
-            "type": "image/jpeg",
+            "type": "image/png",
             "purpose": "any"
         },
         {
             "src": "/Images/Logo 8.jpg",
             "sizes": "256x256",
-            "type": "image/jpeg",
+            "type": "image/png",
             "purpose": "any"
         },
         {
             "src": "/Images/Logo 8.jpg",
             "sizes": "384x384",
-            "type": "image/jpeg",
+            "type": "image/png",
             "purpose": "any"
         },
         {
             "src": "/Images/Logo 8.jpg",
             "sizes": "512x512",
-            "type": "image/jpeg",
+            "type": "image/png",
             "purpose": "maskable any"
         }
     ],

@@ -38,7 +38,6 @@ const Profile = () => {
   const navigate = useNavigate();
   const { universities } = useUniversities();
   const [universityLandmarks, setUniversityLandmarks] = useState([]);
-  // eslint-disable-next-line no-unused-vars
   const [landmarksLoading, setLandmarksLoading] = useState(false);
 
   // Utility function to safely get university name
