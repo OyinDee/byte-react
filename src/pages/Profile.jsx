@@ -258,52 +258,64 @@ const Profile = () => {
       </AnimatePresence>
 
       <div className="max-w-6xl mx-auto">
-        {/* Profile Hero Section */}
+        {/* Profile Hero Section - Enhanced with background pattern and better styling */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="relative bg-crust rounded-3xl overflow-hidden shadow-2xl mb-8"
         >
+          {/* Add decorative background pattern */}
+          <div className="absolute inset-0 opacity-10 bg-repeat z-0" 
+               style={{ backgroundImage: "url('/Images/Band Pattern.jpg')", backgroundSize: "200px" }} />
+          
+          {/* Add decorative circles */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-pepperoni opacity-20 rounded-full blur-xl"></div>
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-cheese opacity-20 rounded-full blur-xl"></div>
+          
           <div className="relative z-10 p-8 lg:p-12">
             <div className="flex flex-col lg:flex-row items-center gap-8">
-              {/* Profile Image Section */}
+              {/* Profile Image Section - Enhanced with better animations and effects */}
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring" }}
+                transition={{ delay: 0.2, type: "spring", bounce: 0.4 }}
                 className="relative group"
               >
                 <div className="relative">
+                  {/* Add a decorative ring around the profile image */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-cheese via-pepperoni to-cheese p-1 animate-spin-slow opacity-70"></div>
                   <img
                     src={user?.imageUrl || "https://res.cloudinary.com/dol47ucmj/image/upload/v1729928426/jm9dfybhu5pqqevrhyke.jpg"}
                     alt="Profile"
-                    className="w-40 h-40 lg:w-48 lg:h-48 rounded-full object-cover border-4 border-cheese shadow-2xl group-hover:scale-105 transition-transform duration-300"
+                    className="w-40 h-40 lg:w-48 lg:h-48 rounded-full object-cover border-4 border-cheese shadow-2xl group-hover:scale-105 transition-transform duration-300 relative z-10"
                   />
-                  <div className="absolute -bottom-3 -right-3 bg-pepperoni p-4 rounded-full shadow-lg border-2 border-white">
+                  <div className="absolute -bottom-3 -right-3 bg-pepperoni p-4 rounded-full shadow-lg border-2 border-white hover:bg-red-600 transition-colors cursor-pointer">
                     <FaCamera className="text-white text-lg" />
                   </div>
                   {user?.role === 'VIP' && (
-                    <div className="absolute -top-2 -left-2 bg-cheese p-2 rounded-full shadow-lg border-2 border-white">
+                    <div className="absolute -top-2 -left-2 bg-cheese p-3 rounded-full shadow-lg border-2 border-white animate-pulse">
                       <FaCrown className="text-crust text-sm" />
                     </div>
                   )}
                 </div>
               </motion.div>
 
-              {/* Profile Info Section */}
+              {/* Profile Info Section - Enhanced with better typography and layout */}
               <div className="flex-1 text-center lg:text-left">
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <h2 className="text-cheese text-xl mb-2 font-secondary tracking-wider">Byte's Foodie Card</h2>
-                  <h1 className="text-4xl lg:text-6xl font-bold mb-3 font-secondary text-cheese">
+                  <div className="inline-block bg-gradient-to-r from-yellow-400 to-yellow-300 px-4 py-1 rounded-full mb-2">
+                    <h2 className="text-crust text-xl font-secondary tracking-wider font-bold">Byte's Foodie Card</h2>
+                  </div>
+                  <h1 className="text-4xl lg:text-6xl font-bold mb-3 font-secondary text-cheese drop-shadow-md">
                     {user?.firstName} {user?.lastName}
                   </h1>
-                  <div className="text-xl text-white/90 mb-4 flex items-center justify-center lg:justify-start gap-2">
-                    <FaUser className="text-lg" />
-                    @{user?.username}
+                  <div className="text-xl text-white/90 mb-4 flex items-center justify-center lg:justify-start gap-2 bg-white/5 inline-block px-4 py-1 rounded-full">
+                    <FaUser className="text-lg text-cheese" />
+                    <span className="font-medium">@{user?.username}</span>
                   </div>
                 </motion.div>
                 
@@ -311,34 +323,42 @@ const Profile = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="bg-white/10 backdrop-blur-md rounded-2xl p-6"
+                  className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-colors"
                 >
                   <div className="flex items-center justify-center lg:justify-start gap-2 mb-3">
-                    <FaQuoteLeft className="text-cheese" />
-                    <span className="text-cheese font-semibold">Bio</span>
+                    <div className="bg-cheese p-2 rounded-full">
+                      <FaQuoteLeft className="text-crust" />
+                    </div>
+                    <span className="text-cheese font-semibold text-lg">Bio</span>
                   </div>
-                  <p className="text-white/90 font-sans text-lg leading-relaxed">
-                    {user?.bio || "Food enthusiast and taste explorer"}
+                  <p className="text-white/90 font-sans text-lg leading-relaxed italic">
+                    "{user?.bio || "Food enthusiast and taste explorer"}"
                   </p>
                 </motion.div>
 
-                {/* Contact Info */}
+                {/* Contact Info - Enhanced with better styling */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
                   className="flex flex-wrap justify-center lg:justify-start gap-4 mt-6"
                 >
-                  <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full text-white">
-                    <FaEnvelope className="text-cheese text-sm" />
+                  <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full text-white backdrop-blur-sm border border-white/10 hover:bg-white/15 transition-colors">
+                    <div className="bg-cheese p-1.5 rounded-full">
+                      <FaEnvelope className="text-crust text-xs" />
+                    </div>
                     <span className="text-sm font-medium">{user?.email}</span>
                   </div>
-                  <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full text-white">
-                    <FaPhone className="text-cheese text-sm" />
+                  <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full text-white backdrop-blur-sm border border-white/10 hover:bg-white/15 transition-colors">
+                    <div className="bg-cheese p-1.5 rounded-full">
+                      <FaPhone className="text-crust text-xs" />
+                    </div>
                     <span className="text-sm font-medium">{user?.phoneNumber}</span>
                   </div>
-                  <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full text-white">
-                    <FaUniversity className="text-cheese text-sm" />
+                  <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full text-white backdrop-blur-sm border border-white/10 hover:bg-white/15 transition-colors">
+                    <div className="bg-cheese p-1.5 rounded-full">
+                      <FaUniversity className="text-crust text-xs" />
+                    </div>
                     <span className="text-sm font-medium">
                       {getUniversityName(user?.university, universities)}
                     </span>
@@ -349,32 +369,44 @@ const Profile = () => {
           </div>
         </motion.div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - Enhanced with better visual indicators */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ y: -5 }}
-            className="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-cheese"
+            whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
+            className="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-cheese relative overflow-hidden group"
           >
-            <div className="text-2xl font-bold text-crust mb-1">₦{user?.byteBalance}</div>
-            <p className="text-sm font-secondary text-gray-600 font-bold">BALANCE</p>
+            <div className="absolute inset-0 bg-yellow-50 transform scale-y-0 group-hover:scale-y-100 origin-bottom transition-transform duration-300 z-0"></div>
+            <div className="relative z-10">
+              <div className="text-2xl font-bold text-crust mb-1 flex items-center">
+                <FaWallet className="mr-2 text-cheese" />
+                ₦{user?.byteBalance}
+              </div>
+              <p className="text-sm font-secondary text-gray-600 font-bold">BALANCE</p>
+            </div>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ y: -5 }}
-            className="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-pepperoni"
+            whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
+            className="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-pepperoni relative overflow-hidden group"
           >
-            <div className="text-2xl font-bold text-crust mb-1">{user?.orderItems || 0}</div>
-            <p className="text-sm text-gray-600 font-secondary font-bold">ORDERS</p>
+            <div className="absolute inset-0 bg-red-50 transform scale-y-0 group-hover:scale-y-100 origin-bottom transition-transform duration-300 z-0"></div>
+            <div className="relative z-10">
+              <div className="text-2xl font-bold text-crust mb-1 flex items-center">
+                <FaHistory className="mr-2 text-pepperoni" />
+                {user?.orderItems || 0}
+              </div>
+              <p className="text-sm text-gray-600 font-secondary font-bold">ORDERS</p>
+            </div>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ y: -5 }}
+            whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
             className="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-crust"
           >
             <div className="text-2xl font-bold text-crust mb-1 flex items-center">
