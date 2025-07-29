@@ -6,7 +6,7 @@
     "display": "standalone",
     "orientation" :"portrait-primary", 
     "theme_color": "#990000",
-    "background_color": "#000000",
+    "background_color": "#990000",
     "icons": [
         {
             "src": "/Images/Logo 8.jpg",

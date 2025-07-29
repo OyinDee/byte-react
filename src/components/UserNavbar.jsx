@@ -45,6 +45,7 @@ const UserNavbar = () => {
   const handleLogout = () => {
     if (window.confirm("Do you really want to log out?")) {
       localStorage.removeItem("token");
+      localStorage.removeItem('byteUser')
       navigate("/login");
     }
   };
