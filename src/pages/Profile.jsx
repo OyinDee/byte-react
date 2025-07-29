@@ -77,7 +77,6 @@ const Profile = () => {
             ? response.data.user.university?._id || ""
             : response.data.user.university || ""
           );
-          console.log(response)
           setLoading(false);
         } catch (error) {
           console.error('Profile fetch error:', error);

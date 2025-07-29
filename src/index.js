@@ -61,7 +61,7 @@ serviceWorkerRegistration.register({
   },
 
   onSuccess: () => {
-    console.log('✅ Service worker successfully registered.');
+    // console.log('✅ Service worker successfully registered.');
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }

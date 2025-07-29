@@ -43,7 +43,7 @@ const Withdrawals = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log(response.data)
+      // console.log(response.data)
       setWithdrawals(response.data);
       
       // Calculate stats

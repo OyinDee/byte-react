@@ -182,15 +182,6 @@ const RestaurantDashboard = () => {
         return total + (dayData.orders?.length || 0);
       }, 0);
       
-      console.log('Revenue Data:', {
-        totalRevenue,
-        totalOrders,
-        processedDataLength: processedData.length,
-        processedData: processedData.map(day => ({
-          date: day.date,
-          ordersCount: day.orders?.length || 0
-        }))
-      });
       
       const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 

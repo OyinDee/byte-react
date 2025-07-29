@@ -42,7 +42,7 @@ const Orders = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log("Fetched orders:", response.data);
+      // console.log("Fetched orders:", response.data);
 
       // Sort orders by createdAt descending (most recent first)
       const sortedOrders = [...response.data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

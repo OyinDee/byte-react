@@ -3,7 +3,7 @@
 // Function to check if Push notification is supported and permission is granted
 export const checkNotificationPermission = async () => {
   if (!('Notification' in window)) {
-    console.log('This browser does not support notifications');
+
     return false;
   }
   
@@ -25,7 +25,6 @@ export const subscribeUserToPush = async () => {
     const hasPermission = await checkNotificationPermission();
     
     if (!hasPermission) {
-      console.log('Notification permission not granted');
       return null;
     }
     
@@ -50,7 +49,7 @@ export const subscribeUserToPush = async () => {
     });
     
     // In a real application, you would send the subscription to your server
-    console.log('User subscribed:', subscription);
+
     
     return subscription;
   } catch (error) {
@@ -71,7 +70,6 @@ export const unsubscribeFromPush = async () => {
       // In a real application, you would inform your server
       // await removeSubscriptionFromServer(subscription);
       
-      console.log('User unsubscribed');
       return true;
     }
     

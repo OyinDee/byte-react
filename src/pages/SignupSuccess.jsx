@@ -104,9 +104,6 @@ const SignUpSuccess = () => {
           </form>
 
           <div className="mt-6 border-t border-white/20 pt-4">
-            <p className="mb-4 text-sm">
-              Entered the wrong email address? No worries! You can go back to sign up again with the correct email.
-            </p>
             <a
               href="/signup"
               className="inline-block bg-white/20 hover:bg-white/30 text-white py-2 px-6 rounded-lg transition"

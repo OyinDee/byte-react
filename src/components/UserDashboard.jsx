@@ -17,21 +17,29 @@ import {
   FaBolt,
   FaCrown
 } from "react-icons/fa";
+import { set } from "date-fns";
 
 const CombinedPage = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [username, setUsername] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Get user info from localStorage
     const byteUser = localStorage.getItem('byteUser');
+    // console.log(byteUser)
     if (byteUser) {
-      // setUser(JSON.parse(byteUser)); // This line was removed as per the edit hint
+      // setUser(byteUser);
+      // console.log(JSON.parse(byteUser))
+      setUsername(JSON.parse(byteUser).username);
+      // console.log(username);
     }
-
+    else{
+      navigate("/login");
+    }
     AOS.init({ duration: 1000, once: true });
     AOS.refresh();
 
@@ -122,8 +130,9 @@ const CombinedPage = () => {
             transition={{ delay: 1.6, duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl font-bold text-crust mb-4 font-secondary">
-              Discover <span className="text-pepperoni">Amazing</span> Restaurants 🌟
+            <h2 className="font-secondary font-bold text-4xl"> Welcome, <span className="text-pepperoni">{username}</span>!</h2>
+            <h2 className="text-4xl text-crust mb-4 font-primary">
+               Discover <span className="text-pepperoni">Amazing</span> Restaurants 🌟
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto font-sans">
               Hand-picked restaurants serving the most delicious meals on campus

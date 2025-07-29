@@ -235,6 +235,10 @@ const SignUp = () => {
     if (!phoneNumber.trim()) {
       newErrors.push("Phone number is required.");
     }
+    if (phoneNumber.length != 10) {
+      newErrors.push("Phone number cannot be longer or less than 10 digits. Should not start with 0");
+    }
+
     if (!otherUniversity && !universityId) {
       newErrors.push("Please select your university.");
     }

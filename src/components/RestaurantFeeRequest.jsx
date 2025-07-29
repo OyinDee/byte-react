@@ -30,10 +30,7 @@ const RestaurantFeeRequest = ({ order, onOrderUpdate, onClose }) => {
     };
 
     try {
-      // Log the request data for debugging
-      console.log('PAYMENT CONFIRMATION - FeeRequest Component - Request Body:', requestData);
-      console.log('PAYMENT CONFIRMATION - FeeRequest Component - Order ID:', order.customId);
-      
+
       // Instead of making our own API call, pass the data to the parent component
       // to make a single API call with the correct fee amount
       onOrderUpdate({

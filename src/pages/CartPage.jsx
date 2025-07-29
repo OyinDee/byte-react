@@ -65,8 +65,6 @@ const CartPage = () => {
       // Also update user balance with fresh data
       setUserBalance(freshUserData.byteBalance || 0);
       
-      console.log("Profile refreshed with latest data");
-      
       return freshUserData;
     } catch (error) {
       console.error("Error refreshing user profile:", error);
@@ -99,7 +97,7 @@ const CartPage = () => {
   useEffect(() => {
     const handleProfileUpdate = (event) => {
       const updatedUser = event.detail;
-      console.log("Profile updated, refreshing user data:", updatedUser);
+      // console.log("Profile updated, refreshing user data:", updatedUser);
       setUser(prevUser => ({
         ...prevUser,
         ...updatedUser
