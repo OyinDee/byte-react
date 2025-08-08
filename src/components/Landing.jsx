@@ -125,10 +125,10 @@ const Landing = () => {
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
-        if (decodedToken.user) {
+        if (decodedToken.username) {
           navigate("/user");
         }
-        if (decodedToken) {
+        if (decodedToken.customId) {
           navigate("/restaurant/dashboard");
         }
       } catch (error) {

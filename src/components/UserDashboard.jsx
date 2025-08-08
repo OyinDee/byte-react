@@ -17,7 +17,6 @@ import {
   FaBolt,
   FaCrown
 } from "react-icons/fa";
-import { set } from "date-fns";
 
 const CombinedPage = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -73,7 +72,7 @@ const CombinedPage = () => {
     };
 
     fetchRestaurants();
-  }, []);
+  }, [navigate]);
 
   const filteredRestaurants = restaurants.filter((restaurant) => {
     const searchLower = searchQuery.toLowerCase();

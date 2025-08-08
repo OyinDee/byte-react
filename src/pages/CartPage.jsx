@@ -119,7 +119,7 @@ const CartPage = () => {
       try {
         // First, decode the token to get basic user data
         const storedUser = jwtDecode(storedToken);
-        setUser(storedUser.user);
+        setUser(storedUser);
         
         // Then, refresh the profile data from the server
         (async () => {

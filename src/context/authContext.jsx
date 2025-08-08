@@ -15,8 +15,8 @@ export function AuthProvider({ children }) {
         setAuth(decodedToken);
         
         // Store user in localStorage for easier access
-        if (decodedToken.user) {
-          localStorage.setItem("byteUser", JSON.stringify(decodedToken.user));
+        if (decodedToken) {
+          localStorage.setItem("byteUser", JSON.stringify(decodedToken));
         }
       } catch (error) {
         console.error("Invalid token:", error);
