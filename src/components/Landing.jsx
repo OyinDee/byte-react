@@ -128,7 +128,7 @@ const Landing = () => {
         if (decodedToken.user) {
           navigate("/user");
         }
-        if (decodedToken.restaurant) {
+        if (decodedToken) {
           navigate("/restaurant/dashboard");
         }
       } catch (error) {

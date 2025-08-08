@@ -98,8 +98,25 @@ const CombinedPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-yellow-50">
       <main className="container mx-auto px-4 py-6 pt-16 md:pt-24 pb-24 md:pb-8 lg:px-8 lg:py-8">
         
-        {/* Hero Section removed as requested. */}
-        <motion.div
+
+
+        {/* Restaurants Section */}
+        <section id="restaurant-list">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 1.6, duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="font-secondary font-bold text-4xl"> Ready to eat, <span className="text-pepperoni">{username}</span>?</h2>
+            <h2 className="text-4xl text-crust mb-4 font-primary">
+               Discover <span className="text-pepperoni">Amazing</span> Restaurants 🌟
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto font-sans">
+              Hand-picked restaurants serving the most delicious meals on campus
+            </p>
+          </motion.div>
+          <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.4, duration: 0.6 }}
@@ -117,28 +134,10 @@ const CombinedPage = () => {
               className="block w-full pl-12 pr-4 py-5 border-2 border-orange-200 rounded-3xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-4 focus:ring-pepperoni/20 focus:border-pepperoni text-lg shadow-xl transition-all duration-300 font-sans"
             />
             <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
-              {/* Find Food button removed as per user request */}
+
             </div>
           </div>
         </motion.div>
-
-        {/* Restaurants Section */}
-        <section id="restaurant-list">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.6, duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2 className="font-secondary font-bold text-4xl"> Welcome, <span className="text-pepperoni">{username}</span>!</h2>
-            <h2 className="text-4xl text-crust mb-4 font-primary">
-               Discover <span className="text-pepperoni">Amazing</span> Restaurants 🌟
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto font-sans">
-              Hand-picked restaurants serving the most delicious meals on campus
-            </p>
-          </motion.div>
-          
           {loading ? (
             <LoadingPage />
           ) : error ? (

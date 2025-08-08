@@ -54,7 +54,8 @@ const Login = () => {
         const token = response.data.token;
         localStorage.setItem('token', token);
         const decodedToken = jwtDecode(token);
-        localStorage.setItem('byteUser', JSON.stringify(decodedToken.user));
+        console.log(decodedToken)
+        localStorage.setItem('byteUser', JSON.stringify(decodedToken));
         window.location.reload()
       }
     } catch (error) {

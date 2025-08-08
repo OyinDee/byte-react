@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
@@ -27,6 +27,7 @@ const RestaurantDashboard = () => {
   // Core Restaurant Data
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
+  
   const [ratingStats, setRatingStats] = useState({
     averageRating: 0,
     totalRatings: 0,
@@ -39,6 +40,23 @@ const RestaurantDashboard = () => {
       packaging: 0
     }
   });
+
+  // Memoize restaurant credentials to avoid re-decoding token
+  const restaurantCredentials = useMemo(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+    
+    try {
+      const decodedToken = jwtDecode(token);
+      return {
+        token,
+        customId: decodedToken.customId
+      };
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return null;
+    }
+  }, []);
 
   // Orders and Ratings Management
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -130,7 +148,12 @@ const RestaurantDashboard = () => {
   }, [dateRange]);
 
 
-  const fetchDashboardStats = useCallback(async (customId, token) => {
+  const fetchDashboardStats = useCallback(async () => {
+    if (!restaurantCredentials) {
+      console.warn("No restaurant credentials available for stats fetch");
+      return;
+    }
+
     setIsLoadingRevenue(true);
     try {
       const { startDate, endDate } = calculateDateRange();
@@ -156,7 +179,7 @@ const RestaurantDashboard = () => {
       
       // Add pagination and sorting for large datasets
       const response = await axios.get(
-`https://mongobyte.vercel.app/api/v1/restaurants/${customId}/revenue`,
+`https://mongobyte.vercel.app/api/v1/restaurants/${restaurantCredentials.customId}/revenue`,
         {
           params: { 
             startDate, 
@@ -166,7 +189,7 @@ const RestaurantDashboard = () => {
             limit: 20,
             sortOrder: 'desc'
           },
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${restaurantCredentials.token}` }
         }
       );
       
@@ -218,15 +241,20 @@ const RestaurantDashboard = () => {
     } finally {
       setIsLoadingRevenue(false);
     }
-  }, [calculateDateRange, dateRange]);
+  }, [calculateDateRange, dateRange, restaurantCredentials]);
 
-  const fetchOrders = useCallback(async (restaurantId, token) => {
+  const fetchOrders = useCallback(async () => {
+    if (!restaurantCredentials) {
+      console.warn("No restaurant credentials available for orders fetch");
+      return;
+    }
+
     try {
       await axios.get(
-        `https://mongobyte.vercel.app/api/v1/orders/restaurant/${restaurantId}`,
+        `https://mongobyte.vercel.app/api/v1/orders/restaurant/${restaurantCredentials.customId}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${restaurantCredentials.token}`,
           },
           timeout: 8000 // Add timeout to the axios request to prevent hanging
         }
@@ -237,17 +265,23 @@ const RestaurantDashboard = () => {
         setIsRefreshing(false);
       }
     } catch (error) {
+      console.error("Error fetching orders:", error);
       toast.error(error.message || "Error fetching orders.");
       setIsRefreshing(false);
     }
-  }, [isRefreshing]);
+  }, [restaurantCredentials, isRefreshing]);
 
-  const fetchRatings = useCallback(async (restaurantId, token) => {
+  const fetchRatings = useCallback(async () => {
+    if (!restaurantCredentials) {
+      console.warn("No restaurant credentials available for ratings fetch");
+      return;
+    }
+
     try {
       const response = await axios.get(
-        `https://mongobyte.vercel.app/api/v1/ratings/restaurant/${restaurantId}`,
+        `https://mongobyte.vercel.app/api/v1/ratings/restaurant/${restaurantCredentials.customId}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${restaurantCredentials.token}` },
         }
       );
       const ratingsData = response.data.ratings || [];
@@ -264,36 +298,27 @@ const RestaurantDashboard = () => {
     } catch (error) {
       console.error("Error fetching ratings:", error);
     }
-  }, []);
+  }, [restaurantCredentials]);
 
+  // Separate useEffect for restaurant data (only runs once on mount)
   useEffect(() => {
-    const fetchRestaurantAndData = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        toast.error("Token not found.");
+    const fetchRestaurantData = async () => {
+      if (!restaurantCredentials) {
+        toast.error("Authentication required. Please log in again.");
+        setLoading(false);
         return;
       }
 
       try {
-        const decodedToken = jwtDecode(token);
-        const restaurantCustomId = decodedToken.restaurant.customId;
-        
-        // Fetch restaurant data
         const restaurantResponse = await axios.get(
-          `https://mongobyte.vercel.app/api/v1/restaurants/${restaurantCustomId}`,
+          `https://mongobyte.vercel.app/api/v1/restaurants/${restaurantCredentials.customId}`,
           {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${restaurantCredentials.token}` },
           }
         );
         setRestaurant(restaurantResponse.data);
-        
-        // Fetch all data in parallel
-        await Promise.all([
-          fetchOrders(restaurantCustomId, token),
-          fetchDashboardStats(restaurantCustomId, token),
-          fetchRatings(restaurantCustomId, token)
-        ]);
       } catch (error) {
+        console.error("Error fetching restaurant data:", error);
         toast.error(
           error.response?.data?.message || "Error fetching restaurant data."
         );
@@ -302,17 +327,41 @@ const RestaurantDashboard = () => {
       }
     };
 
-    fetchRestaurantAndData();
-  }, [dateRange, fetchDashboardStats, fetchOrders, fetchRatings]);
+    fetchRestaurantData();
+  }, [restaurantCredentials]);
+
+  // Separate useEffect for dashboard stats (runs when date range changes)
+  useEffect(() => {
+    if (!restaurantCredentials) return;
+    
+    fetchDashboardStats();
+  }, [fetchDashboardStats, restaurantCredentials]);
+
+  // Separate useEffect for orders (independent of date range)
+  useEffect(() => {
+    if (!restaurantCredentials) return;
+    
+    fetchOrders();
+  }, [fetchOrders, restaurantCredentials]);
+
+  // Separate useEffect for ratings (independent and only runs once)
+  useEffect(() => {
+    if (!restaurantCredentials) return;
+    
+    fetchRatings();
+  }, [fetchRatings, restaurantCredentials]);
 
   const handleWithdrawal = async () => {
+    if (!restaurantCredentials) {
+      toast.error("Authentication required. Please log in again.");
+      return;
+    }
+
     toast.info("Processing withdrawal request...");
     if (!restaurant.walletBalance || parseFloat(restaurant.walletBalance) <= 0) {
       toast.error("Insufficient balance for withdrawal.");
       return;
     }
-
-    const token = localStorage.getItem("token");
 
     try {
       const response = await axios.post(
@@ -322,7 +371,7 @@ const RestaurantDashboard = () => {
           amount: parseFloat(restaurant.walletBalance) 
         },
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${restaurantCredentials.token}` },
         }
       );
       toast.success(response.data.message || "Withdrawal request submitted successfully");
@@ -344,8 +393,38 @@ const RestaurantDashboard = () => {
     setDateRange(range);
   };
 
+  // Manual refresh function for data independence
+  const refreshAllData = async () => {
+    if (!restaurantCredentials) {
+      toast.error("Authentication required to refresh data.");
+      return;
+    }
+
+    setIsRefreshing(true);
+    try {
+      // Run all fetches independently with error boundaries
+      const refreshPromises = [
+        fetchDashboardStats().catch(err => console.error("Stats refresh failed:", err)),
+        fetchOrders().catch(err => console.error("Orders refresh failed:", err)),
+        fetchRatings().catch(err => console.error("Ratings refresh failed:", err))
+      ];
+
+      await Promise.allSettled(refreshPromises);
+      toast.success("Dashboard data refreshed!");
+    } catch (error) {
+      console.error("Error during refresh:", error);
+      toast.error("Some data may not have refreshed properly.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const toggleActiveStatus = async () => {
-    const token = localStorage.getItem("token");
+    if (!restaurantCredentials || !restaurant) {
+      toast.error("Authentication or restaurant data not available.");
+      return;
+    }
+
     setIsTogglingStatus(true);
     try {
       await axios.patch(
@@ -353,7 +432,7 @@ const RestaurantDashboard = () => {
         { isActive: !restaurant.isActive },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${restaurantCredentials.token}`,
           },
         }
       );
@@ -477,24 +556,51 @@ const RestaurantDashboard = () => {
 
         {/* Navigation Tabs */}
         <div className="bg-white p-4 rounded-xl shadow-lg mb-8">
-          <div className="flex flex-wrap gap-2">
-            {[
-              { key: 'overview', label: 'Overview', icon: <ChartBarIcon className="w-4 h-4" /> },
-              { key: 'orders', label: 'Orders', icon: <ShoppingBagIcon className="w-4 h-4" /> }
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                  activeTab === tab.key
-                    ? 'bg-cheese text-crust'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
+          <div className="flex flex-wrap justify-between items-center gap-2">
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'overview', label: 'Overview', icon: <ChartBarIcon className="w-4 h-4" /> },
+                { key: 'orders', label: 'Orders', icon: <ShoppingBagIcon className="w-4 h-4" /> }
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                    activeTab === tab.key
+                      ? 'bg-cheese text-crust'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            
+            {/* Refresh Button */}
+            <button
+              onClick={refreshAllData}
+              disabled={isRefreshing}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                isRefreshing 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-blue-500 text-white hover:bg-blue-600'
+              }`}
+            >
+              {isRefreshing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                  <span>Refreshing...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Refresh</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 

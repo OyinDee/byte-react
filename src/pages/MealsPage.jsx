@@ -119,7 +119,7 @@ const MealsPage = () => {
       }
       const token = localStorage.getItem("token");
       const decodedToken = jwtDecode(token);
-      const restaurantId = decodedToken.restaurant._id;
+      const restaurantId = decodedToken._id;
       if (isEditing && editingMealId) {
         await axios.put(
           `https://mongobyte.vercel.app/api/v1/meals/${editingMealId}`,

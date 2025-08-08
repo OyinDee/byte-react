@@ -44,7 +44,7 @@ const RestaurantOrders = () => {
       }
 
       const decodedToken = jwtDecode(token);
-      const restaurantCustomId = decodedToken.restaurant.customId;
+      const restaurantCustomId = decodedToken.customId;
 
       const response = await axios.get(
         `https://mongobyte.vercel.app/api/v1/orders/restaurant/${restaurantCustomId}`,
